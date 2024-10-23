@@ -24,6 +24,7 @@ imagePRO have 2 meanings:
 - facenet_pytorch
 - Pillow
 - matplotlib
+- Opencv
 
 ## Installation
 First, clone the repository:
