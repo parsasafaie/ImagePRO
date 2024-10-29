@@ -1,98 +1,86 @@
-import torch
 from facenet_pytorch import MTCNN
-from PIL import Image
-import matplotlib.pyplot as plt
 import cv2
+import os
+from PIL import Image, ImageDraw, ImageFont
+import numpy as np
 
 class ImagePRO:
     """
-    A class for detecting and displaying faces in images and videos using the MTCNN model 
-    from the facenet_pytorch library.
-
-    This class encapsulates the functionality for face detection in both static images 
-    and live video streams. It provides methods to display detected faces with bounding 
-    boxes and confidence scores, as well as to write the coordinates of detected faces 
-    to a text file. The class supports customization of visual attributes such as box 
-    colors, text styles, and transparency levels.
+    A comprehensive utility class for face detection, display, and image/video processing using the MTCNN model.
+    
+    This class includes methods to detect faces within images and videos, display bounding boxes with confidence scores,
+    save detected faces as individual image files, and log face coordinates to text files. The MTCNN model provides 
+    accurate face detection, and the class attributes allow extensive customization of appearance for bounding boxes 
+    and text. 
 
     Attributes
     ----------
     linecolor : str
-        The color of the bounding boxes drawn around detected faces. The default value 
-        is "red". This can be changed to any valid color name recognized by matplotlib.
+        Specifies the color of the bounding box drawn around each detected face in the image or video. Default is "red".
     linecolor_bgr : tuple
-        The BGR (Blue, Green, Red) representation of the bounding box color. Default is 
-        (0, 0, 255), representing red in OpenCV.
+        Color in BGR format (for OpenCV functions) of bounding boxes. Default is (0, 0, 255) which represents red in BGR.
     linewidth : int
-        The width of the lines used to draw the face bounding boxes. The default is set 
-        to 2 pixels. This value can be adjusted for thicker or thinner bounding boxes.
+        Defines the thickness of the lines for bounding boxes around detected faces. Default is 2 pixels.
     textcolor : str
-        The color of the text used for displaying confidence scores. The default value 
-        is "blue", but can be modified to suit user preferences.
+        Specifies the color of the text displaying the confidence score. Default color is "blue".
     textcolor_bgr : tuple
-        The BGR representation of the text color used for confidence scores. The default 
-        is (255, 0, 0), which corresponds to blue in OpenCV.
+        Text color in BGR format, used in OpenCV video feeds. Default is (255, 0, 0), which represents blue in BGR.
     textsize : int
-        The font size for the confidence score text. The default is set to 10. Adjust 
-        this value to increase or decrease the text size based on the display requirements.
+        Determines the font size of the text displaying confidence scores. Default size is 10 points.
     textshape : str
-        The font weight/style of the confidence score text. The default is "normal", 
-        but can be set to "bold" or "italic" for different text presentations.
+        Specifies the font style for confidence text, with possible values of "normal" or "bold". Default is "normal".
     textboxcolor : str
-        The background color of the text box that appears behind the confidence scores. 
-        The default value is "blue". Users can customize this color as needed.
+        Color of the background box behind the confidence score text, enhancing text readability. Default is "blue".
     textboxcontrast : float
-        The transparency level (alpha) of the text box background. The default is set 
-        to 0.3, allowing for a semi-transparent look. Values between 0 (fully transparent) 
-        and 1 (fully opaque) can be used to adjust visibility.
-
+        Transparency level of the text box background, ranging from 0 (transparent) to 1 (opaque). Default is 0.3.
+    
     Methods
     -------
-    __init__() :
-        Initializes the ImagePRO object with default attribute values.
-    
     display_faces(img_path: str, want_confidence: bool = False) :
-        Detects faces in an image and displays it with rectangles drawn around 
-        detected faces, optionally showing confidence scores.
-
+        Detects and displays faces within an image, marking each face with a bounding box and optionally adding a 
+        confidence score above the face. The image is displayed in a separate viewer with the option to close it manually.
+    save_faces_images(image_path: str, folder_name: str = "faces", want_confidence: bool = False) :
+        Detects faces within an image and saves each detected face as an individual image in a specified folder.
+        Optionally saves a text file with confidence scores alongside each face image.
     save_faces_coordinates(img_path: str, destination_path: str, want_confidence: bool = False) :
-        Detects faces in an image and writes their bounding box coordinates to a text 
-        file, optionally including confidence scores.
-
+        Writes the bounding box coordinates of detected faces to a text file, with an option to include confidence scores.
+        This provides a useful record for further analysis or logging face positions within images.
     process_video_feed(video_path: str = 0, want_confidence: bool = False) :
-        Processes a video file or webcam feed to detect faces and display the video 
-        with bounding boxes around detected faces, optionally showing confidence scores.
+        Detects faces in a live video feed or from a video file, displaying bounding boxes and confidence scores 
+        in real-time. The stream updates continuously until the user presses 'q' to exit.
 
-    Examples
-    --------
-    To use this class, create an instance of ImagePRO and call its methods:
-    
-    >>> image_pro = ImagePRO()
-    >>> image_pro.display_faces('image.jpg', want_confidence=True)
-    >>> image_pro.save_faces_coordinates('image.jpg', 'output.txt', want_confidence=True)
-    >>> image_pro.process_video_feed('video.mp4', want_confidence=True)
+    Example Usage
+    -------------
+    ```python
+    # Instantiate the ImagePRO class
+    image_pro = ImagePRO()
+
+    # Display faces with bounding boxes and confidence in an image
+    image_pro.display_faces('sample.jpg', want_confidence=True)
+
+    # Save detected face images to a folder, with optional confidence scores
+    image_pro.save_faces_images('sample.jpg', folder_name='detected_faces', want_confidence=True)
+
+    # Save coordinates of detected faces to a text file
+    image_pro.save_faces_coordinates('sample.jpg', 'face_coordinates.txt', want_confidence=True)
+
+    # Process and display video feed with face detection and confidence scores
+    image_pro.process_video_feed('sample_video.mp4', want_confidence=True)
+    ```
     """
 
     def __init__(self) -> None:
         """
-        Initializes an instance of the ImagePRO class with default attribute values.
+        Initializes the ImagePRO instance with customizable default attributes for visual styling.
 
-        This constructor sets up various attributes that define the appearance of the 
-        bounding boxes and text displayed during face detection. The attributes are 
-        configurable and allow customization of the visual aspects of detected faces, 
-        such as the colors, linewidth, text size, and background transparency for the 
-        text box.
-
-        Returns
-        -------
-        None
-            This method does not return any value.
+        The `__init__` method configures visual attributes such as bounding box line color, width, text color, text box 
+        color, and transparency for displaying face detection results. These settings affect the appearance of bounding 
+        boxes and confidence score text in all methods that display or save face data.
 
         Notes
         -----
-        The default values can be modified after instantiation to customize the appearance 
-        of bounding boxes and text displayed during face detection. For example, users 
-        can change colors or text size according to their specific visualization preferences.
+        Attributes can be adjusted after instantiation to customize visual styling across methods like `display_faces`
+        and `process_video_feed`.
         """
         self.linecolor = 'red'
         self.linecolor_bgr = (0, 0, 255)
@@ -103,191 +91,189 @@ class ImagePRO:
         self.textshape = 'normal'
         self.textboxcolor = 'blue'
         self.textboxcontrast = 0.3
+        self.mtcnn = MTCNN(keep_all=True)
 
     def display_faces(self, img_path: str, want_confidence: bool = False) -> None:
         """
-        Detects faces in an image and displays it with rectangles drawn around 
-        detected faces, optionally showing confidence scores.
+        Detects faces in an image, displaying bounding boxes and optional confidence scores.
 
         Parameters
         ----------
         img_path : str
-            The file path of the image to be processed. The image should be in a format 
-            supported by the PIL library (e.g., JPEG, PNG).
+            Path to the image file for face detection. Accepted formats include JPG, PNG, etc.
         want_confidence : bool, optional
-            If True, the confidence scores of the detected faces will be displayed above 
-            each bounding box. The default is False, meaning confidence scores will not 
-            be shown.
+            If True, displays the confidence score above each detected face, providing a visual indicator 
+            of detection accuracy. Default is False.
 
         Returns
-        --------
+        -------
         None
-            This method does not return any value.
-
-        Notes
-        -----
-        This method uses the MTCNN model to detect faces and draws bounding boxes around 
-        detected faces on the image. If `want_confidence` is set to True, it will display 
-        the confidence score for each detected face, providing an indication of the 
-        model's certainty in its detections. The bounding box color and text properties 
-        can be customized using class attributes.
+            Opens a viewer displaying the image with bounding boxes and confidence scores, if enabled.
 
         Example
         -------
-        To display an image with detected faces:
-        
-        >>> image_pro = ImagePRO()
-        >>> image_pro.display_faces('image.jpg', want_confidence=True)
+        ```python
+        image_pro.display_faces("example.jpg", want_confidence=True)
+        ```
+
+        Notes
+        -----
+        - This method uses MTCNN to detect faces and provides an option to display confidence scores.
+        - Bounding boxes are drawn around each detected face with customizable color and thickness, 
+          based on `linecolor` and `linewidth` attributes.
+        - When `want_confidence` is True, the confidence score text appears above each bounding box, 
+          with font size and color set by `textsize` and `textcolor`.
         """
-        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        mtcnn = MTCNN(keep_all=True, device=device)
+        image = Image.open(img_path).convert("RGB")
+        boxes, probs = self.mtcnn.detect(image, landmarks=False)
 
-        img = Image.open(img_path)
-        boxes, probs = mtcnn.detect(img)
+        if boxes is not None:
+            draw = ImageDraw.Draw(image)
+            font = ImageFont.truetype("arial", self.textsize) if self.textshape == "normal" else ImageFont.load_default()
 
-        plt.imshow(img)
-        ax = plt.gca()
+            for i, box in enumerate(boxes):
+                draw.rectangle(box.tolist(), outline=self.linecolor, width=self.linewidth)
+                if want_confidence and probs is not None:
+                    text = f"{probs[i]:.2f}"
+                    text_size = draw.textsize(text, font=font)
+                    text_position = (box[0], box[1] - text_size[1])
+                    draw.rectangle([text_position, (text_position[0] + text_size[0], text_position[1] + text_size[1])], fill=self.textboxcolor)
+                    draw.text(text_position, text, fill=self.textcolor, font=font)
+
+        image.show()
+
+    def save_faces_images(self, image_path: str, folder_name: str = "faces", want_confidence: bool = False) -> None:
+        """
+        Detects faces in an image, saving each face as a separate file in a specified folder.
+
+        Parameters
+        ----------
+        image_path : str
+            Path to the image file for processing.
+        folder_name : str, optional
+            Directory to store cropped face images. If the folder does not exist, it will be created.
+            Default folder name is "faces".
+        want_confidence : bool, optional
+            If True, creates a text file with the confidence score for each detected face next to the face image. 
+            Default is False.
+
+        Returns
+        -------
+        None
+
+        Example
+        -------
+        ```python
+        image_pro.save_faces_images("group_photo.jpg", folder_name="output_faces", want_confidence=True)
+        ```
+
+        Notes
+        -----
+        - Each detected face is saved as a separate file in the specified folder. Face images are named `face_n.jpg`,
+          where `n` is the index of the face in the image.
+        - If `want_confidence` is True, a `.txt` file accompanies each face image, containing the confidence score.
+        - This method is useful for applications requiring cropped face images, such as training datasets.
+        """
+        if not os.path.exists(folder_name):
+            os.makedirs(folder_name)
+
+        image = Image.open(image_path).convert("RGB")
+        boxes, probs = self.mtcnn.detect(image)
 
         if boxes is not None:
             for i, box in enumerate(boxes):
-                try:
-                    rect = plt.Rectangle(
-                        (box[0], box[1]), box[2] - box[0], box[3] - box[1],
-                        fill=False, color=self.linecolor, linewidth=self.linewidth)
-                    ax.add_patch(rect)
+                face = image.crop(box)
+                face_path = os.path.join(folder_name, f"face_{i + 1}.jpg")
+                face.save(face_path)
 
-                    if want_confidence and probs is not None:
-                        confidence = probs[i]
-                        ax.text(box[0], box[1] - 10, f'{confidence:.2f}',
-                                color=self.textcolor, fontsize=self.textsize, weight=self.textshape,
-                                bbox=dict(facecolor=self.textboxcolor, alpha=self.textboxcontrast))
-                except Exception as e:
-                    print(f"An error occurred: {e}")
-                    print("Some variables may be undefined. Please initialize the object using objname.__init__() or set them manually.")
-                    break
-
-            plt.axis('off')  # Optional: Hide axes for better visualization
-            plt.show()
+                if want_confidence and probs is not None:
+                    confidence_path = os.path.join(folder_name, f"face_{i + 1}_confidence.txt")
+                    with open(confidence_path, "w") as f:
+                        f.write(f"Confidence: {probs[i]:.2f}")
 
     def save_faces_coordinates(self, img_path: str, destination_path: str, want_confidence: bool = False) -> None:
         """
-        Detects faces in an image and writes their bounding box coordinates to a text file, 
-        optionally including confidence scores.
+        Detects faces in an image and saves the coordinates of each bounding box to a text file.
 
         Parameters
         ----------
         img_path : str
-            The file path of the image to be processed. The image should be in a format 
-            supported by the PIL library (e.g., JPEG, PNG).
+            Path to the image file for face detection.
         destination_path : str
-            The file path where the coordinates of detected faces will be saved. The 
-            output will be written in a text file format.
+            Path to the output text file where coordinates will be saved.
         want_confidence : bool, optional
-            If True, the confidence scores of the detected faces will be included in the 
-            output file. The default is False, meaning only coordinates will be written.
+            If True, includes the confidence score for each detected face in the text file. Default is False.
 
         Returns
-        --------
+        -------
         None
-            This method does not return any value.
-
-        Notes
-        -----
-        The coordinates are saved in the format: `x_min, y_min, x_max, y_max` for each 
-        detected face. If `want_confidence` is True, each line will also include the 
-        confidence score corresponding to the face detection.
 
         Example
         -------
-        To write the coordinates of detected faces to a file:
-        
-        >>> image_pro = ImagePRO()
-        >>> image_pro.save_faces_coordinates('image.jpg', 'output.txt', want_confidence=True)
+        ```python
+        image_pro.save_faces_coordinates("image.jpg", "coordinates.txt", want_confidence=True)
+        ```
+
+        Notes
+        -----
+        - This method is useful for logging or analyzing face positions within an image.
+        - Bounding box coordinates are saved in (x1, y1, x2, y2) format, representing the top-left and bottom-right
+          corners of each bounding box.
+        - If `want_confidence` is enabled, each bounding box entry includes the confidence score for that detection.
         """
-        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        mtcnn = MTCNN(keep_all=True, device=device)
+        image = Image.open(img_path).convert("RGB")
+        boxes, probs = self.mtcnn.detect(image)
 
-        img = Image.open(img_path)
-        boxes, probs = mtcnn.detect(img)
-
-        with open(destination_path, 'w') as f:
+        with open(destination_path, "w") as f:
             if boxes is not None:
                 for i, box in enumerate(boxes):
+                    box_coords = f"Face {i + 1}: {box.tolist()}"
                     if want_confidence and probs is not None:
-                        confidence = probs[i]
-                        f.write(f'{box[0]}, {box[1]}, {box[2]}, {box[3]}, {confidence:.2f}\n')
-                    else:
-                        f.write(f'{box[0]}, {box[1]}, {box[2]}, {box[3]}\n')
+                        box_coords += f", Confidence: {probs[i]:.2f}"
+                    f.write(box_coords + "\n")
 
     def process_video_feed(self, video_path: str = 0, want_confidence: bool = False) -> None:
         """
-        Processes a video file or webcam feed to detect faces and display the video 
-        with bounding boxes around detected faces, optionally showing confidence scores.
+        Processes a video feed or file for real-time face detection, displaying bounding boxes and confidence scores.
 
         Parameters
         ----------
-        video_path : str or int, optional
-            The file path of the video to be processed or the index of the webcam feed. 
-            The default value is 0, which typically represents the primary webcam. 
-            A string can be provided for file paths.
+        video_path : str, optional
+            Path to the video file for processing. If set to 0, the method will open the default webcam. Default is 0.
         want_confidence : bool, optional
-            If True, the confidence scores of the detected faces will be displayed above 
-            each bounding box. The default is False, meaning confidence scores will not 
-            be shown.
+            If True, displays confidence scores for each detected face in the video stream. Default is False.
 
         Returns
-        --------
+        -------
         None
-            This method does not return any value.
 
         Notes
         -----
-        This method captures frames from the video and applies the face detection model 
-        to each frame. Detected faces are highlighted in real-time, and the video stream 
-        can be stopped by pressing 'q'. The bounding box color and text properties can 
-        be customized using class attributes.
-
-        Example
-        -------
-        To process a video file or webcam feed for face detection:
-        
-        >>> image_pro = ImagePRO()
-        >>> image_pro.process_video_feed('video.mp4', want_confidence=True)
+        - Press 'q' to quit the video stream.
+        - Bounding boxes and confidence scores are displayed in real-time using OpenCV. Bounding box colors, thickness, 
+          and text styles are customizable via instance attributes.
         """
-        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        mtcnn = MTCNN(keep_all=True, device=device)
-
-        cap = cv2.VideoCapture(video_path)
-
-        while cap.isOpened():
-            ret, frame = cap.read()
+        video = cv2.VideoCapture(video_path)
+        
+        while video.isOpened():
+            ret, frame = video.read()
             if not ret:
                 break
-
-            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            boxes, probs = mtcnn.detect(Image.fromarray(frame_rgb))
+            rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            pil_frame = Image.fromarray(rgb_frame)
+            boxes, probs = self.mtcnn.detect(pil_frame)
 
             if boxes is not None:
                 for i, box in enumerate(boxes):
-                    cv2.rectangle(frame, 
-                                  (int(box[0]), int(box[1])), 
-                                  (int(box[2]), int(box[3])), 
-                                  self.linecolor_bgr, 
-                                  self.linewidth)
-
+                    box = [int(coord) for coord in box]
+                    cv2.rectangle(frame, (box[0], box[1]), (box[2], box[3]), self.linecolor_bgr, self.linewidth)
                     if want_confidence and probs is not None:
-                        confidence = probs[i]
-                        cv2.putText(frame, f'{confidence:.2f}', 
-                                    (int(box[0]), int(box[1]) - 10), 
-                                    cv2.FONT_HERSHEY_SIMPLEX, 
-                                    self.textsize / 30, 
-                                    self.textcolor_bgr, 
-                                    2)
+                        confidence_text = f"{probs[i]:.2f}"
+                        cv2.putText(frame, confidence_text, (box[0], box[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, self.textcolor_bgr, 1)
 
-            cv2.imshow('Video', frame)
-
-            if cv2.waitKey(1) & 0xFF == ord('q'):
+            cv2.imshow("Face Detection", frame)
+            if cv2.waitKey(1) & 0xFF == ord("q"):
                 break
 
-        cap.release()
+        video.release()
         cv2.destroyAllWindows()
