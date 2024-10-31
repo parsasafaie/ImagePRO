@@ -22,17 +22,18 @@ class ImagePRO:
     linewidth : int
         Defines the thickness of the lines for bounding boxes around detected faces. Default is 2 pixels.
     textcolor : str
-        Specifies the color of the text displaying the confidence score. Default color is "blue".
+        Specifies the color of the text displaying the confidence score. Default color is "white".
     textcolor_bgr : tuple
         Text color in BGR format, used in OpenCV video feeds. Default is (255, 0, 0), which represents blue in BGR.
     textsize : int
-        Determines the font size of the text displaying confidence scores. Default size is 10 points.
-    textshape : str
-        Specifies the font style for confidence text, with possible values of "normal" or "bold". Default is "normal".
+        Determines the font size of the text displaying confidence scores. Increased for better visibility.
+    textfont : str
+        Specifies the font style for confidence text. If set to "default", uses the default font; otherwise, attempts 
+        to load the specified font. Default is "default".
     textboxcolor : str
         Color of the background box behind the confidence score text, enhancing text readability. Default is "blue".
     textboxcontrast : float
-        Transparency level of the text box background, ranging from 0 (transparent) to 1 (opaque). Default is 0.3.
+        Transparency level of the text box background, ranging from 0 (transparent) to 1 (opaque). Adjusted for better visibility.
     
     Methods
     -------
@@ -48,34 +49,15 @@ class ImagePRO:
     process_video_feed(video_path: str = 0, want_confidence: bool = False) :
         Detects faces in a live video feed or from a video file, displaying bounding boxes and confidence scores 
         in real-time. The stream updates continuously until the user presses 'q' to exit.
-
-    Example Usage
-    -------------
-    ```python
-    # Instantiate the ImagePRO class
-    image_pro = ImagePRO()
-
-    # Display faces with bounding boxes and confidence in an image
-    image_pro.display_faces('sample.jpg', want_confidence=True)
-
-    # Save detected face images to a folder, with optional confidence scores
-    image_pro.save_faces_images('sample.jpg', folder_name='detected_faces', want_confidence=True)
-
-    # Save coordinates of detected faces to a text file
-    image_pro.save_faces_coordinates('sample.jpg', 'face_coordinates.txt', want_confidence=True)
-
-    # Process and display video feed with face detection and confidence scores
-    image_pro.process_video_feed('sample_video.mp4', want_confidence=True)
-    ```
     """
-
+    
     def __init__(self) -> None:
         """
         Initializes the ImagePRO instance with customizable default attributes for visual styling.
 
         The `__init__` method configures visual attributes such as bounding box line color, width, text color, text box 
         color, and transparency for displaying face detection results. These settings affect the appearance of bounding 
-        boxes and confidence score text in all methods that display or save face data.
+        boxes and text in all methods that display or save face data.
 
         Notes
         -----
@@ -85,13 +67,31 @@ class ImagePRO:
         self.linecolor = 'red'
         self.linecolor_bgr = (0, 0, 255)
         self.linewidth = 2
-        self.textcolor = 'blue'
+        self.textcolor = 'white'
         self.textcolor_bgr = (255, 0, 0)
-        self.textsize = 10
-        self.textshape = 'normal'
-        self.textboxcolor = 'blue'
-        self.textboxcontrast = 0.3
+        self.textsize = 160
+        self.textfont = 'default'
+        self.textboxcolor = 'rgba(0, 0, 0, 0.8)'
+        self.textboxcontrast = 0.8
         self.mtcnn = MTCNN(keep_all=True)
+
+    def _get_font(self) -> ImageFont:
+        """
+        Helper method to load the specified font. Uses the default font if `textfont` is set to "default"
+        or falls back to the default font in case the specified font is unavailable.
+        
+        Returns
+        -------
+        ImageFont
+            The font object to use for drawing text on the image.
+        """
+        if self.textfont == 'default':
+            return ImageFont.load_default()
+        try:
+            return ImageFont.truetype(self.textfont, self.textsize)
+        except IOError:
+            print(f"Warning: Font '{self.textfont}' is unavailable. Using default font.")
+            return ImageFont.load_default()
 
     def display_faces(self, img_path: str, want_confidence: bool = False) -> None:
         """
@@ -109,42 +109,40 @@ class ImagePRO:
         -------
         None
             Opens a viewer displaying the image with bounding boxes and confidence scores, if enabled.
-
-        Example
-        -------
-        ```python
-        image_pro.display_faces("example.jpg", want_confidence=True)
-        ```
-
-        Notes
-        -----
-        - This method uses MTCNN to detect faces and provides an option to display confidence scores.
-        - Bounding boxes are drawn around each detected face with customizable color and thickness, 
-          based on `linecolor` and `linewidth` attributes.
-        - When `want_confidence` is True, the confidence score text appears above each bounding box, 
-          with font size and color set by `textsize` and `textcolor`.
         """
         image = Image.open(img_path).convert("RGB")
         boxes, probs = self.mtcnn.detect(image, landmarks=False)
 
         if boxes is not None:
             draw = ImageDraw.Draw(image)
-            font = ImageFont.truetype("arial", self.textsize) if self.textshape == "normal" else ImageFont.load_default()
+            font = self._get_font()
 
             for i, box in enumerate(boxes):
                 draw.rectangle(box.tolist(), outline=self.linecolor, width=self.linewidth)
                 if want_confidence and probs is not None:
                     text = f"{probs[i]:.2f}"
-                    text_size = draw.textsize(text, font=font)
-                    text_position = (box[0], box[1] - text_size[1])
-                    draw.rectangle([text_position, (text_position[0] + text_size[0], text_position[1] + text_size[1])], fill=self.textboxcolor)
-                    draw.text(text_position, text, fill=self.textcolor, font=font)
+                    
+                    text_bbox = draw.textbbox((0, 0), text, font=font)
+                    text_x = int(box[0])
+                    text_y = int(box[1]) - (text_bbox[3] - text_bbox[1]) - 20
+
+                    if text_x < 0:
+                        text_x = 0
+                    if text_y < 0:
+                        text_y = 0
+
+                    text_box_x1 = text_x + (text_bbox[2] - text_bbox[0]) + 20
+                    text_box_y1 = text_y + (text_bbox[3] - text_bbox[1]) + 20
+
+                    if text_box_x1 >= text_x and text_box_y1 >= text_y:
+                        draw.rectangle([text_x, text_y, text_box_x1, text_box_y1], fill=(0, 0, 0, 200))
+                        draw.text((text_x + 10, text_y + 10), text, fill=self.textcolor, font=font)
 
         image.show()
 
     def save_faces_images(self, image_path: str, folder_name: str = "faces", want_confidence: bool = False) -> None:
         """
-        Detects faces in an image, saving each face as a separate file in a specified folder.
+        Detects faces in an image and saves each face as a separate file in a specified folder.
 
         Parameters
         ----------
@@ -160,19 +158,6 @@ class ImagePRO:
         Returns
         -------
         None
-
-        Example
-        -------
-        ```python
-        image_pro.save_faces_images("group_photo.jpg", folder_name="output_faces", want_confidence=True)
-        ```
-
-        Notes
-        -----
-        - Each detected face is saved as a separate file in the specified folder. Face images are named `face_n.jpg`,
-          where `n` is the index of the face in the image.
-        - If `want_confidence` is True, a `.txt` file accompanies each face image, containing the confidence score.
-        - This method is useful for applications requiring cropped face images, such as training datasets.
         """
         if not os.path.exists(folder_name):
             os.makedirs(folder_name)
@@ -193,33 +178,24 @@ class ImagePRO:
 
     def save_faces_coordinates(self, img_path: str, destination_path: str, want_confidence: bool = False) -> None:
         """
-        Detects faces in an image and saves the coordinates of each bounding box to a text file.
+        Writes the bounding box coordinates of detected faces to a text file.
 
         Parameters
         ----------
         img_path : str
             Path to the image file for face detection.
         destination_path : str
-            Path to the output text file where coordinates will be saved.
+            Path to the output text file for saving coordinates.
         want_confidence : bool, optional
-            If True, includes the confidence score for each detected face in the text file. Default is False.
+            If True, includes confidence scores in the output file next to each bounding box. Default is False.
 
         Returns
         -------
         None
 
-        Example
-        -------
-        ```python
-        image_pro.save_faces_coordinates("image.jpg", "coordinates.txt", want_confidence=True)
-        ```
-
         Notes
         -----
-        - This method is useful for logging or analyzing face positions within an image.
-        - Bounding box coordinates are saved in (x1, y1, x2, y2) format, representing the top-left and bottom-right
-          corners of each bounding box.
-        - If `want_confidence` is enabled, each bounding box entry includes the confidence score for that detection.
+        The coordinates are saved in the format: x1, y1, x2, y2, [confidence].
         """
         image = Image.open(img_path).convert("RGB")
         boxes, probs = self.mtcnn.detect(image)
@@ -227,21 +203,21 @@ class ImagePRO:
         with open(destination_path, "w") as f:
             if boxes is not None:
                 for i, box in enumerate(boxes):
-                    box_coords = f"Face {i + 1}: {box.tolist()}"
+                    line = f"{box[0]:.2f}, {box[1]:.2f}, {box[2]:.2f}, {box[3]:.2f}"
                     if want_confidence and probs is not None:
-                        box_coords += f", Confidence: {probs[i]:.2f}"
-                    f.write(box_coords + "\n")
+                        line += f", {probs[i]:.2f}"
+                    f.write(line + "\n")
 
     def process_video_feed(self, video_path: str = 0, want_confidence: bool = False) -> None:
         """
-        Processes a video feed or file for real-time face detection, displaying bounding boxes and confidence scores.
+        Processes a video feed, detecting and displaying faces in real time.
 
         Parameters
         ----------
-        video_path : str, optional
-            Path to the video file for processing. If set to 0, the method will open the default webcam. Default is 0.
+        video_path : str or int, optional
+            Path to a video file or device index for a camera (default is 0 for the primary camera).
         want_confidence : bool, optional
-            If True, displays confidence scores for each detected face in the video stream. Default is False.
+            If True, displays confidence scores on the bounding boxes. Default is False.
 
         Returns
         -------
@@ -249,31 +225,48 @@ class ImagePRO:
 
         Notes
         -----
-        - Press 'q' to quit the video stream.
-        - Bounding boxes and confidence scores are displayed in real-time using OpenCV. Bounding box colors, thickness, 
-          and text styles are customizable via instance attributes.
+        The video feed will continue until the user presses 'q' to exit.
         """
-        video = cv2.VideoCapture(video_path)
-        
-        while video.isOpened():
-            ret, frame = video.read()
+        cap = cv2.VideoCapture(video_path)
+
+        while cap.isOpened():
+            ret, frame = cap.read()
             if not ret:
                 break
-            rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            pil_frame = Image.fromarray(rgb_frame)
-            boxes, probs = self.mtcnn.detect(pil_frame)
+
+            image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+            boxes, probs = self.mtcnn.detect(image)
 
             if boxes is not None:
-                for i, box in enumerate(boxes):
-                    box = [int(coord) for coord in box]
-                    cv2.rectangle(frame, (box[0], box[1]), (box[2], box[3]), self.linecolor_bgr, self.linewidth)
-                    if want_confidence and probs is not None:
-                        confidence_text = f"{probs[i]:.2f}"
-                        cv2.putText(frame, confidence_text, (box[0], box[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, self.textcolor_bgr, 1)
+                draw = ImageDraw.Draw(image)
+                font = self._get_font()
 
-            cv2.imshow("Face Detection", frame)
-            if cv2.waitKey(1) & 0xFF == ord("q"):
+                for i, box in enumerate(boxes):
+                    draw.rectangle(box.tolist(), outline=self.linecolor, width=self.linewidth)
+                    if want_confidence and probs is not None:
+                        text = f"{probs[i]:.2f}"
+                        text_bbox = draw.textbbox((0, 0), text, font=font)
+
+                        text_x = int(box[0])
+                        text_y = int(box[1]) - (text_bbox[3] - text_bbox[1]) - 20
+
+                        if text_x < 0:
+                            text_x = 0
+                        if text_y < 0:
+                            text_y = 0
+
+                        text_box_x1 = text_x + (text_bbox[2] - text_bbox[0]) + 20
+                        text_box_y1 = text_y + (text_bbox[3] - text_bbox[1]) + 20
+
+                        if text_box_x1 >= text_x and text_box_y1 >= text_y:
+                            draw.rectangle([text_x, text_y, text_box_x1, text_box_y1], fill=(0, 0, 0, 200))
+                            draw.text((text_x + 10, text_y + 10), text, fill=self.textcolor, font=font)
+
+            frame = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+            cv2.imshow('Face Detection', frame)
+
+            if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
 
-        video.release()
+        cap.release()
         cv2.destroyAllWindows()
