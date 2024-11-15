@@ -33,7 +33,7 @@ git clone https://github.com/parsasafaie/ImagePRO.git
 ```
 Then, in project folder, use this command for install dependencies.
 ```
-pip install -r requirments.txt
+pip install -r requirements.txt
 ```
 
 ## License
