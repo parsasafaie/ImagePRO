@@ -100,7 +100,12 @@ class ImagePRO:
         None
             Opens a viewer displaying the image with bounding boxes and confidence scores, if enabled.
         """
-        image = Image.open(img_path).convert("RGB")
+        try:
+            image = Image.open(img_path).convert("RGB")
+        except:
+            print("Image path not found.")
+            return
+        
         boxes, probs = self.mtcnn.detect(image, landmarks=False)
 
         if boxes is not None:
@@ -149,10 +154,14 @@ class ImagePRO:
         -------
         None
         """
+        try:
+            image = Image.open(img_path).convert("RGB")
+        except:
+            print("Image path not found.")
+            return
+        
         if not os.path.exists(folder_name):
             os.makedirs(folder_name)
-
-        image = Image.open(image_path).convert("RGB")
         boxes, probs = self.mtcnn.detect(image)
 
         if boxes is not None:
@@ -187,7 +196,11 @@ class ImagePRO:
         -----
         The coordinates are saved in the format: x1, y1, x2, y2, [confidence].
         """
-        image = Image.open(img_path).convert("RGB")
+        try:
+            image = Image.open(img_path).convert("RGB")
+        except:
+            print("Image path not found.")
+            return
         boxes, probs = self.mtcnn.detect(image)
 
         with open(destination_path, "w") as f:
@@ -217,7 +230,11 @@ class ImagePRO:
         -----
         The video feed will continue until the user presses 'q' to exit.
         """
-        cap = cv2.VideoCapture(video_path)
+        try:
+            cap = cv2.VideoCapture(video_path)
+        except:
+            print("Video source not found.")
+            return
 
         while cap.isOpened():
             ret, frame = cap.read()
@@ -260,7 +277,3 @@ class ImagePRO:
 
         cap.release()
         cv2.destroyAllWindows()
-
-
-detector = ImagePRO()
-detector.display_faces(img_path="input_image.jpg", want_confidence=True)
