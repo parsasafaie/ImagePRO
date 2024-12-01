@@ -17,23 +17,17 @@ class ImagePRO:
     ----------
     linecolor : str
         Specifies the color of the bounding box drawn around each detected face in the image or video. Default is "red".
-    linecolor_bgr : tuple
-        Color in BGR format (for OpenCV functions) of bounding boxes. Default is (0, 0, 255) which represents red in BGR.
     linewidth : int
         Defines the thickness of the lines for bounding boxes around detected faces. Default is 2 pixels.
     textcolor : str
         Specifies the color of the text displaying the confidence score. Default color is "white".
-    textcolor_bgr : tuple
-        Text color in BGR format, used in OpenCV video feeds. Default is (255, 0, 0), which represents blue in BGR.
     textsize : int
         Determines the font size of the text displaying confidence scores. Increased for better visibility.
     textfont : str
         Specifies the font style for confidence text. If set to "default", uses the default font; otherwise, attempts 
         to load the specified font. Default is "default".
-    textboxcolor : str
-        Color of the background box behind the confidence score text, enhancing text readability. Default is "blue".
-    textboxcontrast : float
-        Transparency level of the text box background, ranging from 0 (transparent) to 1 (opaque). Adjusted for better visibility.
+    mtcnn : MTCNN
+        An instance of the MTCNN model used for face detection.
     
     Methods
     -------
@@ -55,8 +49,8 @@ class ImagePRO:
         """
         Initializes the ImagePRO instance with customizable default attributes for visual styling.
 
-        The `__init__` method configures visual attributes such as bounding box line color, width, text color, text box 
-        color, and transparency for displaying face detection results. These settings affect the appearance of bounding 
+        The `__init__` method configures visual attributes such as bounding box line color, width, text color and text box 
+        color for displaying face detection results. These settings affect the appearance of bounding 
         boxes and text in all methods that display or save face data.
 
         Notes
@@ -65,14 +59,10 @@ class ImagePRO:
         and `process_video_feed`.
         """
         self.linecolor = 'red'
-        self.linecolor_bgr = (0, 0, 255)
         self.linewidth = 2
         self.textcolor = 'white'
-        self.textcolor_bgr = (255, 0, 0)
         self.textsize = 160
         self.textfont = 'default'
-        self.textboxcolor = 'rgba(0, 0, 0, 0.8)'
-        self.textboxcontrast = 0.8
         self.mtcnn = MTCNN(keep_all=True)
 
     def _get_font(self) -> ImageFont:
@@ -270,3 +260,7 @@ class ImagePRO:
 
         cap.release()
         cv2.destroyAllWindows()
+
+
+detector = ImagePRO()
+detector.display_faces(img_path="input_image.jpg", want_confidence=True)
