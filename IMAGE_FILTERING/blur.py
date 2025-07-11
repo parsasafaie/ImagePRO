@@ -34,3 +34,15 @@ def median_blur(filter_size=5, image_path=None, np_image=None, result_path=None)
         cv2.imwrite(result_path, blur_image)
     else:
         return blur_image
+
+
+def bilateral_blur(filter_size=9, sigma_color=75, sigma_space=75, image_path=None, np_image=None, result_path=None):
+    if image_path:
+        np_image = cv2.imread(image_path)
+
+    blur_image = cv2.bilateralFilter(np_image, d=filter_size, sigmaColor=sigma_color, sigmaSpace=sigma_space)
+
+    if result_path:
+        cv2.imwrite(result_path, blur_image)
+    else:
+        return blur_image
