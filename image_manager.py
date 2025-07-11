@@ -10,3 +10,4 @@ def output_manger(np_image, result_path=None):
         return f"File saved at {result_path}"
     else:
         return np_image
+    
