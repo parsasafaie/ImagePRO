@@ -7,10 +7,10 @@ from pathlib import Path
 parent_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(parent_dir))
 
-from image_manager import input_manager
+from io_manager import IOManager
 
-def face_mesh(max_faces=1, min_confidence=0.7, image_path=None, np_image=None, result_path=None):
-    np_image = input_manager(image_path=image_path, np_image=np_image)
+def face_mesh(max_faces=1, min_confidence=0.7, landmarks_idx=None, image_path=None, np_image=None, result_path=None):
+    np_image = IOManager.load_image(image_path=image_path, np_image=np_image)
 
     FACE_MESH = mp.solutions.face_mesh.FaceMesh(
         max_num_faces=max_faces,
@@ -23,18 +23,21 @@ def face_mesh(max_faces=1, min_confidence=0.7, image_path=None, np_image=None, r
     results = FACE_MESH.process(rgb_color)
 
     if results.multi_face_landmarks:
-        for face_landmark in results.multi_face_landmarks:
+        if not isinstance(landmarks_idx, list):
+            landmarks_idx = [i for i in range(468)]
+
+        for face_landmarks in results.multi_face_landmarks:
             if result_path.endswith('.jpg'):
-                for idx, landmark in enumerate(face_landmark.landmark):
+                for idx in landmarks_idx:
+                    landmark = face_landmarks[idx]
                     ih, iw, _ = np_image.shape
-                    x, y = (iw*landmark.x), (ih*landmark.y)
+                    x, y = int(iw*landmark.x), int(ih*landmark.y)
                     cv2.circle(np_image, (x, y), 1, (0, 255, 0), -1)
 
-                cv2.imwrite(result_path, np_image)
+                cv2.imwrite(np_image, result_path)
 
             elif result_path.endswith('.csv'):
                 landmarks_list = []
-                for idx, landmark in enumerate(face_landmark.landmark):
-                    landmarks_list.append([landmark.x, landmark.y, landmark.z])
-                np.savetxt("face_landmarks.csv", landmarks_list, delimiter=",")
-                
+                for idx in landmarks_idx:
+                    landmarks_list.append([face_landmarks.landmark[idx].x, face_landmarks.landmark[idx].y, face_landmarks.landmark[idx].z])
+                np.savetext(result_path, landmarks_list)
