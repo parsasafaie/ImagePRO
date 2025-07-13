@@ -19,7 +19,7 @@ def input_manager(image_path=None, np_image=None):
         TypeError: If `image_path` is not a string or file not found.
         TypeError: If `np_image` is not a valid NumPy array.
     """
-    # Validate inputs
+    # Input validation
     if image_path is None and np_image is None:
         raise ValueError("At least one of 'image_path' or 'np_image' must be provided.")
 
@@ -39,7 +39,7 @@ def input_manager(image_path=None, np_image=None):
         return np_image
 
 
-def output_manger(np_image, result_path=None):
+def output_manager(np_image, result_path=None):
     """
     Manages image output by either saving it to a file or returning it directly.
 
@@ -55,7 +55,7 @@ def output_manger(np_image, result_path=None):
         TypeError: If `np_image` is not a valid NumPy array.
         ValueError: If `result_path` is not a string when provided.
     """
-    # Validate inputs
+    # Input validation
     if not isinstance(np_image, np.ndarray):
         raise TypeError("'np_image' must be a valid NumPy array.")
 

@@ -7,7 +7,7 @@ parent_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(parent_dir))
 
 # Import input/output managers from your custom module
-from image_manager import input_manager, output_manger
+from image_manager import input_manager, output_manager
 
 
 def average_blur(kernel_size=(5, 5), image_path=None, np_image=None, result_path=None):
@@ -15,7 +15,7 @@ def average_blur(kernel_size=(5, 5), image_path=None, np_image=None, result_path
     Applies average blur to the image using a box filter.
     
     Parameters:
-        kernel_size (tuple): Size of the kernel (width, height). Larger values produce more blur.
+        kernel_size (tuple): Size of the kernel (width, height). Must be positive and odd.
         image_path (str): Path to input image file. If provided, `np_image` will be ignored.
         np_image (np.ndarray): Pre-loaded image as NumPy array. Only used if `image_path` is None.
         result_path (str): Path to save the blurred image (optional). If not provided, returns the image array.
@@ -24,9 +24,17 @@ def average_blur(kernel_size=(5, 5), image_path=None, np_image=None, result_path
         str | np.ndarray: If `result_path` is given, returns confirmation message.
                           Otherwise, returns the blurred image as a NumPy array.
 
-    Note:
-        At least one of `image_path` or `np_image` must be provided.
+    Raises:
+        TypeError: If inputs are of incorrect type.
+        ValueError: If values are out of valid range.
     """
+    # Validate specific parameters
+    if not isinstance(kernel_size, tuple) or len(kernel_size) != 2:
+        raise TypeError("'kernel_size' must be a tuple of two integers.")
+
+    if not all(isinstance(x, int) and x > 0 for x in kernel_size):
+        raise ValueError("'kernel_size' values must be positive integers.")
+
     # Load input image using input manager
     np_image = input_manager(image_path=image_path, np_image=np_image)
 
@@ -34,7 +42,7 @@ def average_blur(kernel_size=(5, 5), image_path=None, np_image=None, result_path
     blurred_image = cv2.blur(np_image, kernel_size)
 
     # Output the result (save or return)
-    return output_manger(blurred_image, result_path)
+    return output_manager(blurred_image, result_path)
 
 
 def gaussian_blur(kernel_size=(5, 5), image_path=None, np_image=None, result_path=None):
@@ -51,9 +59,17 @@ def gaussian_blur(kernel_size=(5, 5), image_path=None, np_image=None, result_pat
         str | np.ndarray: If `result_path` is given, returns confirmation message.
                           Otherwise, returns the blurred image as a NumPy array.
 
-    Note:
-        At least one of `image_path` or `np_image` must be provided.
+    Raises:
+        TypeError: If inputs are of incorrect type.
+        ValueError: If values are out of valid range.
     """
+    # Validate specific parameters
+    if not isinstance(kernel_size, tuple) or len(kernel_size) != 2:
+        raise TypeError("'kernel_size' must be a tuple of two integers.")
+
+    if not all(isinstance(x, int) and x > 0 and x % 2 == 1 for x in kernel_size):
+        raise ValueError("'kernel_size' values must be positive odd integers.")
+
     # Load input image using input manager
     np_image = input_manager(image_path=image_path, np_image=np_image)
 
@@ -61,7 +77,7 @@ def gaussian_blur(kernel_size=(5, 5), image_path=None, np_image=None, result_pat
     blurred_image = cv2.GaussianBlur(np_image, kernel_size, 0)
 
     # Output the result (save or return)
-    return output_manger(blurred_image, result_path)
+    return output_manager(blurred_image, result_path)
 
 
 def median_blur(filter_size=5, image_path=None, np_image=None, result_path=None):
@@ -78,9 +94,17 @@ def median_blur(filter_size=5, image_path=None, np_image=None, result_path=None)
         str | np.ndarray: If `result_path` is given, returns confirmation message.
                           Otherwise, returns the blurred image as a NumPy array.
 
-    Note:
-        At least one of `image_path` or `np_image` must be provided.
+    Raises:
+        TypeError: If inputs are of incorrect type.
+        ValueError: If values are out of valid range.
     """
+    # Validate specific parameters
+    if not isinstance(filter_size, int):
+        raise TypeError("'filter_size' must be an integer.")
+
+    if filter_size <= 1 or filter_size % 2 == 0:
+        raise ValueError("'filter_size' must be an odd integer greater than 1.")
+
     # Load input image using input manager
     np_image = input_manager(image_path=image_path, np_image=np_image)
 
@@ -88,7 +112,7 @@ def median_blur(filter_size=5, image_path=None, np_image=None, result_path=None)
     blurred_image = cv2.medianBlur(np_image, filter_size)
 
     # Output the result (save or return)
-    return output_manger(blurred_image, result_path)
+    return output_manager(blurred_image, result_path)
 
 
 def bilateral_blur(filter_size=9, sigma_color=75, sigma_space=75, image_path=None, np_image=None, result_path=None):
@@ -107,9 +131,20 @@ def bilateral_blur(filter_size=9, sigma_color=75, sigma_space=75, image_path=Non
         str | np.ndarray: If `result_path` is given, returns confirmation message.
                           Otherwise, returns the blurred image as a NumPy array.
 
-    Note:
-        At least one of `image_path` or `np_image` must be provided.
+    Raises:
+        TypeError: If inputs are of incorrect type.
+        ValueError: If values are out of valid range.
     """
+    # Validate specific parameters
+    if not isinstance(filter_size, int) or filter_size < 1:
+        raise ValueError("'filter_size' must be a positive integer.")
+
+    if not isinstance(sigma_color, (int, float)) or sigma_color <= 0:
+        raise ValueError("'sigma_color' must be a positive number.")
+
+    if not isinstance(sigma_space, (int, float)) or sigma_space <= 0:
+        raise ValueError("'sigma_space' must be a positive number.")
+
     # Load input image using input manager
     np_image = input_manager(image_path=image_path, np_image=np_image)
 
@@ -117,4 +152,4 @@ def bilateral_blur(filter_size=9, sigma_color=75, sigma_space=75, image_path=Non
     blurred_image = cv2.bilateralFilter(np_image, d=filter_size, sigmaColor=sigma_color, sigmaSpace=sigma_space)
 
     # Output the result (save or return)
-    return output_manger(blurred_image, result_path)
+    return output_manager(blurred_image, result_path)

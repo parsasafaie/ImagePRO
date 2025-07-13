@@ -7,7 +7,7 @@ parent_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(parent_dir))
 
 # Import input/output managers from your custom module
-from image_manager import input_manager, output_manger
+from image_manager import input_manager, output_manager
 
 
 def resize(new_size, image_path=None, np_image=None, result_path=None):
@@ -15,7 +15,7 @@ def resize(new_size, image_path=None, np_image=None, result_path=None):
     Resizes an image to the specified dimensions.
     
     Parameters:
-        new_size (tuple): Target size as a tuple of (width, height).
+        new_size (tuple): Target size as a tuple of (width, height). Both must be positive integers.
         image_path (str): Path to input image file. If provided, `np_image` will be ignored.
         np_image (np.ndarray): Pre-loaded image as NumPy array. Only used if `image_path` is None.
         result_path (str): Path to save the resized image (optional). If not provided, returns the image array.
@@ -23,15 +23,22 @@ def resize(new_size, image_path=None, np_image=None, result_path=None):
     Returns:
         str | np.ndarray: If `result_path` is given, returns confirmation message.
                           Otherwise, returns the resized image as a NumPy array.
-
-    Note:
-        At least one of `image_path` or `np_image` must be provided.
     """
-    # Load input image using input manager
+    # Input validation specific to resize (not general image/path checks)
+    if not isinstance(new_size, tuple) or len(new_size) != 2:
+        raise TypeError("'new_size' must be a tuple of two elements: (width, height).")
+
+    if not isinstance(new_size[0], int) or not isinstance(new_size[1], int):
+        raise TypeError("'width' and 'height' in 'new_size' must be integers.")
+
+    if new_size[0] <= 0 or new_size[1] <= 0:
+        raise ValueError("'width' and 'height' in 'new_size' must be positive integers.")
+
+    # Load input image using input manager (already validates inputs)
     np_image = input_manager(image_path=image_path, np_image=np_image)
 
     # Resize the image to the specified dimensions
     resized_image = cv2.resize(np_image, dsize=new_size)
 
     # Output the result (save or return)
-    return output_manger(resized_image, result_path)
+    return output_manager(resized_image, result_path)
