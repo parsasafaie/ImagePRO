@@ -45,30 +45,52 @@ class IOHandler:
     @staticmethod
     def save_image(np_image, result_path=None):
         """
-        Saves an image to file or returns it directly.
+        Saves an image or list of images to file or returns them directly.
 
         Parameters:
-            np_image (np.ndarray): Image to save or return.
-            result_path (str | None): Path to save the image. If None, returns the image array.
+            np_image (np.ndarray | List[np.ndarray]): 
+                Single image or list of images as NumPy arrays.
+            result_path (str | None): 
+                Path to save the image(s). If None, returns the image(s) array(s).
 
         Returns:
-            str | np.ndarray: Confirmation message if saved, or the image array if not.
+            str | np.ndarray | List[np.ndarray]: 
+                - If `result_path` is provided and one image: returns confirmation message.
+                - If `result_path` is provided and multiple images: saves with suffixes like `_0.jpg`, `_1.jpg`.
+                - If `result_path` is None: returns the input image(s).
 
         Raises:
             TypeError: If inputs are of incorrect type.
-            IOError: If saving the image fails.
+            IOError: If saving any image fails.
         """
-        if not isinstance(np_image, np.ndarray):
-            raise TypeError("'np_image' must be a NumPy array.")
+        # Input validation
+        if not isinstance(np_image, (np.ndarray, list)):
+            raise TypeError("'np_image' must be a NumPy array or a list of NumPy arrays.")
 
-        if result_path is not None:
-            if not isinstance(result_path, str):
-                raise TypeError("'result_path' must be a string or None.")
+        if isinstance(np_image, list) and not all(isinstance(img, np.ndarray) for img in np_image):
+            raise TypeError("'np_image' list must contain only NumPy arrays.")
 
-            success = cv2.imwrite(result_path, np_image)
-            if not success:
-                raise IOError(f"Failed to save image at '{result_path}'")
-            return f"Image saved at {result_path}"
+        if result_path is not None and not isinstance(result_path, str):
+            raise TypeError("'result_path' must be a string or None.")
+
+        # Save image(s)
+        if result_path:
+            if isinstance(np_image, np.ndarray):
+                success = cv2.imwrite(result_path, np_image)
+                if not success:
+                    raise IOError(f"Failed to save image at '{result_path}'")
+                return f"Image saved at {result_path}"
+
+            elif isinstance(np_image, list):
+                base_path = result_path
+                for i, img in enumerate(np_image):
+                    # Add index to filename for multiple images
+                    path = base_path.replace('.jpg', f'_{i}.jpg') if i > 0 else base_path
+                    success = cv2.imwrite(path, img)
+                    if not success:
+                        raise IOError(f"Failed to save image at '{path}'")
+                return f"Images saved at {base_path} and its variations."
+
         else:
             return np_image
 
