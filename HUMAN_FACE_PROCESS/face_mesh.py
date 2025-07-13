@@ -101,3 +101,25 @@ def face_mesh(max_faces=1, min_confidence=0.7, landmarks_idx=None, image_path=No
     else:
         return annotated_image, all_landmarks
     
+
+def live_face_mesh(max_faces=1, min_confidence=0.7):
+    cap = cv2.VideoCapture(0)
+
+    while cap.isOpened():
+        success, image = cap.read()
+        if not success:
+            print("Ignoring empty camera frame.")
+            continue
+        
+        try:
+            landmarked_image = face_mesh(max_faces=max_faces, min_confidence=min_confidence, np_image=image)[0]
+        except ValueError:
+            landmarked_image = image
+        
+        cv2.imshow('ImagePRO - Live Face Mesh', landmarked_image)
+
+        if cv2.waitKey(5) & 0xFF == 27:
+            break
+
+    cap.release()
+    cv2.destroyAllWindows()
