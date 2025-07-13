@@ -2,6 +2,11 @@ import mediapipe as mp
 import cv2
 import numpy as np
 from pathlib import Path
+import sys
+
+# Add parent directory to Python path for importing custom modules
+parent_dir = Path(__file__).resolve().parent.parent
+sys.path.append(str(parent_dir))
 
 # Import new IOHandler
 from io_handler import IOHandler
@@ -20,14 +25,13 @@ def face_mesh(max_faces=1, min_confidence=0.7, landmarks_idx=None, image_path=No
         result_path (str): Path to save output (image with landmarks or CSV). Supports `.jpg` and `.csv`.
 
     Returns:
-        str | tuple(np.ndarray | list): 
-            - If `result_path` ends with `.jpg`, returns annotated image or saves it.
-            - If `result_path` ends with `.csv`, returns list of coordinates or saves as CSV.
-            - If no `result_path` is given, returns the annotated image or list of coordinates.
+        str | tuple(np.ndarray, list) | np.ndarray | list:
+            - If `result_path` ends with `.jpg`: returns annotated image or saves it.
+            - If `result_path` ends with `.csv`: returns list of coordinates or saves as CSV.
+            - If no `result_path` is given: returns both annotated image and list of landmarks coordinates.
 
     Raises:
-        TypeError: If inputs are of incorrect type.
-        ValueError: If values are out of valid range or unsupported file extension.
+        ValueError: If inputs have invalid values or unsupported file extension.
     """
     # Validate specific parameters
     if not isinstance(max_faces, int) or max_faces <= 0:
@@ -68,32 +72,33 @@ def face_mesh(max_faces=1, min_confidence=0.7, landmarks_idx=None, image_path=No
         landmarks_idx = list(range(468))
 
     # Process each detected face
+    annotated_image = np_image.copy()
     all_landmarks = []
 
-    for face_landmarks in results.multi_face_landmarks:
-        if result_path and result_path.endswith('.jpg'):
-            ih, iw, _ = np_image.shape
+    for face_id, face_landmarks in enumerate(results.multi_face_landmarks):
+        if result_path and result_path.endswith('.jpg') or result_path is None:
+            ih, iw, _ = annotated_image.shape
             for idx in landmarks_idx:
                 landmark = face_landmarks.landmark[idx]
                 x, y = int(iw * landmark.x), int(ih * landmark.y)
-                cv2.circle(np_image, (x, y), 1, (0, 255, 0), -1)
+                cv2.circle(annotated_image, (x, y), 1, (0, 255, 0), -1)
 
-        elif result_path and result_path.endswith('.csv'):
+        if result_path and result_path.endswith('.csv') or result_path is None:
             landmarks_list = []
             for idx in landmarks_idx:
                 landmark = face_landmarks.landmark[idx]
-                landmarks_list.append([landmark.x, landmark.y, landmark.z])
-            all_landmarks.extend(landmarks_list)
+                landmarks_list.append([face_id, idx, landmark.x, landmark.y, landmark.z])
+            all_landmarks.append(landmarks_list)
 
     # Handle output
     if result_path:
         if result_path.endswith('.jpg'):
-            return IOHandler.save_image(np_image, result_path)
+            return IOHandler.save_image(annotated_image, result_path)
         elif result_path.endswith('.csv'):
-            return IOHandler.save_csv(all_landmarks, result_path)
+            # Flatten list if multiple faces
+            flat_landmarks = [item for sublist in all_landmarks for item in sublist]
+            return IOHandler.save_csv(flat_landmarks, result_path)
     else:
-        if result_path is None and landmarks_idx is None:
-            return np_image
-        elif result_path is None and landmarks_idx is not None:
-            return all_landmarks
-        
+        return annotated_image, all_landmarks
+    
+face_mesh(image_path='test.jpg', result_path='r.csv')
