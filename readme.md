@@ -17,6 +17,7 @@ Whether you're working on computer vision pipelines, preprocessing images for AI
 - Sharpening filters (Laplacian, Unsharp Masking)
 - Face mesh analyzer
 - Face detector
+- Head Position Estimator
 
 More features are being added regularly!
 
