@@ -1,5 +1,6 @@
 from pathlib import Path
 import sys
+import cv2
 
 # Add parent directory to Python path for importing custom modules
 parent_dir = Path(__file__).resolve().parent.parent
@@ -50,24 +51,24 @@ def head_pose_estimator(max_faces=1, min_confidence=0.7, image_path=None, np_ima
         raise ValueError("No face landmarks detected in the input image.")
 
     face_yaw_pitch = []
-
-    # Process each detected face
+    
     for face in landmarks:
-        # Initialize landmarks dictionary
-        landmark_dict = {idx: (x, y) for idx, x, y in face}
-
-        try:
-            nose_tip = landmark_dict[1]
-            chin = landmark_dict[152]
-            left_eye_outer = landmark_dict[33]
-            right_eye_outer = landmark_dict[263]
-            nasion = landmark_dict[168]
-        except KeyError as e:
-            raise ValueError(f"Missing expected landmark index: {e}")
+        for landmark in face:
+            idx = landmark[1]
+            if idx==1:
+                nose_tip = landmark
+            elif idx==152:
+                chin = landmark
+            elif idx==33:
+                left_eye_outer = landmark
+            elif idx==263:
+                right_eye_outer = landmark
+            elif idx==168:
+                nasion = landmark
 
         # Calculate yaw and pitch using simple proportional differences
-        yaw = 100 * ((right_eye_outer[1] - nasion[1]) - (nasion[1] - left_eye_outer[1]))
-        pitch = 100 * ((chin[1] - nose_tip[1]) - (nose_tip[1] - nasion[1]))
+        yaw = 100 * ((right_eye_outer[2] - nasion[2]) - (nasion[2] - left_eye_outer[2]))
+        pitch = 100 * ((chin[3] - nose_tip[3]) - (nose_tip[3] - nasion[3]))
 
         face_yaw_pitch.append([face[0][0], yaw, pitch])  # face ID, yaw, pitch
 
