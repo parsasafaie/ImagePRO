@@ -6,8 +6,8 @@ import sys
 parent_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(parent_dir))
 
-# Import input/output managers from your custom module
-from image_manager import input_manager, output_manager
+# Import new IOHandler
+from io_handler import IOHandler
 
 
 def grayscale(image_path=None, np_image=None, result_path=None):
@@ -22,15 +22,12 @@ def grayscale(image_path=None, np_image=None, result_path=None):
     Returns:
         str | np.ndarray: If `result_path` is given, returns confirmation message.
                           Otherwise, returns the grayscale image as a NumPy array.
-
-    Note:
-        At least one of `image_path` or `np_image` must be provided.
     """
-    # Load input image using input manager
-    np_image = input_manager(image_path=image_path, np_image=np_image)
+    # Load image
+    np_image = IOHandler.load_image(image_path=image_path, np_image=np_image)
 
     # Convert image to grayscale using OpenCV's BGR to GRAY conversion
     grayscale_image = cv2.cvtColor(np_image, cv2.COLOR_BGR2GRAY)
 
-    # Output the result (save or return)
-    return output_manager(grayscale_image, result_path)
+    # Save or return
+    return IOHandler.save_image(grayscale_image, result_path)

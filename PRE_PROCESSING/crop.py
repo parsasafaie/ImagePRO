@@ -6,8 +6,8 @@ import sys
 parent_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(parent_dir))
 
-# Import input/output managers from your custom module
-from image_manager import input_manager, output_manager
+# Import new IOHandler
+from io_handler import IOHandler
 
 
 def crop(start_point, end_point, image_path=None, np_image=None, result_path=None):
@@ -29,7 +29,7 @@ def crop(start_point, end_point, image_path=None, np_image=None, result_path=Non
         TypeError: If `start_point` or `end_point` are not tuples of two integers.
         ValueError: If coordinates are invalid (negative values or out of bounds).
     """
-    # Validate crop coordinates
+    # Validate specific parameters
     if not isinstance(start_point, tuple) or len(start_point) != 2:
         raise TypeError("'start_point' must be a tuple of two integers (x, y).")
 
@@ -49,8 +49,8 @@ def crop(start_point, end_point, image_path=None, np_image=None, result_path=Non
         raise ValueError("'start_point' must be top-left and 'end_point' bottom-right. "
                          "Ensure x1 < x2 and y1 < y2.")
 
-    # Load input image using input manager (already validates inputs)
-    np_image = input_manager(image_path=image_path, np_image=np_image)
+    # Load image
+    np_image = IOHandler.load_image(image_path=image_path, np_image=np_image)
 
     # Get image dimensions
     height, width = np_image.shape[:2]
@@ -62,5 +62,5 @@ def crop(start_point, end_point, image_path=None, np_image=None, result_path=Non
     # Crop the image using NumPy slicing
     cropped_image = np_image[y1:y2, x1:x2]
 
-    # Output the result (save or return)
-    return output_manager(cropped_image, result_path)
+    # Save or return
+    return IOHandler.save_image(cropped_image, result_path)

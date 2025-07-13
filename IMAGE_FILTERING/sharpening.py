@@ -7,9 +7,8 @@ import sys
 parent_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(parent_dir))
 
-# Import input/output managers and blur functions from your custom modules
-from image_manager import input_manager, output_manager
-from blur import average_blur
+# Import new IOHandler
+from io_handler import IOHandler
 
 
 def laplacian_filter(laplacian_coefficient=3, image_path=None, np_image=None, result_path=None):
@@ -27,15 +26,14 @@ def laplacian_filter(laplacian_coefficient=3, image_path=None, np_image=None, re
                           Otherwise, returns the sharpened image as a NumPy array.
 
     Raises:
-        TypeError: If inputs are of incorrect type.
         ValueError: If values are out of valid range.
     """
     # Validate specific parameter
     if not isinstance(laplacian_coefficient, (int, float)) or laplacian_coefficient < 0:
         raise ValueError("'laplacian_coefficient' must be a non-negative number.")
 
-    # Load input image using input manager
-    np_image = input_manager(image_path=image_path, np_image=np_image)
+    # Load image
+    np_image = IOHandler.load_image(image_path=image_path, np_image=np_image)
 
     # Apply Laplacian filter for edge detection
     laplacian = cv2.Laplacian(np_image, cv2.CV_64F)
@@ -45,8 +43,8 @@ def laplacian_filter(laplacian_coefficient=3, image_path=None, np_image=None, re
     sharpen_image = np_image + laplacian_coefficient * laplacian
     sharpen_image = np.uint8(np.clip(sharpen_image, 0, 255))  # Clamp values to [0, 255]
 
-    # Output the result (save or return)
-    return output_manager(sharpen_image, result_path)
+    # Save or return
+    return IOHandler.save_image(sharpen_image, result_path)
 
 
 def unsharp_masking(coefficient=1, image_path=None, np_image=None, result_path=None):
@@ -64,15 +62,14 @@ def unsharp_masking(coefficient=1, image_path=None, np_image=None, result_path=N
                           Otherwise, returns the sharpened image as a NumPy array.
 
     Raises:
-        TypeError: If inputs are of incorrect type.
         ValueError: If values are out of valid range.
     """
     # Validate specific parameter
     if not isinstance(coefficient, (int, float)) or coefficient < 0:
         raise ValueError("'coefficient' must be a non-negative number.")
 
-    # Load input image using input manager
-    np_image = input_manager(image_path=image_path, np_image=np_image)
+    # Load image
+    np_image = IOHandler.load_image(image_path=image_path, np_image=np_image)
 
     # Blur the image using average blur function
     blur_image = average_blur(np_image=np_image)
@@ -83,5 +80,5 @@ def unsharp_masking(coefficient=1, image_path=None, np_image=None, result_path=N
     # Apply weighted addition to enhance sharpness
     sharpen_image = cv2.addWeighted(np_image, 1 + coefficient, mask, -coefficient, 0)
 
-    # Output the result (save or return)
-    return output_manager(sharpen_image, result_path)
+    # Save or return
+    return IOHandler.save_image(sharpen_image, result_path)
