@@ -103,23 +103,45 @@ def face_mesh(max_faces=1, min_confidence=0.7, landmarks_idx=None, image_path=No
     
 
 def live_face_mesh(max_faces=1, min_confidence=0.7):
+    """
+    Live webcam capture with real-time facial landmark detection and overlay.
+
+    Parameters:
+        max_faces (int): Maximum number of faces to detect.
+        min_confidence (float): Minimum confidence threshold for face detection (0.0 - 1.0).
+
+    Raises:
+        ValueError: If inputs are out of valid range.
+        RuntimeError: If camera cannot be accessed or released.
+    """
+    # Validate specific parameters
+    if not isinstance(max_faces, int) or max_faces <= 0:
+        raise ValueError("'max_faces' must be a positive integer.")
+
+    if not isinstance(min_confidence, (int, float)) or not (0.0 <= min_confidence <= 1.0):
+        raise ValueError("'min_confidence' must be a float between 0.0 and 1.0.")
+
+    # Start video capture
     cap = cv2.VideoCapture(0)
+    if not cap.isOpened():
+        raise RuntimeError("Failed to open webcam.")
 
-    while cap.isOpened():
-        success, image = cap.read()
-        if not success:
-            print("Ignoring empty camera frame.")
-            continue
-        
-        try:
-            landmarked_image = face_mesh(max_faces=max_faces, min_confidence=min_confidence, np_image=image)[0]
-        except ValueError:
-            landmarked_image = image
-        
-        cv2.imshow('ImagePRO - Live Face Mesh', landmarked_image)
+    try:
+        while True:
+            success, image = cap.read()
+            if not success:
+                print("Ignoring empty camera frame.")
+                continue
 
-        if cv2.waitKey(5) & 0xFF == 27:
-            break
+            try:
+                landmarked_image = face_mesh(max_faces=max_faces, min_confidence=min_confidence, np_image=image)[0]
+            except ValueError:
+                landmarked_image = image
 
-    cap.release()
-    cv2.destroyAllWindows()
+            cv2.imshow('ImagePRO - Live Face Mesh', landmarked_image)
+
+            if cv2.waitKey(5) & 0xFF == 27:
+                break
+    finally:
+        cap.release()
+        cv2.destroyAllWindows()
