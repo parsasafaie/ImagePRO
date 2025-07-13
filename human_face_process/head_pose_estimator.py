@@ -51,7 +51,6 @@ def head_pose_estimator(max_faces=1, min_confidence=0.7, image_path=None, np_ima
         raise ValueError("No face landmarks detected in the input image.")
 
     face_yaw_pitch = []
-    
     for face in landmarks:
         for landmark in face:
             idx = landmark[1]
@@ -77,4 +76,41 @@ def head_pose_estimator(max_faces=1, min_confidence=0.7, image_path=None, np_ima
         return IOHandler.save_csv(face_yaw_pitch, result_path)
     else:
         return face_yaw_pitch
+
+
+def live_head_pose_estimator(max_faces=1, min_confidence=0.7):
+    if not isinstance(max_faces, int) or max_faces <= 0:
+        raise ValueError("'max_faces' must be a positive integer.")
+
+    if not isinstance(min_confidence, (int, float)) or not (0.0 <= min_confidence <= 1.0):
+        raise ValueError("'min_confidence' must be a float between 0.0 and 1.0.")
+
+    # Start video capture
+    cap = cv2.VideoCapture(0)
+    if not cap.isOpened():
+        raise RuntimeError("Failed to open webcam.")
     
+    try:
+        while True:
+            success, image = cap.read()
+            if not success:
+                print("Ignoring empty camera frame.")
+                continue
+            
+            try:
+                face_yaw_pitch = head_pose_estimator(max_faces=max_faces, min_confidence=min_confidence, np_image=image)
+                
+                first_text_h = 50
+                for i, face in enumerate(face_yaw_pitch):
+                    text = f"Face {int(face[0])}: Yaw={face[1]}, Pitch={face[2]}"
+                    cv2.putText(image, text, (10, first_text_h+((i-1)*20)),cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
+            except:
+                pass
+
+            cv2.imshow('ImagePRO - Live Head pose estimator', image)
+
+            if cv2.waitKey(5) & 0xFF == 27:
+                break
+    finally:
+        cap.release()
+        cv2.destroyAllWindows()
