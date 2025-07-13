@@ -8,7 +8,7 @@ parent_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(parent_dir))
 
 # Import input/output managers and blur functions from your custom modules
-from image_manager import input_manager, output_manger
+from image_manager import input_manager, output_manager
 from blur import average_blur
 
 
@@ -26,9 +26,14 @@ def laplacian_filter(laplacian_coefficient=3, image_path=None, np_image=None, re
         str | np.ndarray: If `result_path` is given, returns confirmation message.
                           Otherwise, returns the sharpened image as a NumPy array.
 
-    Note:
-        At least one of `image_path` or `np_image` must be provided.
+    Raises:
+        TypeError: If inputs are of incorrect type.
+        ValueError: If values are out of valid range.
     """
+    # Validate specific parameter
+    if not isinstance(laplacian_coefficient, (int, float)) or laplacian_coefficient < 0:
+        raise ValueError("'laplacian_coefficient' must be a non-negative number.")
+
     # Load input image using input manager
     np_image = input_manager(image_path=image_path, np_image=np_image)
 
@@ -41,7 +46,7 @@ def laplacian_filter(laplacian_coefficient=3, image_path=None, np_image=None, re
     sharpen_image = np.uint8(np.clip(sharpen_image, 0, 255))  # Clamp values to [0, 255]
 
     # Output the result (save or return)
-    return output_manger(sharpen_image, result_path)
+    return output_manager(sharpen_image, result_path)
 
 
 def unsharp_masking(coefficient=1, image_path=None, np_image=None, result_path=None):
@@ -58,9 +63,14 @@ def unsharp_masking(coefficient=1, image_path=None, np_image=None, result_path=N
         str | np.ndarray: If `result_path` is given, returns confirmation message.
                           Otherwise, returns the sharpened image as a NumPy array.
 
-    Note:
-        At least one of `image_path` or `np_image` must be provided.
+    Raises:
+        TypeError: If inputs are of incorrect type.
+        ValueError: If values are out of valid range.
     """
+    # Validate specific parameter
+    if not isinstance(coefficient, (int, float)) or coefficient < 0:
+        raise ValueError("'coefficient' must be a non-negative number.")
+
     # Load input image using input manager
     np_image = input_manager(image_path=image_path, np_image=np_image)
 
@@ -74,4 +84,4 @@ def unsharp_masking(coefficient=1, image_path=None, np_image=None, result_path=N
     sharpen_image = cv2.addWeighted(np_image, 1 + coefficient, mask, -coefficient, 0)
 
     # Output the result (save or return)
-    return output_manger(sharpen_image, result_path)
+    return output_manager(sharpen_image, result_path)

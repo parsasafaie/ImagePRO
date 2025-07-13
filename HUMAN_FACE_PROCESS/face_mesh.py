@@ -7,10 +7,10 @@ from pathlib import Path
 parent_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(parent_dir))
 
-from io_manager import IOManager
+from image_manager import input_manager
 
 def face_mesh(max_faces=1, min_confidence=0.7, landmarks_idx=None, image_path=None, np_image=None, result_path=None):
-    np_image = IOManager.load_image(image_path=image_path, np_image=np_image)
+    np_image = input_manager(image_path=image_path, np_image=np_image)
 
     FACE_MESH = mp.solutions.face_mesh.FaceMesh(
         max_num_faces=max_faces,
