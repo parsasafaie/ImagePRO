@@ -79,6 +79,19 @@ def head_pose_estimator(max_faces=1, min_confidence=0.7, image_path=None, np_ima
 
 
 def live_head_pose_estimator(max_faces=1, min_confidence=0.7):
+    """
+    Estimates head pose (yaw and pitch) in real-time using webcam input.
+    
+    Parameters:
+        max_faces (int): Maximum number of faces to detect.
+        min_confidence (float): Minimum detection confidence threshold.
+    
+    Raises:
+        ValueError: If invalid parameters are provided.
+        RuntimeError: If webcam cannot be opened.
+    """
+
+    # Validate specific parameters
     if not isinstance(max_faces, int) or max_faces <= 0:
         raise ValueError("'max_faces' must be a positive integer.")
 
@@ -96,21 +109,29 @@ def live_head_pose_estimator(max_faces=1, min_confidence=0.7):
             if not success:
                 print("Ignoring empty camera frame.")
                 continue
-            
-            try:
-                face_yaw_pitch = head_pose_estimator(max_faces=max_faces, min_confidence=min_confidence, np_image=image)
-                
-                first_text_h = 50
-                for i, face in enumerate(face_yaw_pitch):
-                    text = f"Face {int(face[0])}: Yaw={face[1]}, Pitch={face[2]}"
-                    cv2.putText(image, text, (10, first_text_h+((i-1)*20)),cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
-            except:
-                pass
 
-            cv2.imshow('ImagePRO - Live Head pose estimator', image)
+            # Estimate head pose for each detected face
+            face_yaw_pitch = head_pose_estimator(
+                max_faces=max_faces,
+                min_confidence=min_confidence,
+                np_image=image
+            )
 
+            # Overlay yaw and pitch info on the image
+            first_text_h = 50
+            for i, face in enumerate(face_yaw_pitch):
+                text = f"Face {int(face[0])}: Yaw={face[1]:.2f}, Pitch={face[2]:.2f}"
+                cv2.putText(image, text, (10, first_text_h + i * 25),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
+
+            # Show the resulting frame
+            cv2.imshow('ImagePRO - Live Head Pose Estimator', image)
+
+            # Exit on ESC key press
             if cv2.waitKey(5) & 0xFF == 27:
                 break
+
     finally:
+        # Release resources
         cap.release()
         cv2.destroyAllWindows()
