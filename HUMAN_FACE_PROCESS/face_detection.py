@@ -20,7 +20,7 @@ def face_extraction(image_path=None, np_image=None, result_path=None):
         361, 288, 397, 365, 379, 378, 400, 377, 152, 148, 
         176, 149, 150, 136, 164, 163, 153, 157
     ]
-    landmarks = face_mesh(landmarks_idx=face_outline_indices, image_path=image_path, np_image=np_image)[1]
+    landmarks = face_mesh(max_faces=2,landmarks_idx=face_outline_indices, image_path=image_path, np_image=np_image)[1]
     
     for face_index, face in enumerate(landmarks):
         for landmark_index, landmark in enumerate(face):
@@ -30,10 +30,9 @@ def face_extraction(image_path=None, np_image=None, result_path=None):
     for i, face in enumerate(landmarks):
         landmarks[i] = np.array(face, dtype=np.int32)
     
-
+    cropped_faces = []
     for face in landmarks:
         x, y, w, h = cv2.boundingRect(face)
-        cropped_face = np_image[y:y+h, x:x+w]
+        cropped_faces.append(np_image[y:y+h, x:x+w])
 
-    return IOHandler.save_image(cropped_face, result_path=result_path)
-    
+    return IOHandler.save_image(cropped_faces, result_path=result_path)
