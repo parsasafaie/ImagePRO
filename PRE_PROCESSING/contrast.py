@@ -2,15 +2,13 @@ import cv2
 from pathlib import Path
 import sys
 
-# Import grayscale utility from your custom module
-from grayscale import grayscale
-
 # Add parent directory to Python path for importing custom modules
 parent_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(parent_dir))
 
-# Import input/output managers from your custom module
-from image_manager import input_manager, output_manager
+# Import grayscale utility and IOHandler
+from grayscale import grayscale
+from io_handler import IOHandler
 
 
 def enhance_contrast_clahe(clipLimit=2.0, tileGridSize=(8, 8), image_path=None, np_image=None, result_path=None):
@@ -43,7 +41,7 @@ def enhance_contrast_clahe(clipLimit=2.0, tileGridSize=(8, 8), image_path=None, 
         raise ValueError("'tileGridSize' values must be positive integers.")
 
     # Load and convert image to grayscale
-    np_image = grayscale(np_image=input_manager(image_path=image_path, np_image=np_image))
+    np_image = grayscale(np_image=IOHandler.load_image(image_path=image_path, np_image=np_image))
 
     # Create CLAHE object with specified parameters
     clahe = cv2.createCLAHE(clipLimit=clipLimit, tileGridSize=tileGridSize)
@@ -51,8 +49,8 @@ def enhance_contrast_clahe(clipLimit=2.0, tileGridSize=(8, 8), image_path=None, 
     # Apply CLAHE to enhance contrast
     enhanced_image = clahe.apply(np_image)
 
-    # Output the result (save or return)
-    return output_manager(enhanced_image, result_path)
+    # Save or return
+    return IOHandler.save_image(enhanced_image, result_path)
 
 
 def enhance_contrast_GHE(image_path=None, np_image=None, result_path=None):
@@ -69,13 +67,13 @@ def enhance_contrast_GHE(image_path=None, np_image=None, result_path=None):
                           Otherwise, returns the enhanced image as a NumPy array.
     """
     # Load and convert image to grayscale
-    np_image = grayscale(np_image=input_manager(image_path=image_path, np_image=np_image))
+    np_image = grayscale(np_image=IOHandler.load_image(image_path=image_path, np_image=np_image))
 
     # Apply global histogram equalization
     enhanced_image = cv2.equalizeHist(np_image)
 
-    # Output the result (save or return)
-    return output_manager(enhanced_image, result_path)
+    # Save or return
+    return IOHandler.save_image(enhanced_image, result_path)
 
 
 def contrast_stretching(alpha, beta, image_path=None, np_image=None, result_path=None):
@@ -105,10 +103,10 @@ def contrast_stretching(alpha, beta, image_path=None, np_image=None, result_path
         raise ValueError("'beta' must be an integer between 0 and 255.")
 
     # Load and convert image to grayscale
-    np_image = grayscale(np_image=input_manager(image_path=image_path, np_image=np_image))
+    np_image = grayscale(np_image=IOHandler.load_image(image_path=image_path, np_image=np_image))
 
     # Apply contrast stretching using alpha and beta
     enhanced_image = cv2.convertScaleAbs(np_image, alpha=alpha, beta=beta)
 
-    # Output the result (save or return)
-    return output_manager(enhanced_image, result_path)
+    # Save or return
+    return IOHandler.save_image(enhanced_image, result_path)

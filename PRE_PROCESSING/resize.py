@@ -6,8 +6,8 @@ import sys
 parent_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(parent_dir))
 
-# Import input/output managers from your custom module
-from image_manager import input_manager, output_manager
+# Import new IOHandler
+from io_handler import IOHandler
 
 
 def resize(new_size, image_path=None, np_image=None, result_path=None):
@@ -23,8 +23,12 @@ def resize(new_size, image_path=None, np_image=None, result_path=None):
     Returns:
         str | np.ndarray: If `result_path` is given, returns confirmation message.
                           Otherwise, returns the resized image as a NumPy array.
+
+    Raises:
+        TypeError: If `new_size` is not a tuple of two integers.
+        ValueError: If width or height in `new_size` are not positive integers.
     """
-    # Input validation specific to resize (not general image/path checks)
+    # Input validation specific to resize
     if not isinstance(new_size, tuple) or len(new_size) != 2:
         raise TypeError("'new_size' must be a tuple of two elements: (width, height).")
 
@@ -34,11 +38,11 @@ def resize(new_size, image_path=None, np_image=None, result_path=None):
     if new_size[0] <= 0 or new_size[1] <= 0:
         raise ValueError("'width' and 'height' in 'new_size' must be positive integers.")
 
-    # Load input image using input manager (already validates inputs)
-    np_image = input_manager(image_path=image_path, np_image=np_image)
+    # Load image
+    np_image = IOHandler.load_image(image_path=image_path, np_image=np_image)
 
     # Resize the image to the specified dimensions
     resized_image = cv2.resize(np_image, dsize=new_size)
 
-    # Output the result (save or return)
-    return output_manager(resized_image, result_path)
+    # Save or return
+    return IOHandler.save_image(resized_image, result_path)

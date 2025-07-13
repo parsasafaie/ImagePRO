@@ -6,8 +6,8 @@ import sys
 parent_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(parent_dir))
 
-# Import input/output managers from your custom module
-from image_manager import input_manager, output_manager
+# Import new IOHandler
+from io_handler import IOHandler
 
 
 def rotate_90(image_path=None, np_image=None, result_path=None):
@@ -22,15 +22,15 @@ def rotate_90(image_path=None, np_image=None, result_path=None):
     Returns:
         str | np.ndarray: If `result_path` is given, returns confirmation message. 
                           Otherwise, returns the rotated image as a NumPy array.
-
-    Raises:
-        TypeError: If inputs are of incorrect type.
-        ValueError: If both image sources are None.
     """
-    # Process
-    np_image = input_manager(image_path=image_path, np_image=np_image)
+    # Load image
+    np_image = IOHandler.load_image(image_path=image_path, np_image=np_image)
+
+    # Rotate
     rotated_image = cv2.rotate(np_image, cv2.ROTATE_90_CLOCKWISE)
-    return output_manager(rotated_image, result_path)
+
+    # Save or return
+    return IOHandler.save_image(rotated_image, result_path)
 
 
 def rotate_180(image_path=None, np_image=None, result_path=None):
@@ -45,15 +45,15 @@ def rotate_180(image_path=None, np_image=None, result_path=None):
     Returns:
         str | np.ndarray: If `result_path` is given, returns confirmation message. 
                           Otherwise, returns the rotated image as a NumPy array.
-
-    Raises:
-        TypeError: If inputs are of incorrect type.
-        ValueError: If both image sources are None.
     """
-    # Process
-    np_image = input_manager(image_path=image_path, np_image=np_image)
+    # Load image
+    np_image = IOHandler.load_image(image_path=image_path, np_image=np_image)
+
+    # Rotate
     rotated_image = cv2.rotate(np_image, cv2.ROTATE_180)
-    return output_manager(rotated_image, result_path)
+
+    # Save or return
+    return IOHandler.save_image(rotated_image, result_path)
 
 
 def rotate_270(image_path=None, np_image=None, result_path=None):
@@ -68,15 +68,15 @@ def rotate_270(image_path=None, np_image=None, result_path=None):
     Returns:
         str | np.ndarray: If `result_path` is given, returns confirmation message. 
                           Otherwise, returns the rotated image as a NumPy array.
-
-    Raises:
-        TypeError: If inputs are of incorrect type.
-        ValueError: If both image sources are None.
     """
-    # Process
-    np_image = input_manager(image_path=image_path, np_image=np_image)
+    # Load image
+    np_image = IOHandler.load_image(image_path=image_path, np_image=np_image)
+
+    # Rotate
     rotated_image = cv2.rotate(np_image, cv2.ROTATE_90_COUNTERCLOCKWISE)
-    return output_manager(rotated_image, result_path)
+
+    # Save or return
+    return IOHandler.save_image(rotated_image, result_path)
 
 
 def rotate_custom(angle, scale=1.0, image_path=None, np_image=None, result_path=None):
@@ -96,19 +96,23 @@ def rotate_custom(angle, scale=1.0, image_path=None, np_image=None, result_path=
 
     Raises:
         TypeError: If inputs are of incorrect type.
-        ValueError: If inputs have invalid values or both image sources are None.
+        ValueError: If inputs have invalid values.
     """
-    # Input validation
+    # Input validation - only specific parameters
     if not isinstance(angle, (int, float)):
         raise TypeError("'angle' must be a number (int or float).")
 
     if not isinstance(scale, (int, float)) or scale <= 0:
         raise ValueError("'scale' must be a positive number.")
 
-    # Process
-    np_image = input_manager(image_path=image_path, np_image=np_image)
+    # Load image
+    np_image = IOHandler.load_image(image_path=image_path, np_image=np_image)
+
+    # Rotate
     height, width = np_image.shape[:2]
     image_center = (width / 2, height / 2)
     rotation_matrix = cv2.getRotationMatrix2D(center=image_center, angle=angle, scale=scale)
     rotated_image = cv2.warpAffine(np_image, rotation_matrix, (width, height))
-    return output_manager(rotated_image, result_path)
+
+    # Save or return
+    return IOHandler.save_image(rotated_image, result_path)
