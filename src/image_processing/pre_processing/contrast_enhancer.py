@@ -1,14 +1,8 @@
 import cv2
-from pathlib import Path
-import sys
-
-# Add parent directory to Python path for importing custom modules
-parent_dir = Path(__file__).resolve().parent.parent
-sys.path.append(str(parent_dir))
 
 # Import grayscale utility and IOHandler
-from grayscale import grayscale
-from io_handler import IOHandler
+from src.image_processing.pre_processing.grayscale_converter import grayscale
+from src.core.io_handler import IOHandler
 
 
 def enhance_contrast_clahe(clipLimit=2.0, tileGridSize=(8, 8), image_path=None, np_image=None, result_path=None):
