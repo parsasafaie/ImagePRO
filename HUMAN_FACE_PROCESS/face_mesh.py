@@ -101,4 +101,3 @@ def face_mesh(max_faces=1, min_confidence=0.7, landmarks_idx=None, image_path=No
     else:
         return annotated_image, all_landmarks
     
-face_mesh(image_path='test.jpg', result_path='r.csv')
