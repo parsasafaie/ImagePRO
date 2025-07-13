@@ -7,7 +7,7 @@ parent_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(parent_dir))
 
 # Import grayscale utility and IOHandler
-from grayscale import grayscale
+from pre_processing.grayscale_converter import grayscale
 from io_handler import IOHandler
 
 

@@ -9,7 +9,7 @@ sys.path.append(str(parent_dir))
 
 # Import new IOHandler
 from io_handler import IOHandler
-from face_mesh import face_mesh
+from human_face_process.face_mesh_analyzer import face_mesh
 
 
 def face_extraction(max_faces=1, min_confidence=0.7, image_path=None, np_image=None, result_path=None):
