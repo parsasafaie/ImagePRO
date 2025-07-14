@@ -53,16 +53,20 @@ def face_mesh(max_faces=1, min_confidence=0.7, landmarks_idx=None, image_path=No
     np_image = IOHandler.load_image(image_path=image_path, np_image=np_image)
 
     # Initialize MediaPipe FaceMesh model
-    face_mesh = mp.solutions.face_mesh.FaceMesh(
+    mp_face_mesh = mp.solutions.face_mesh
+    face_Mesh = mp_face_mesh.FaceMesh(
         max_num_faces=max_faces,
         min_detection_confidence=min_confidence,
         refine_landmarks=True,
         static_image_mode=True
     )
 
+    mp_drawing_utils = mp.solutions.drawing_utils
+    mp_drawing_styles = mp.solutions.drawing_styles
+
     # Convert image to RGB for MediaPipe
     rgb_color = cv2.cvtColor(np_image, cv2.COLOR_BGR2RGB)
-    results = face_mesh.process(rgb_color)
+    results = face_Mesh.process(rgb_color)
 
     if not results.multi_face_landmarks:
         raise ValueError("No face landmarks detected in the input image.")
@@ -76,13 +80,14 @@ def face_mesh(max_faces=1, min_confidence=0.7, landmarks_idx=None, image_path=No
     all_landmarks = []
 
     for face_id, face_landmarks in enumerate(results.multi_face_landmarks):
-        if result_path and result_path.endswith('.jpg') or result_path is None:
-            ih, iw, _ = annotated_image.shape
-            for idx in landmarks_idx:
-                landmark = face_landmarks.landmark[idx]
-                x, y = int(iw * landmark.x), int(ih * landmark.y)
-                cv2.circle(annotated_image, (x, y), 1, (0, 255, 0), -1)
-
+        if results.multi_face_landmarks and (result_path and result_path.endswith('.jpg') or result_path is None):
+            mp_drawing_utils.draw_landmarks(
+                image=annotated_image,
+                landmark_list=face_landmarks,
+                connections=mp_face_mesh.FACEMESH_TESSELATION,
+                landmark_drawing_spec=None,
+                connection_drawing_spec=mp_drawing_styles.get_default_face_mesh_tesselation_style()
+            )
         if result_path and result_path.endswith('.csv') or result_path is None:
             landmarks_list = []
             for idx in landmarks_idx:
@@ -145,3 +150,5 @@ def live_face_mesh(max_faces=1, min_confidence=0.7):
     finally:
         cap.release()
         cv2.destroyAllWindows()
+
+face_mesh(image_path='n.jpg', result_path='r.jpg')

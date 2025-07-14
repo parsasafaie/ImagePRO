@@ -38,9 +38,10 @@ def body_pose_detection(model_accuracy=1, landmarks_idx=None, image_path=None, n
 
     if result_path and not (result_path.endswith('.jpg') or result_path.endswith('.csv')):
         raise ValueError("Only '.jpg' and '.csv' extensions are supported for 'result_path'.")
-    
+
     # Initialize MediaPipe Pose model
-    body_pose = mp.solutions.pose.Pose(
+    mp_pose = mp.solutions.pose
+    bode_Pose = mp_pose.Pose(
         static_image_mode=False, 
         model_complexity=model_accuracy
     )
@@ -54,7 +55,7 @@ def body_pose_detection(model_accuracy=1, landmarks_idx=None, image_path=None, n
     
     # Convert image to RGB for MediaPipe
     image_rgb = cv2.cvtColor(np_image, cv2.COLOR_BGR2RGB)
-    result = body_pose.process(image_rgb)
+    result = bode_Pose.process(image_rgb)
     
     # Process detected body
     annotated_image = np_image.copy()
@@ -62,15 +63,21 @@ def body_pose_detection(model_accuracy=1, landmarks_idx=None, image_path=None, n
     all_landmarks = []
 
     if result.pose_landmarks:
-        for idx in landmarks_idx:
-            if result_path and result_path.endswith('.jpg') or result_path is None:
-                landmark = result.pose_landmarks.landmark[idx]
-                x, y = int(iw * landmark.x), int(ih * landmark.y)
-                cv2.circle(annotated_image, (x, y), 4, (255, 0, 0), -1)
+        if result_path and result_path.endswith('.jpg') or result_path is None:
+            mp_drawing = mp.solutions.drawing_utils
+            mp_drawing_styles = mp.solutions.drawing_styles
+            mp_drawing.draw_landmarks(
+                annotated_image,
+                result.pose_landmarks,
+                connections=mp_pose.POSE_CONNECTIONS,
+                landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style()
+            )
 
-            if result_path and result_path.endswith('.csv') or result_path is None:
+        if result_path and result_path.endswith('.csv') or result_path is None:
+            for idx in landmarks_idx:
                 landmark = result.pose_landmarks.landmark[idx]
                 all_landmarks.append([idx, landmark.x, landmark.y, landmark.z])
+
     
     # Handle output
     if result_path:
@@ -114,5 +121,3 @@ def live_body_pose():
     finally:
         cap.release()
         cv2.destroyAllWindows()
-
-live_body_pose()
