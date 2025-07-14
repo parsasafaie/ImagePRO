@@ -80,14 +80,22 @@ def face_mesh(max_faces=1, min_confidence=0.7, landmarks_idx=None, image_path=No
     all_landmarks = []
 
     for face_id, face_landmarks in enumerate(results.multi_face_landmarks):
-        if results.multi_face_landmarks and (result_path and result_path.endswith('.jpg') or result_path is None):
-            mp_drawing_utils.draw_landmarks(
-                image=annotated_image,
-                landmark_list=face_landmarks,
-                connections=mp_face_mesh.FACEMESH_TESSELATION,
-                landmark_drawing_spec=None,
-                connection_drawing_spec=mp_drawing_styles.get_default_face_mesh_tesselation_style()
-            )
+        if result_path and result_path.endswith('.jpg') or result_path is None:
+            if len(landmarks_idx) == 468:
+                mp_drawing_utils.draw_landmarks(
+                    image=annotated_image,
+                    landmark_list=face_landmarks,
+                    connections=mp_face_mesh.FACEMESH_TESSELATION,
+                    landmark_drawing_spec=None,
+                    connection_drawing_spec=mp_drawing_styles.get_default_face_mesh_tesselation_style()
+                )
+            else:
+                ih, iw, _ = annotated_image.shape
+                for idx in landmarks_idx:
+                    landmark = face_landmarks.landmark[idx]
+                    x, y = int(iw * landmark.x), int(ih * landmark.y)
+                    cv2.circle(annotated_image, (x, y), 3, (0, 0, 255), -1)
+
         if result_path and result_path.endswith('.csv') or result_path is None:
             landmarks_list = []
             for idx in landmarks_idx:
@@ -150,5 +158,3 @@ def live_face_mesh(max_faces=1, min_confidence=0.7):
     finally:
         cap.release()
         cv2.destroyAllWindows()
-
-face_mesh(image_path='n.jpg', result_path='r.jpg')
