@@ -66,7 +66,7 @@ def body_pose_detection(model_accuracy=1, landmarks_idx=None, image_path=None, n
             if result_path and result_path.endswith('.jpg') or result_path is None:
                 landmark = result.pose_landmarks.landmark[idx]
                 x, y = int(iw * landmark.x), int(ih * landmark.y)
-                cv2.circle(annotated_image, (x, y), 2, (0, 0, 0), -1)
+                cv2.circle(annotated_image, (x, y), 4, (255, 0, 0), -1)
 
             if result_path and result_path.endswith('.csv') or result_path is None:
                 landmark = result.pose_landmarks.landmark[idx]
@@ -80,3 +80,39 @@ def body_pose_detection(model_accuracy=1, landmarks_idx=None, image_path=None, n
             return IOHandler.save_csv(all_landmarks, result_path)
     else:
         return annotated_image, all_landmarks
+
+
+def live_body_pose():
+    """
+    Live webcam capture with real-time body landmark detection and overlay.
+
+    Raises:
+        ValueError: If inputs are out of valid range.
+        RuntimeError: If camera cannot be accessed or released.
+    """
+    # Start video capture
+    cap = cv2.VideoCapture(0)
+    if not cap.isOpened():
+        raise RuntimeError("Failed to open webcam.")
+
+    try:
+        while True:
+            success, image = cap.read()
+            if not success:
+                print("Ignoring empty camera frame.")
+                continue
+
+            try:
+                landmarked_image = body_pose_detection(model_accuracy=1, np_image=image)[0]
+            except ValueError:
+                landmarked_image = image
+
+            cv2.imshow('ImagePRO - Live Body pose detection', landmarked_image)
+
+            if cv2.waitKey(5) & 0xFF == 27:
+                break
+    finally:
+        cap.release()
+        cv2.destroyAllWindows()
+
+live_body_pose()
