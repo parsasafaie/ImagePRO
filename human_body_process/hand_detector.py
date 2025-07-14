@@ -11,7 +11,7 @@ sys.path.append(str(parent_dir))
 from io_handler import IOHandler
 
 
-def hand_detectore(max_hands=2, min_confidence=0.7, landmarks_idx=None, image_path=None, np_image=None, result_path=None):
+def hand_detector(max_hands=2, min_confidence=0.7, landmarks_idx=None, image_path=None, np_image=None, result_path=None):
     # Validate specific parameters
     if not isinstance(max_hands, int) or max_hands <= 0:
         raise ValueError("'max_hands' must be a positive integer.")
@@ -57,13 +57,20 @@ def hand_detectore(max_hands=2, min_confidence=0.7, landmarks_idx=None, image_pa
 
     for hand_id, hand_landmarks in enumerate(results.multi_hand_landmarks):
         if  result_path and result_path.endswith('.jpg') or result_path is None:
-            mp_drawing_utils.draw_landmarks(
-                image=annotated_image,
-                landmark_list=hand_landmarks,
-                connections=mp_hands.HAND_CONNECTIONS,
-                landmark_drawing_spec=mp_drawing_styles.get_default_hand_landmarks_style(),
-                connection_drawing_spec=mp_drawing_styles.get_default_hand_connections_style()
-            )
+            if len(landmarks_idx) == 21:
+                mp_drawing_utils.draw_landmarks(
+                    image=annotated_image,
+                    landmark_list=hand_landmarks,
+                    connections=mp_hands.HAND_CONNECTIONS,
+                    landmark_drawing_spec=mp_drawing_styles.get_default_hand_landmarks_style(),
+                    connection_drawing_spec=mp_drawing_styles.get_default_hand_connections_style()
+                )
+            else:
+                for idx in landmarks_idx:
+                    ih, iw, _ = annotated_image.shape
+                    landmark = hand_landmarks.landmark[idx]
+                    x, y = int(iw * landmark.x), int(ih * landmark.y)
+                    cv2.circle(annotated_image, (x, y), 3, (0, 0, 255), -1)
 
         if result_path and result_path.endswith('.csv') or result_path is None:
             landmarks_list = []

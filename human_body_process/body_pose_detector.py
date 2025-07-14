@@ -10,7 +10,7 @@ sys.path.append(str(parent_dir))
 # Import new IOHandler
 from io_handler import IOHandler
 
-def body_pose_detection(model_accuracy=1, landmarks_idx=None, image_path=None, np_image=None, result_path=None):
+def body_pose_detector(model_accuracy=1, landmarks_idx=None, image_path=None, np_image=None, result_path=None):
     """
     Detects body landmarks using MediaPipe FaceMesh and visualizes or saves them.
 
@@ -59,19 +59,25 @@ def body_pose_detection(model_accuracy=1, landmarks_idx=None, image_path=None, n
     
     # Process detected body
     annotated_image = np_image.copy()
-    ih, iw, _ = annotated_image.shape
     all_landmarks = []
 
     if result.pose_landmarks:
         if result_path and result_path.endswith('.jpg') or result_path is None:
-            mp_drawing = mp.solutions.drawing_utils
-            mp_drawing_styles = mp.solutions.drawing_styles
-            mp_drawing.draw_landmarks(
-                annotated_image,
-                result.pose_landmarks,
-                connections=mp_pose.POSE_CONNECTIONS,
-                landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style()
-            )
+            if len(landmarks_idx) == 33:
+                mp_drawing = mp.solutions.drawing_utils
+                mp_drawing_styles = mp.solutions.drawing_styles
+                mp_drawing.draw_landmarks(
+                    annotated_image,
+                    result.pose_landmarks,
+                    connections=mp_pose.POSE_CONNECTIONS,
+                    landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style()
+                )
+            else:
+                for idx in landmarks_idx:
+                    ih, iw, _ = annotated_image.shape
+                    landmark = result.pose_landmarks.landmark[idx]
+                    x, y = int(iw * landmark.x), int(ih * landmark.y)
+                    cv2.circle(annotated_image, (x, y), 3, (0, 0, 255), -1)
 
         if result_path and result_path.endswith('.csv') or result_path is None:
             for idx in landmarks_idx:
@@ -110,7 +116,7 @@ def live_body_pose():
                 continue
 
             try:
-                landmarked_image = body_pose_detection(model_accuracy=1, np_image=image)[0]
+                landmarked_image = body_pose_detector(model_accuracy=1, np_image=image)[0]
             except ValueError:
                 landmarked_image = image
 
