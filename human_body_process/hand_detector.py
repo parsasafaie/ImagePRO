@@ -54,30 +54,33 @@ def hand_detector(max_hands=2, min_confidence=0.7, landmarks_idx=None, image_pat
     # Process each detected hand
     annotated_image = np_image.copy()
     all_landmarks = []
+    
+    if results.multi_hand_landmarks:
+        for hand_id, hand_landmarks in enumerate(results.multi_hand_landmarks):
+            if  result_path and result_path.endswith('.jpg') or result_path is None:
+                if len(landmarks_idx) == 21:
+                    mp_drawing_utils.draw_landmarks(
+                        image=annotated_image,
+                        landmark_list=hand_landmarks,
+                        connections=mp_hands.HAND_CONNECTIONS,
+                        landmark_drawing_spec=mp_drawing_styles.get_default_hand_landmarks_style(),
+                        connection_drawing_spec=mp_drawing_styles.get_default_hand_connections_style()
+                    )
+                else:
+                    for idx in landmarks_idx:
+                        ih, iw, _ = annotated_image.shape
+                        landmark = hand_landmarks.landmark[idx]
+                        x, y = int(iw * landmark.x), int(ih * landmark.y)
+                        cv2.circle(annotated_image, (x, y), 3, (0, 0, 255), -1)
 
-    for hand_id, hand_landmarks in enumerate(results.multi_hand_landmarks):
-        if  result_path and result_path.endswith('.jpg') or result_path is None:
-            if len(landmarks_idx) == 21:
-                mp_drawing_utils.draw_landmarks(
-                    image=annotated_image,
-                    landmark_list=hand_landmarks,
-                    connections=mp_hands.HAND_CONNECTIONS,
-                    landmark_drawing_spec=mp_drawing_styles.get_default_hand_landmarks_style(),
-                    connection_drawing_spec=mp_drawing_styles.get_default_hand_connections_style()
-                )
-            else:
+            if result_path and result_path.endswith('.csv') or result_path is None:
+                landmarks_list = []
                 for idx in landmarks_idx:
-                    ih, iw, _ = annotated_image.shape
                     landmark = hand_landmarks.landmark[idx]
-                    x, y = int(iw * landmark.x), int(ih * landmark.y)
-                    cv2.circle(annotated_image, (x, y), 3, (0, 0, 255), -1)
-
-        if result_path and result_path.endswith('.csv') or result_path is None:
-            landmarks_list = []
-            for idx in landmarks_idx:
-                landmark = hand_landmarks.landmark[idx]
-                landmarks_list.append([hand_id, idx, landmark.x, landmark.y, landmark.z])
-            all_landmarks.append(landmarks_list)
+                    landmarks_list.append([hand_id, idx, landmark.x, landmark.y, landmark.z])
+                all_landmarks.append(landmarks_list)
+    else:
+        return np_image,[]
 
     # Handle output
     if result_path:
@@ -88,4 +91,5 @@ def hand_detector(max_hands=2, min_confidence=0.7, landmarks_idx=None, image_pat
             flat_landmarks = [item for sublist in all_landmarks for item in sublist]
             return IOHandler.save_csv(flat_landmarks, result_path)
     else:
-        return annotated_image, 
+        return annotated_image, all_landmarks
+
