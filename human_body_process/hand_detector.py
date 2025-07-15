@@ -93,3 +93,38 @@ def hand_detector(max_hands=2, min_confidence=0.7, landmarks_idx=None, image_pat
     else:
         return annotated_image, all_landmarks
 
+
+def live_hand_detector(max_hands=2, min_confidence=0.7):
+    # Validate specific parameters
+    if not isinstance(max_hands, int) or max_hands <= 0:
+        raise ValueError("'max_hands' must be a positive integer.")
+
+    if not isinstance(min_confidence, (int, float)) or not (0.0 <= min_confidence <= 1.0):
+        raise ValueError("'min_confidence' must be a float between 0.0 and 1.0.")
+    
+    # Start video capture
+    cap = cv2.VideoCapture(0)
+    if not cap.isOpened():
+        raise RuntimeError("Failed to open webcam.")
+    
+    try:
+        while True:
+            success, image = cap.read()
+            if not success:
+                print("Ignoring empty camera frame.")
+                continue
+            
+            # Detect hands in image
+            result = hand_detector(max_hands=max_hands, min_confidence=min_confidence, np_image=image)[0]
+
+            # Show the resulting frame
+            cv2.imshow('Live hand detector - ImagePRO', result)
+
+            # Exit on ESC key press
+            if cv2.waitKey(5) & 0xFF == 27:
+                break
+
+    finally:
+        # Release resources
+        cap.release()
+        cv2.destroyAllWindows()
