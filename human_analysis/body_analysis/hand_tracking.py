@@ -11,7 +11,7 @@ sys.path.append(str(parent_dir))
 from io_handler import IOHandler
 
 
-def hand_detector(max_hands=2, min_confidence=0.7, landmarks_idx=None, image_path=None, np_image=None, result_path=None):
+def detect_hands(max_hands=2, min_confidence=0.7, landmarks_idx=None, image_path=None, np_image=None, result_path=None):
     # Validate specific parameters
     if not isinstance(max_hands, int) or max_hands <= 0:
         raise ValueError("'max_hands' must be a positive integer.")
@@ -94,7 +94,7 @@ def hand_detector(max_hands=2, min_confidence=0.7, landmarks_idx=None, image_pat
         return annotated_image, all_landmarks
 
 
-def live_hand_detector(max_hands=2, min_confidence=0.7):
+def detect_hands_live(max_hands=2, min_confidence=0.7):
     # Validate specific parameters
     if not isinstance(max_hands, int) or max_hands <= 0:
         raise ValueError("'max_hands' must be a positive integer.")
@@ -115,7 +115,7 @@ def live_hand_detector(max_hands=2, min_confidence=0.7):
                 continue
             
             # Detect hands in image
-            result = hand_detector(max_hands=max_hands, min_confidence=min_confidence, np_image=image)[0]
+            result = detect_hands(max_hands=max_hands, min_confidence=min_confidence, np_image=image)[0]
 
             # Show the resulting frame
             cv2.imshow('Live hand detector - ImagePRO', result)

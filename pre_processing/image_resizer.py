@@ -10,7 +10,7 @@ sys.path.append(str(parent_dir))
 from io_handler import IOHandler
 
 
-def resize(new_size, image_path=None, np_image=None, result_path=None):
+def resize_image(new_size, image_path=None, np_image=None, result_path=None):
     """
     Resizes an image to the specified dimensions.
     

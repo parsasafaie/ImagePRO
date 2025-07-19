@@ -7,11 +7,11 @@ parent_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(parent_dir))
 
 # Import grayscale utility and IOHandler
-from pre_processing.grayscale_converter import grayscale
+from pre_processing.grayscale import grayscale
 from io_handler import IOHandler
 
 
-def enhance_contrast_clahe(clipLimit=2.0, tileGridSize=(8, 8), image_path=None, np_image=None, result_path=None):
+def apply_clahe_contrast(clipLimit=2.0, tileGridSize=(8, 8), image_path=None, np_image=None, result_path=None):
     """
     Enhances image contrast using CLAHE (Contrast Limited Adaptive Histogram Equalization).
     
@@ -53,7 +53,7 @@ def enhance_contrast_clahe(clipLimit=2.0, tileGridSize=(8, 8), image_path=None, 
     return IOHandler.save_image(enhanced_image, result_path)
 
 
-def enhance_contrast_GHE(image_path=None, np_image=None, result_path=None):
+def apply_histogram_equalization(image_path=None, np_image=None, result_path=None):
     """
     Enhances image contrast using Global Histogram Equalization (GHE).
     
@@ -76,7 +76,7 @@ def enhance_contrast_GHE(image_path=None, np_image=None, result_path=None):
     return IOHandler.save_image(enhanced_image, result_path)
 
 
-def contrast_stretching(alpha, beta, image_path=None, np_image=None, result_path=None):
+def apply_contrast_stretching(alpha, beta, image_path=None, np_image=None, result_path=None):
     """
     Enhances image contrast using linear stretching with alpha (contrast) and beta (brightness).
     

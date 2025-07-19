@@ -10,7 +10,7 @@ sys.path.append(str(parent_dir))
 from io_handler import IOHandler
 
 
-def grayscale(image_path=None, np_image=None, result_path=None):
+def convert_to_grayscale(image_path=None, np_image=None, result_path=None):
     """
     Converts an image to grayscale (BGR to single-channel 8-bit image).
     

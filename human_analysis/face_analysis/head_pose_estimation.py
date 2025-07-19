@@ -8,10 +8,10 @@ sys.path.append(str(parent_dir))
 
 # Import custom modules
 from io_handler import IOHandler
-from human_face_process.face_mesh_analyzer import face_mesh
+from human_analysis.face_analysis.face_mesh_analysis import analyze_face_mesh
 
 
-def head_pose_estimator(max_faces=1, min_confidence=0.7, image_path=None, np_image=None, result_path=None):
+def estimate_head_pose(max_faces=1, min_confidence=0.7, image_path=None, np_image=None, result_path=None):
     """
     Estimates the head pose (yaw and pitch) from facial landmarks in an image.
 
@@ -40,7 +40,7 @@ def head_pose_estimator(max_faces=1, min_confidence=0.7, image_path=None, np_ima
     important_indices = [1, 152, 33, 263, 168]
 
     # Detect facial landmarks
-    _, landmarks = face_mesh(
+    _, landmarks = analyze_face_mesh(
         max_faces=max_faces,
         min_confidence=min_confidence,
         landmarks_idx=important_indices,
@@ -78,7 +78,7 @@ def head_pose_estimator(max_faces=1, min_confidence=0.7, image_path=None, np_ima
         return face_yaw_pitch
 
 
-def live_head_pose_estimator(max_faces=1, min_confidence=0.7):
+def estimate_head_pose_live(max_faces=1, min_confidence=0.7):
     """
     Estimates head pose (yaw and pitch) in real-time using webcam input.
     
@@ -111,7 +111,7 @@ def live_head_pose_estimator(max_faces=1, min_confidence=0.7):
                 continue
 
             # Estimate head pose for each detected face
-            face_yaw_pitch = head_pose_estimator(
+            face_yaw_pitch = estimate_head_pose(
                 max_faces=max_faces,
                 min_confidence=min_confidence,
                 np_image=image
