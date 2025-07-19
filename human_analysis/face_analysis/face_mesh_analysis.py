@@ -12,7 +12,7 @@ sys.path.append(str(parent_dir))
 from io_handler import IOHandler
 
 
-def face_mesh(max_faces=1, min_confidence=0.7, landmarks_idx=None, image_path=None, np_image=None, result_path=None):
+def analyze_face_mesh(max_faces=1, min_confidence=0.7, landmarks_idx=None, image_path=None, np_image=None, result_path=None):
     """
     Detects facial landmarks using MediaPipe FaceMesh and visualizes or saves them.
 
@@ -115,7 +115,7 @@ def face_mesh(max_faces=1, min_confidence=0.7, landmarks_idx=None, image_path=No
         return annotated_image, all_landmarks
     
 
-def live_face_mesh(max_faces=1, min_confidence=0.7):
+def analyze_face_mesh_live(max_faces=1, min_confidence=0.7):
     """
     Live webcam capture with real-time facial landmark detection and overlay.
 
@@ -147,7 +147,7 @@ def live_face_mesh(max_faces=1, min_confidence=0.7):
                 continue
 
             try:
-                landmarked_image = face_mesh(max_faces=max_faces, min_confidence=min_confidence, np_image=image)[0]
+                landmarked_image = analyze_face_mesh(max_faces=max_faces, min_confidence=min_confidence, np_image=image)[0]
             except ValueError:
                 landmarked_image = image
 

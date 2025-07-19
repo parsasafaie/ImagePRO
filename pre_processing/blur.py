@@ -10,7 +10,7 @@ sys.path.append(str(parent_dir))
 from io_handler import IOHandler
 
 
-def average_blur(kernel_size=(5, 5), image_path=None, np_image=None, result_path=None):
+def apply_average_blur(kernel_size=(5, 5), image_path=None, np_image=None, result_path=None):
     """
     Applies average blur to the image using a box filter.
     
@@ -45,7 +45,7 @@ def average_blur(kernel_size=(5, 5), image_path=None, np_image=None, result_path
     return IOHandler.save_image(blurred_image, result_path)
 
 
-def gaussian_blur(kernel_size=(5, 5), image_path=None, np_image=None, result_path=None):
+def apply_gaussian_blur(kernel_size=(5, 5), image_path=None, np_image=None, result_path=None):
     """
     Applies Gaussian blur to the image.
     
@@ -80,7 +80,7 @@ def gaussian_blur(kernel_size=(5, 5), image_path=None, np_image=None, result_pat
     return IOHandler.save_image(blurred_image, result_path)
 
 
-def median_blur(filter_size=5, image_path=None, np_image=None, result_path=None):
+def apply_median_blur(filter_size=5, image_path=None, np_image=None, result_path=None):
     """
     Applies median blur to reduce salt-and-pepper noise.
     
@@ -115,7 +115,7 @@ def median_blur(filter_size=5, image_path=None, np_image=None, result_path=None)
     return IOHandler.save_image(blurred_image, result_path)
 
 
-def bilateral_blur(filter_size=9, sigma_color=75, sigma_space=75, image_path=None, np_image=None, result_path=None):
+def apply_bilateral_blur(filter_size=9, sigma_color=75, sigma_space=75, image_path=None, np_image=None, result_path=None):
     """
     Applies bilateral filter to blur the image while preserving edges.
     

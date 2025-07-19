@@ -10,7 +10,7 @@ sys.path.append(str(parent_dir))
 # Import new IOHandler
 from io_handler import IOHandler
 
-def body_pose_detector(model_accuracy=1, landmarks_idx=None, image_path=None, np_image=None, result_path=None):
+def detect_body_pose(model_accuracy=1, landmarks_idx=None, image_path=None, np_image=None, result_path=None):
     """
     Detects body landmarks using MediaPipe FaceMesh and visualizes or saves them.
 
@@ -95,7 +95,7 @@ def body_pose_detector(model_accuracy=1, landmarks_idx=None, image_path=None, np
         return annotated_image, all_landmarks
 
 
-def live_body_pose():
+def detect_body_pose_live():
     """
     Live webcam capture with real-time body landmark detection and overlay.
 
@@ -116,7 +116,7 @@ def live_body_pose():
                 continue
 
             try:
-                landmarked_image = body_pose_detector(model_accuracy=1, np_image=image)[0]
+                landmarked_image = detect_body_pose(model_accuracy=1, np_image=image)[0]
             except ValueError:
                 landmarked_image = image
 

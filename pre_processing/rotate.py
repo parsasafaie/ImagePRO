@@ -10,7 +10,7 @@ sys.path.append(str(parent_dir))
 from io_handler import IOHandler
 
 
-def rotate_90(image_path=None, np_image=None, result_path=None):
+def rotate_image_90(image_path=None, np_image=None, result_path=None):
     """
     Rotates the image 90 degrees clockwise.
     
@@ -33,7 +33,7 @@ def rotate_90(image_path=None, np_image=None, result_path=None):
     return IOHandler.save_image(rotated_image, result_path)
 
 
-def rotate_180(image_path=None, np_image=None, result_path=None):
+def rotate_image_180(image_path=None, np_image=None, result_path=None):
     """
     Rotates the image 180 degrees.
     
@@ -56,7 +56,7 @@ def rotate_180(image_path=None, np_image=None, result_path=None):
     return IOHandler.save_image(rotated_image, result_path)
 
 
-def rotate_270(image_path=None, np_image=None, result_path=None):
+def rotate_image_270(image_path=None, np_image=None, result_path=None):
     """
     Rotates the image 270 degrees clockwise (same as 90 counter-clockwise).
     
@@ -79,7 +79,7 @@ def rotate_270(image_path=None, np_image=None, result_path=None):
     return IOHandler.save_image(rotated_image, result_path)
 
 
-def rotate_custom(angle, scale=1.0, image_path=None, np_image=None, result_path=None):
+def rotate_image_custom(angle, scale=1.0, image_path=None, np_image=None, result_path=None):
     """
     Rotates image by a given angle around its center with optional scaling.
     

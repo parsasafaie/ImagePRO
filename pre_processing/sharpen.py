@@ -11,7 +11,7 @@ sys.path.append(str(parent_dir))
 from io_handler import IOHandler
 
 
-def laplacian_filter(laplacian_coefficient=3, image_path=None, np_image=None, result_path=None):
+def apply_laplacian_sharpening(laplacian_coefficient=3, image_path=None, np_image=None, result_path=None):
     """
     Enhances image sharpness using the Laplacian filter method.
     
@@ -47,7 +47,7 @@ def laplacian_filter(laplacian_coefficient=3, image_path=None, np_image=None, re
     return IOHandler.save_image(sharpen_image, result_path)
 
 
-def unsharp_masking(coefficient=1, image_path=None, np_image=None, result_path=None):
+def apply_unsharp_masking(coefficient=1, image_path=None, np_image=None, result_path=None):
     """
     Enhances image sharpness using Unsharp Masking technique.
     

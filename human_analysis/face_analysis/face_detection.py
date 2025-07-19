@@ -9,10 +9,10 @@ sys.path.append(str(parent_dir))
 
 # Import new IOHandler
 from io_handler import IOHandler
-from human_face_process.face_mesh_analyzer import face_mesh
+from human_analysis.face_analysis.face_mesh_analysis import analyze_face_mesh
 
 
-def face_extraction(max_faces=1, min_confidence=0.7, image_path=None, np_image=None, result_path=None):
+def detect_faces(max_faces=1, min_confidence=0.7, image_path=None, np_image=None, result_path=None):
     """
     Extracts face regions from an input image using detected facial landmarks.
 
@@ -51,7 +51,7 @@ def face_extraction(max_faces=1, min_confidence=0.7, image_path=None, np_image=N
     ]
 
     # Get annotated landmarks
-    landmarks = face_mesh(
+    landmarks = analyze_face_mesh(
         max_faces=max_faces,
         min_confidence=min_confidence,
         landmarks_idx=face_outline_indices,

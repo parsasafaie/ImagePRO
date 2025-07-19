@@ -10,7 +10,7 @@ sys.path.append(str(parent_dir))
 from io_handler import IOHandler
 
 
-def crop(start_point, end_point, image_path=None, np_image=None, result_path=None):
+def crop_image(start_point, end_point, image_path=None, np_image=None, result_path=None):
     """
     Crops an image between two given points.
     
