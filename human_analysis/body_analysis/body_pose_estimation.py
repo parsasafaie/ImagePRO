@@ -4,7 +4,7 @@ from pathlib import Path
 import sys
 
 # Add parent directory to Python path for importing custom modules
-parent_dir = Path(__file__).resolve().parent.parent
+parent_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(parent_dir))
 
 # Import new IOHandler
@@ -104,7 +104,7 @@ def detect_body_pose_live():
         RuntimeError: If camera cannot be accessed or released.
     """
     # Start video capture
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture('test.mp4')
     if not cap.isOpened():
         raise RuntimeError("Failed to open webcam.")
 

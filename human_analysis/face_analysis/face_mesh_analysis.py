@@ -5,7 +5,7 @@ from pathlib import Path
 import sys
 
 # Add parent directory to Python path for importing custom modules
-parent_dir = Path(__file__).resolve().parent.parent
+parent_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(parent_dir))
 
 # Import new IOHandler
