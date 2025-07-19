@@ -3,7 +3,7 @@ import sys
 import cv2
 
 # Add parent directory to Python path for importing custom modules
-parent_dir = Path(__file__).resolve().parent.parent
+parent_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(parent_dir))
 
 # Import custom modules
