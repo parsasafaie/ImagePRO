@@ -7,6 +7,6 @@ This module provides image preprocessing functions such as resizing, cropping, r
 - `contrast.py`: Functions for histogram equalization, CLAHE, and contrast stretching.
 - `image_cropper.py`: Crop images to a specified region.
 - `grayscale.py`: Convert images to grayscale.
-- `image_resizerresize.py`: Resize images to specific dimensions.
+- `image_resizer.py`: Resize images to specific dimensions.
 - `rotate.py`: Rotate images by fixed or custom angles.
 - `sharpen.py`: Apply sharpening filters like Laplacian and unsharp masking.

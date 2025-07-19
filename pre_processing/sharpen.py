@@ -10,6 +10,8 @@ sys.path.append(str(parent_dir))
 # Import new IOHandler
 from io_handler import IOHandler
 
+from blur import apply_average_blur
+
 
 def apply_laplacian_sharpening(laplacian_coefficient=3, image_path=None, np_image=None, result_path=None):
     """
@@ -72,7 +74,7 @@ def apply_unsharp_masking(coefficient=1, image_path=None, np_image=None, result_
     np_image = IOHandler.load_image(image_path=image_path, np_image=np_image)
 
     # Blur the image using average blur function
-    blur_image = average_blur(np_image=np_image)
+    blur_image = apply_average_blur(np_image=np_image)
 
     # Create mask by subtracting blurred image from original
     mask = cv2.subtract(np_image, blur_image)
