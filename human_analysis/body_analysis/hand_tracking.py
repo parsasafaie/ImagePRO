@@ -128,3 +128,6 @@ def detect_hands_live(max_hands=2, min_confidence=0.7):
         # Release resources
         cap.release()
         cv2.destroyAllWindows()
+
+if __name__=="__main__":
+    detect_hands_live(max_hands=2)

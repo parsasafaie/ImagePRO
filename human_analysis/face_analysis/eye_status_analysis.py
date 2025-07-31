@@ -75,7 +75,7 @@ def analyze_eye_status_live(min_confidence=0.7):
         raise ValueError("'min_confidence' must be a float between 0.0 and 1.0.")
 
     # Start video capture
-    cap = cv2.VideoCapture('test.mp4')
+    cap = cv2.VideoCapture(0)
     if not cap.isOpened():
         raise RuntimeError("Failed to open webcam.")
     
@@ -107,3 +107,6 @@ def analyze_eye_status_live(min_confidence=0.7):
         # Release resources
         cap.release()
         cv2.destroyAllWindows()
+
+if __name__=="__main__":
+    analyze_eye_status_live()
