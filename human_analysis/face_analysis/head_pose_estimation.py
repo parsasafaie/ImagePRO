@@ -1,6 +1,7 @@
 from pathlib import Path
 import sys
 import cv2
+import mediapipe as mp
 
 # Add parent directory to Python path for importing custom modules
 parent_dir = Path(__file__).resolve().parent.parent.parent
@@ -10,8 +11,9 @@ sys.path.append(str(parent_dir))
 from io_handler import IOHandler
 from human_analysis.face_analysis.face_mesh_analysis import analyze_face_mesh
 
+mp_face_mesh = mp.solutions.face_mesh
 
-def estimate_head_pose(max_faces=1, min_confidence=0.7, image_path=None, np_image=None, result_path=None):
+def estimate_head_pose(max_faces=1, min_confidence=0.7, image_path=None, np_image=None, result_path=None, face_mesh_obj=None):
     """
     Estimates the head pose (yaw and pitch) from facial landmarks in an image.
 
@@ -21,6 +23,8 @@ def estimate_head_pose(max_faces=1, min_confidence=0.7, image_path=None, np_imag
         image_path (str | None): Path to input image file.
         np_image (np.ndarray | None): Pre-loaded image array.
         result_path (str | None): Path to save the output CSV results.
+        face_mesh_obj (mp.solutions.face_mesh.FaceMesh): Optional external FaceMesh instance.
+            If provided, this instance will be used instead of creating a new one. Useful for real-time/live use cases to avoid repeated model creation.
 
     Returns:
         str | list[list]: CSV save message if result_path is provided, else list of [face_id, yaw, pitch].
@@ -44,7 +48,8 @@ def estimate_head_pose(max_faces=1, min_confidence=0.7, image_path=None, np_imag
         max_faces=max_faces,
         min_confidence=min_confidence,
         landmarks_idx=important_indices,
-        np_image=np_image
+        np_image=np_image,
+        face_mesh_obj=face_mesh_obj
     )
 
     if not landmarks:
@@ -103,6 +108,13 @@ def estimate_head_pose_live(max_faces=1, min_confidence=0.7):
     if not cap.isOpened():
         raise RuntimeError("Failed to open webcam.")
     
+    face_Mesh = mp_face_mesh.FaceMesh(
+    max_num_faces=max_faces,
+        min_detection_confidence=min_confidence,
+        refine_landmarks=True,
+        static_image_mode=True
+    )
+    
     try:
         while True:
             success, image = cap.read()
@@ -114,7 +126,8 @@ def estimate_head_pose_live(max_faces=1, min_confidence=0.7):
             face_yaw_pitch = estimate_head_pose(
                 max_faces=max_faces,
                 min_confidence=min_confidence,
-                np_image=image
+                np_image=image,
+                face_mesh_obj=face_Mesh
             )
 
             # Overlay yaw and pitch info on the image

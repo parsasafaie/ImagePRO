@@ -1,6 +1,7 @@
 from pathlib import Path
 import sys
 import cv2
+import mediapipe as mp
 
 # Add parent directory to Python path for importing custom modules
 parent_dir = Path(__file__).resolve().parent.parent.parent
@@ -10,13 +11,16 @@ sys.path.append(str(parent_dir))
 from io_handler import IOHandler
 from human_analysis.face_analysis.face_mesh_analysis import analyze_face_mesh
 
+mp_face_mesh = mp.solutions.face_mesh
 
-def analyze_eye_status(min_confidence=0.7, image_path=None, np_image=None):
+def analyze_eye_status(min_confidence=0.7, image_path=None, np_image=None, face_mesh_obj=None):
     """
     Detects eye status (open or closed) from facial landmarks in an image.
     
     Parameters:
         min_confidence (float): Minimum detection confidence threshold.
+        face_mesh_obj (mp.solutions.face_mesh.FaceMesh): Optional external FaceMesh instance.
+            If provided, this instance will be used instead of creating a new one. Useful for real-time/live use cases to avoid repeated model creation.
     
     Raises:
         ValueError: If invalid parameters are provided.
@@ -33,7 +37,8 @@ def analyze_eye_status(min_confidence=0.7, image_path=None, np_image=None):
         max_faces=1,
         min_confidence=min_confidence,
         landmarks_idx=important_indices,
-        np_image=np_image
+        np_image=np_image,
+        face_mesh_obj=face_mesh_obj
     )
     
     if not landmarks:
@@ -79,6 +84,13 @@ def analyze_eye_status_live(min_confidence=0.7):
     if not cap.isOpened():
         raise RuntimeError("Failed to open webcam.")
     
+    face_Mesh = mp_face_mesh.FaceMesh(
+        max_num_faces=1,
+        min_detection_confidence=min_confidence,
+        refine_landmarks=True,
+        static_image_mode=True
+    )
+    
     try:
         while True:
             success, image = cap.read()
@@ -90,7 +102,8 @@ def analyze_eye_status_live(min_confidence=0.7):
             eye_status = analyze_eye_status(
                 image_path=None,
                 min_confidence=min_confidence,
-                np_image=image
+                np_image=image,
+                face_mesh_obj=face_Mesh
             )
 
             text = f"{eye_status}"

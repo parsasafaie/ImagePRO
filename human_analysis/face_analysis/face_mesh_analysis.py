@@ -11,8 +11,10 @@ sys.path.append(str(parent_dir))
 # Import new IOHandler
 from io_handler import IOHandler
 
+mp_face_mesh = mp.solutions.face_mesh
 
-def analyze_face_mesh(max_faces=1, min_confidence=0.7, landmarks_idx=None, image_path=None, np_image=None, result_path=None):
+
+def analyze_face_mesh(max_faces=1, min_confidence=0.7, landmarks_idx=None, image_path=None, np_image=None, result_path=None, face_mesh_obj=None):
     """
     Detects facial landmarks using MediaPipe FaceMesh and visualizes or saves them.
 
@@ -23,6 +25,8 @@ def analyze_face_mesh(max_faces=1, min_confidence=0.7, landmarks_idx=None, image
         image_path (str): Path to input image file. If provided, `np_image` will be ignored.
         np_image (np.ndarray): Pre-loaded image as NumPy array. Only used if `image_path` is None.
         result_path (str): Path to save output (image with landmarks or CSV). Supports `.jpg` and `.csv`.
+        face_mesh_obj (mp.solutions.face_mesh.FaceMesh): Optional external FaceMesh instance.
+            If provided, this instance will be used instead of creating a new one. Useful for real-time/live use cases to avoid repeated model creation.
 
     Returns:
         str | tuple(np.ndarray, list) | np.ndarray | list:
@@ -48,18 +52,20 @@ def analyze_face_mesh(max_faces=1, min_confidence=0.7, landmarks_idx=None, image
 
     if result_path and not (result_path.endswith('.jpg') or result_path.endswith('.csv')):
         raise ValueError("Only '.jpg' and '.csv' extensions are supported for 'result_path'.")
+    
+    if face_mesh_obj is None:
+        # Initialize MediaPipe FaceMesh model
+        face_Mesh = mp_face_mesh.FaceMesh(
+            max_num_faces=max_faces,
+            min_detection_confidence=min_confidence,
+            refine_landmarks=True,
+            static_image_mode=True
+        )
+    else:
+        face_Mesh = face_mesh_obj
 
     # Load input image
     np_image = IOHandler.load_image(image_path=image_path, np_image=np_image)
-
-    # Initialize MediaPipe FaceMesh model
-    mp_face_mesh = mp.solutions.face_mesh
-    face_Mesh = mp_face_mesh.FaceMesh(
-        max_num_faces=max_faces,
-        min_detection_confidence=min_confidence,
-        refine_landmarks=True,
-        static_image_mode=True
-    )
 
     mp_drawing_utils = mp.solutions.drawing_utils
     mp_drawing_styles = mp.solutions.drawing_styles
@@ -138,6 +144,13 @@ def analyze_face_mesh_live(max_faces=1, min_confidence=0.7):
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
         raise RuntimeError("Failed to open webcam.")
+    
+    face_Mesh = mp_face_mesh.FaceMesh(
+        max_num_faces=max_faces,
+        min_detection_confidence=min_confidence,
+        refine_landmarks=True,
+        static_image_mode=True
+    )
 
     try:
         while True:
@@ -147,7 +160,7 @@ def analyze_face_mesh_live(max_faces=1, min_confidence=0.7):
                 continue
 
             try:
-                landmarked_image = analyze_face_mesh(max_faces=max_faces, min_confidence=min_confidence, np_image=image)[0]
+                landmarked_image = analyze_face_mesh(max_faces=max_faces, min_confidence=min_confidence, np_image=image, face_mesh_obj=face_Mesh)[0]
             except ValueError:
                 landmarked_image = image
 

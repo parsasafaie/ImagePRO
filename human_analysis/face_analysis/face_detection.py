@@ -12,7 +12,7 @@ from io_handler import IOHandler
 from human_analysis.face_analysis.face_mesh_analysis import analyze_face_mesh
 
 
-def detect_faces(max_faces=1, min_confidence=0.7, image_path=None, np_image=None, result_path=None):
+def detect_faces(max_faces=1, min_confidence=0.7, image_path=None, np_image=None, result_path=None, face_mesh_obj=None):
     """
     Extracts face regions from an input image using detected facial landmarks.
 
@@ -22,6 +22,8 @@ def detect_faces(max_faces=1, min_confidence=0.7, image_path=None, np_image=None
         image_path (str | None): Path to input image file. If provided, `np_image` will be ignored.
         np_image (np.ndarray | None): Pre-loaded image as NumPy array. Only used if `image_path` is None.
         result_path (str | None): Path to save the cropped face(s). Supports `.jpg` and `.csv`.
+        face_mesh_obj (mp.solutions.face_mesh.FaceMesh): Optional external FaceMesh instance.
+            If provided, this instance will be used instead of creating a new one. Useful for real-time/live use cases to avoid repeated model creation.
 
     Returns:
         str | list[np.ndarray]: 
@@ -55,7 +57,8 @@ def detect_faces(max_faces=1, min_confidence=0.7, image_path=None, np_image=None
         max_faces=max_faces,
         min_confidence=min_confidence,
         landmarks_idx=face_outline_indices,
-        np_image=np_image
+        np_image=np_image,
+        face_mesh_obj=face_mesh_obj
     )[1]
 
     if not landmarks:
