@@ -104,7 +104,7 @@ def detect_body_pose_live():
         RuntimeError: If camera cannot be accessed or released.
     """
     # Start video capture
-    cap = cv2.VideoCapture('test.mp4')
+    cap = cv2.VideoCapture(0)
     if not cap.isOpened():
         raise RuntimeError("Failed to open webcam.")
 
@@ -127,3 +127,6 @@ def detect_body_pose_live():
     finally:
         cap.release()
         cv2.destroyAllWindows()
+
+if __name__=="__main__":
+    detect_body_pose_live()

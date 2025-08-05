@@ -158,3 +158,6 @@ def analyze_face_mesh_live(max_faces=1, min_confidence=0.7):
     finally:
         cap.release()
         cv2.destroyAllWindows()
+
+if __name__=="__main__":
+    analyze_face_mesh_live(max_faces=1)

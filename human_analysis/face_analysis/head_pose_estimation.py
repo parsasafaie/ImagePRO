@@ -120,7 +120,7 @@ def estimate_head_pose_live(max_faces=1, min_confidence=0.7):
             # Overlay yaw and pitch info on the image
             first_text_h = 50
             for i, face in enumerate(face_yaw_pitch):
-                text = f"Face {int(face[0])}: Yaw={face[1]:.2f}, Pitch={face[2]:.2f}"
+                text = f"Face {int(face[0]+1)}: Yaw={face[1]:.2f}, Pitch={face[2]:.2f}"
                 cv2.putText(image, text, (10, first_text_h + i * 25),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
 
@@ -135,3 +135,6 @@ def estimate_head_pose_live(max_faces=1, min_confidence=0.7):
         # Release resources
         cap.release()
         cv2.destroyAllWindows()
+
+if __name__=="__main__":
+    estimate_head_pose_live(max_faces=1)
