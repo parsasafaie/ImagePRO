@@ -29,6 +29,16 @@ def analyze_eye_status(min_confidence=0.7, image_path=None, np_image=None, face_
     # Load input image
     np_image = IOHandler.load_image(image_path=image_path, np_image=np_image)
 
+    if face_mesh_obj is None:
+        # Initialize MediaPipe FaceMesh model
+        face_Mesh = mp_face_mesh.FaceMesh(
+            min_detection_confidence=min_confidence,
+            refine_landmarks=True,
+            static_image_mode=True
+        )
+    else:
+        face_Mesh = face_mesh_obj
+
     # Define important landmark indices
     important_indices = [386, 374, 263, 362]
 
@@ -38,7 +48,7 @@ def analyze_eye_status(min_confidence=0.7, image_path=None, np_image=None, face_
         min_confidence=min_confidence,
         landmarks_idx=important_indices,
         np_image=np_image,
-        face_mesh_obj=face_mesh_obj
+        face_mesh_obj=face_Mesh
     )
     
     if not landmarks:
