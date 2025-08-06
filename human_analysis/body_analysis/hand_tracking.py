@@ -10,8 +10,9 @@ sys.path.append(str(parent_dir))
 # Import new IOHandler
 from io_handler import IOHandler
 
+mp_hands = mp.solutions.hands
 
-def detect_hands(max_hands=2, min_confidence=0.7, landmarks_idx=None, image_path=None, np_image=None, result_path=None):
+def detect_hands(max_hands=2, min_confidence=0.7, landmarks_idx=None, image_path=None, np_image=None, result_path=None, hands_obj=None):
     # Validate specific parameters
     if not isinstance(max_hands, int) or max_hands <= 0:
         raise ValueError("'max_hands' must be a positive integer.")
@@ -32,20 +33,21 @@ def detect_hands(max_hands=2, min_confidence=0.7, landmarks_idx=None, image_path
     np_image = IOHandler.load_image(image_path=image_path, np_image=np_image)
 
     # Initialize MediaPipe Hands model
-    mp_hands = mp.solutions.hands
-    hands = mp_hands.Hands(
-        static_image_mode=False,
-        max_num_hands=max_hands,      
-        min_detection_confidence=min_confidence,
-        min_tracking_confidence=min_confidence
-    )
+    if hands_obj is None:
+        Hands = mp_hands.Hands(
+            min_detection_confidence=min_confidence,
+            max_hands=max_hands,
+            static_image_mode=True
+        )
+    else:
+        Hands = hands_obj
 
     mp_drawing_utils = mp.solutions.drawing_utils
     mp_drawing_styles = mp.solutions.drawing_styles
 
     # Convert image to RGB for MediaPipe
     rgb_color = cv2.cvtColor(np_image, cv2.COLOR_BGR2RGB)
-    results = hands.process(rgb_color)
+    results = Hands.process(rgb_color)
 
     # Use default indices if none provided
     if landmarks_idx is None:
@@ -107,6 +109,12 @@ def detect_hands_live(max_hands=2, min_confidence=0.7):
     if not cap.isOpened():
         raise RuntimeError("Failed to open webcam.")
     
+    Hands = mp_hands.Hands(
+        min_detection_confidence=min_confidence,
+        max_num_hands=max_hands,
+        static_image_mode=True
+    )
+    
     try:
         while True:
             success, image = cap.read()
@@ -115,7 +123,7 @@ def detect_hands_live(max_hands=2, min_confidence=0.7):
                 continue
             
             # Detect hands in image
-            result = detect_hands(max_hands=max_hands, min_confidence=min_confidence, np_image=image)[0]
+            result = detect_hands(max_hands=max_hands, min_confidence=min_confidence, np_image=image, hands_obj=Hands)[0]
 
             # Show the resulting frame
             cv2.imshow('Live hand detector - ImagePRO', result)
