@@ -10,7 +10,9 @@ sys.path.append(str(parent_dir))
 # Import new IOHandler
 from io_handler import IOHandler
 
-def detect_body_pose(model_accuracy=1, landmarks_idx=None, image_path=None, np_image=None, result_path=None):
+mp_pose = mp.solutions.pose
+
+def detect_body_pose(model_accuracy=0.7, landmarks_idx=None, image_path=None, np_image=None, result_path=None, pose_obj=None):
     """
     Detects body landmarks using MediaPipe FaceMesh and visualizes or saves them.
 
@@ -40,11 +42,13 @@ def detect_body_pose(model_accuracy=1, landmarks_idx=None, image_path=None, np_i
         raise ValueError("Only '.jpg' and '.csv' extensions are supported for 'result_path'.")
 
     # Initialize MediaPipe Pose model
-    mp_pose = mp.solutions.pose
-    bode_Pose = mp_pose.Pose(
-        static_image_mode=False, 
-        model_complexity=model_accuracy
-    )
+    if pose_obj is None:
+        body_Pose = mp_pose.Pose(
+            min_detection_confidence=model_accuracy,
+            static_image_mode=True
+        )
+    else:
+        body_Pose = pose_obj
 
     # Load input image
     np_image = IOHandler.load_image(image_path=image_path, np_image=np_image)
@@ -55,7 +59,7 @@ def detect_body_pose(model_accuracy=1, landmarks_idx=None, image_path=None, np_i
     
     # Convert image to RGB for MediaPipe
     image_rgb = cv2.cvtColor(np_image, cv2.COLOR_BGR2RGB)
-    result = bode_Pose.process(image_rgb)
+    result = body_Pose.process(image_rgb)
     
     # Process detected body
     annotated_image = np_image.copy()
@@ -107,6 +111,11 @@ def detect_body_pose_live():
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
         raise RuntimeError("Failed to open webcam.")
+    
+    body_Pose = mp_pose.Pose(
+        min_detection_confidence=0.7,
+        static_image_mode=True
+    )
 
     try:
         while True:
@@ -116,7 +125,7 @@ def detect_body_pose_live():
                 continue
 
             try:
-                landmarked_image = detect_body_pose(model_accuracy=1, np_image=image)[0]
+                landmarked_image = detect_body_pose(model_accuracy=0.7, np_image=image, pose_obj=body_Pose)[0]
             except ValueError:
                 landmarked_image = image
 
