@@ -1,135 +1,152 @@
-from pathlib import Path
 import sys
+from pathlib import Path
+
 import cv2
 import mediapipe as mp
 
-# Add parent directory to Python path for importing custom modules
+# Add parent directory to sys.path
 parent_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(parent_dir))
 
-# Import custom modules
 from io_handler import IOHandler
 from human_analysis.face_analysis.face_mesh_analysis import analyze_face_mesh
 
 mp_face_mesh = mp.solutions.face_mesh
 
-def analyze_eye_status(min_confidence=0.7, image_path=None, np_image=None, face_mesh_obj=None):
+
+def analyze_eye_status(
+    min_confidence=0.7,
+    image_path=None,
+    np_image=None,
+    face_mesh_obj=None,
+    threshold=0.2
+):
     """
-    Detects eye status (open or closed) from facial landmarks in an image.
-    
-    Parameters:
-        min_confidence (float): Minimum detection confidence threshold.
-        face_mesh_obj (mp.solutions.face_mesh.FaceMesh): Optional external FaceMesh instance.
-            If provided, this instance will be used instead of creating a new one. Useful for real-time/live use cases to avoid repeated model creation.
-    
+    Analyze eye open/closed status using Eye Aspect Ratio (EAR).
+
+    Args:
+        min_confidence (float): Minimum confidence for FaceMesh detection.
+        image_path (str, optional): Path to input image.
+        np_image (np.ndarray, optional): Image array.
+        face_mesh_obj (FaceMesh, optional): Reusable instance of FaceMesh.
+        threshold (float): EAR threshold below which eye is considered closed.
+
+    Returns:
+        bool: True if eye is open, False if closed.
+
     Raises:
-        ValueError: If invalid parameters are provided.
-        RuntimeError: If webcam cannot be opened.
+        ValueError: If landmarks are not detected or inputs are invalid.
     """
-    # Load input image
+    if not isinstance(min_confidence, (int, float)) or not (0 <= min_confidence <= 1):
+        raise ValueError("'min_confidence' must be between 0 and 1.")
+
     np_image = IOHandler.load_image(image_path=image_path, np_image=np_image)
+    h, w = np_image.shape[:2]
 
     if face_mesh_obj is None:
-        # Initialize MediaPipe FaceMesh model
-        face_Mesh = mp_face_mesh.FaceMesh(
+        face_mesh_obj = mp_face_mesh.FaceMesh(
             min_detection_confidence=min_confidence,
             refine_landmarks=True,
             static_image_mode=True
         )
-    else:
-        face_Mesh = face_mesh_obj
 
-    # Define important landmark indices
-    important_indices = [386, 374, 263, 362]
+    # Landmark indices for right eye (from MediaPipe's model)
+    # 386 (top eyelid), 374 (bottom eyelid), 263 (outer corner), 362 (inner corner)
+    indices = [386, 374, 263, 362]
 
-    # Detect facial landmarks
     _, landmarks = analyze_face_mesh(
         max_faces=1,
         min_confidence=min_confidence,
-        landmarks_idx=important_indices,
+        landmarks_idx=indices,
         np_image=np_image,
-        face_mesh_obj=face_Mesh
+        face_mesh_obj=face_mesh_obj
     )
-    
+
     if not landmarks:
-        raise ValueError("No face landmarks detected in the input image.")
+        raise ValueError("No face landmarks detected.")
 
-    for landmark in landmarks[0]:
-            idx = landmark[1]
-            if idx==263:
-                outer_corner = landmark[2]
-            elif idx==362:
-                inner_corner = landmark[2]
-            elif idx==374:
-                bottom = landmark[3]
-            elif idx==386:
-                top = landmark[3]
-    
-    # Calculate the vertical and horizontal distances
-    vertical_dist = bottom - top
-    horizontal_dist = outer_corner - inner_corner
+    eye_points = {lm[1]: lm for lm in landmarks[0]}
 
-    # Compute the Eye Aspect Ratio (EAR)
+    try:
+        top_y = eye_points[386][3] * h
+        bottom_y = eye_points[374][3] * h
+        left_x = eye_points[263][2] * w
+        right_x = eye_points[362][2] * w
+    except KeyError:
+        raise ValueError("Missing necessary eye landmarks.")
+
+    vertical_dist = abs(bottom_y - top_y)
+    horizontal_dist = abs(right_x - left_x)
+
+    if horizontal_dist == 0:
+        return False  # avoid division by zero
+
     ear = vertical_dist / horizontal_dist
+    return ear > threshold
 
-    return ear > 0.2
 
-def analyze_eye_status_live(min_confidence=0.7):
+def analyze_eye_status_live(min_confidence=0.7, threshold=0.2):
     """
-    
-    Analyze eye status in real-time using webcam input.
-    
-    Parameters:
-        min_confidence (float): Minimum detection confidence threshold.
-    
+    Perform live eye open/closed detection using webcam input.
+
+    Args:
+        min_confidence (float): Minimum confidence for detection.
+        threshold (float): EAR threshold to consider eyes open.
+
     Raises:
-        ValueError: If invalid parameters are provided.
-        RuntimeError: If webcam cannot be opened.
+        ValueError: If confidence value is invalid.
+        RuntimeError: If webcam cannot be accessed.
     """
-    if not isinstance(min_confidence, (int, float)) or not (0.0 <= min_confidence <= 1.0):
-        raise ValueError("'min_confidence' must be a float between 0.0 and 1.0.")
+    if not isinstance(min_confidence, (int, float)) or not (0 <= min_confidence <= 1):
+        raise ValueError("'min_confidence' must be between 0 and 1.")
 
-    # Start video capture
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
-        raise RuntimeError("Failed to open webcam.")
-    
-    face_Mesh = mp_face_mesh.FaceMesh(
+        raise RuntimeError("Cannot access webcam.")
+
+    face_mesh = mp_face_mesh.FaceMesh(
         max_num_faces=1,
         min_detection_confidence=min_confidence,
         refine_landmarks=True,
         static_image_mode=True
     )
-    
+
     try:
         while True:
-            success, image = cap.read()
+            success, frame = cap.read()
             if not success:
-                print("Ignoring empty camera frame.")
+                print("Skipping empty frame.")
                 continue
 
-            # Detect eye status
-            eye_status = analyze_eye_status(
-                image_path=None,
-                min_confidence=min_confidence,
-                np_image=image,
-                face_mesh_obj=face_Mesh
+            try:
+                is_open = analyze_eye_status(
+                    min_confidence=min_confidence,
+                    np_image=frame,
+                    face_mesh_obj=face_mesh,
+                    threshold=threshold
+                )
+                status = "Open" if is_open else "Closed"
+            except ValueError:
+                status = "No face"
+
+            cv2.putText(
+                frame,
+                f"Eye: {status}",
+                (10, 40),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.7,
+                (0, 255, 0) if status == "Open" else (0, 0, 255),
+                2
             )
 
-            text = f"{eye_status}"
-            cv2.putText(image, text, (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
-
-            # Show the resulting frame
-            cv2.imshow('ImagePRO - Live Eye Status Analyzer', image)
-
-            # Exit on ESC key press
+            cv2.imshow("ImagePRO - Eye Status (ESC to Exit)", frame)
             if cv2.waitKey(5) & 0xFF == 27:
                 break
 
     finally:
-        # Release resources
         cap.release()
         cv2.destroyAllWindows()
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     analyze_eye_status_live()

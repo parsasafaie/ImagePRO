@@ -1,169 +1,158 @@
 # io_handler.py
 
-import cv2
-import numpy as np
 import os
 import json
 import csv
 from pathlib import Path
+
+import cv2
+import numpy as np
 
 
 class IOHandler:
     @staticmethod
     def load_image(image_path=None, np_image=None):
         """
-        Loads an image from file or uses the provided NumPy array.
+        Load an image from disk or use an existing NumPy array.
 
-        Parameters:
-            image_path (str | None): Path to input image file.
-            np_image (np.ndarray | None): Pre-loaded image array.
+        Args:
+            image_path (str, optional): Path to the image file.
+            np_image (np.ndarray, optional): Image as a NumPy array.
 
         Returns:
-            np.ndarray: Loaded image as a NumPy array.
+            np.ndarray: Loaded image.
 
         Raises:
-            TypeError: If inputs are of incorrect type.
-            FileNotFoundError: If image file not found.
-            ValueError: If both sources are None or image loading fails.
+            TypeError: Invalid input types.
+            FileNotFoundError: File not found.
+            ValueError: Both inputs are None or image loading failed.
         """
         if image_path is not None:
             if not isinstance(image_path, str):
                 raise TypeError("'image_path' must be a string.")
             if not os.path.isfile(image_path):
-                raise FileNotFoundError(f"Image file not found at '{image_path}'")
+                raise FileNotFoundError(f"File not found: {image_path}")
             img = cv2.imread(image_path)
             if img is None:
-                raise ValueError(f"Failed to load image at '{image_path}'")
+                raise ValueError(f"Unable to load image: {image_path}")
             return img
-        elif np_image is not None:
+
+        if np_image is not None:
             if not isinstance(np_image, np.ndarray):
                 raise TypeError("'np_image' must be a NumPy array.")
             return np_image
-        else:
-            raise ValueError("At least one of 'image_path' or 'np_image' must be provided.")
+
+        raise ValueError("Provide at least 'image_path' or 'np_image'.")
 
     @staticmethod
     def save_image(np_image, result_path=None):
         """
-        Saves an image or list of images to file or returns them directly.
+        Save a NumPy image array (or list of arrays) to disk or return it.
 
-        Parameters:
-            np_image (np.ndarray | List[np.ndarray]): 
-                Single image or list of images as NumPy arrays.
-            result_path (str | None): 
-                Path to save the image(s). If None, returns the image(s) array(s).
+        Args:
+            np_image (np.ndarray or list[np.ndarray]): Image(s) to save.
+            result_path (str, optional): Save path.
 
         Returns:
-            str | np.ndarray | List[np.ndarray]: 
-                - If `result_path` is provided and one image: returns confirmation message.
-                - If `result_path` is provided and multiple images: saves with suffixes like `_0.jpg`, `_1.jpg`.
-                - If `result_path` is None: returns the input image(s).
+            str or np.ndarray or list[np.ndarray]: 
+                Save message if path given, otherwise returns input.
 
         Raises:
-            TypeError: If inputs are of incorrect type.
-            IOError: If saving any image fails.
+            TypeError: Invalid input types.
+            IOError: Saving failed.
         """
-        # Input validation
         if not isinstance(np_image, (np.ndarray, list)):
-            raise TypeError("'np_image' must be a NumPy array or a list of NumPy arrays.")
+            raise TypeError("'np_image' must be a NumPy array or list of arrays.")
 
-        if isinstance(np_image, list) and not all(isinstance(img, np.ndarray) for img in np_image):
-            raise TypeError("'np_image' list must contain only NumPy arrays.")
+        if isinstance(np_image, list) and not all(isinstance(i, np.ndarray) for i in np_image):
+            raise TypeError("All items in the list must be NumPy arrays.")
 
         if result_path is not None and not isinstance(result_path, str):
             raise TypeError("'result_path' must be a string or None.")
 
-        # Save image(s)
         if result_path:
             if isinstance(np_image, np.ndarray):
-                success = cv2.imwrite(result_path, np_image)
-                if not success:
-                    raise IOError(f"Failed to save image at '{result_path}'")
+                if not cv2.imwrite(result_path, np_image):
+                    raise IOError(f"Failed to save image: {result_path}")
                 return f"Image saved at {result_path}"
 
-            elif isinstance(np_image, list):
-                base_path = result_path
-                for i, img in enumerate(np_image):
-                    # Add index to filename for multiple images
-                    path = base_path.replace('.jpg', f'_{i}.jpg') if i > 0 else base_path
-                    success = cv2.imwrite(path, img)
-                    if not success:
-                        raise IOError(f"Failed to save image at '{path}'")
-                return f"Images saved at {base_path} and its variations."
+            for i, img in enumerate(np_image):
+                suffix = f"_{i}" if i > 0 else ""
+                path = result_path.replace(".jpg", f"{suffix}.jpg")
+                if not cv2.imwrite(path, img):
+                    raise IOError(f"Failed to save image: {path}")
+            return f"Images saved using base path {result_path}"
 
-        else:
-            return np_image
+        return np_image
 
     @staticmethod
     def save_csv(data, result_path=None):
         """
-        Saves data as CSV file or returns it directly.
+        Save a list of lists as a CSV file or return it.
 
-        Parameters:
-            data (list[list]): Data to save or return.
-            result_path (str | None): Path to save the CSV. If None, returns the data.
+        Args:
+            data (list[list]): Tabular data.
+            result_path (str, optional): Save path.
 
         Returns:
-            str | list[list]: Confirmation message if saved, or the data if not.
+            str or list[list]: Save message or original data.
 
         Raises:
-            TypeError: If inputs are of incorrect type.
+            TypeError: Invalid input types.
         """
         if not isinstance(data, list) or not all(isinstance(row, list) for row in data):
             raise TypeError("'data' must be a list of lists.")
 
-        if result_path is not None:
+        if result_path:
             if not isinstance(result_path, str):
                 raise TypeError("'result_path' must be a string or None.")
-
             with open(result_path, "w", newline='') as f:
                 writer = csv.writer(f)
                 writer.writerows(data)
             return f"CSV saved at {result_path}"
-        else:
-            return data
+
+        return data
 
     @staticmethod
     def save_json(data, result_path=None):
         """
-        Saves data as JSON file or returns it directly.
+        Save data as a JSON file or return it.
 
-        Parameters:
-            data (any): JSON-serializable data to save or return.
-            result_path (str | None): Path to save the JSON. If None, returns the data.
+        Args:
+            data (Any): JSON-serializable data.
+            result_path (str, optional): Save path.
 
         Returns:
-            str | any: Confirmation message if saved, or the data if not.
+            str or Any: Save message or original data.
 
         Raises:
-            TypeError: If inputs are of incorrect type.
+            TypeError: Invalid path type.
         """
-        if result_path is not None:
+        if result_path:
             if not isinstance(result_path, str):
                 raise TypeError("'result_path' must be a string or None.")
-
             with open(result_path, "w") as f:
                 json.dump(data, f, indent=4)
             return f"JSON saved at {result_path}"
-        else:
-            return data
+
+        return data
 
     @staticmethod
     def save(data, result_path=None, file_type=None):
         """
-        Automatically selects the correct save method based on file extension or `file_type`.
+        Save data to disk automatically based on file type or extension.
 
-        Parameters:
-            data (any): Data to save or return.
-            result_path (str | None): Path to save the data. If None, returns the data.
-            file_type (str | None): Force file type ('image', 'csv', 'json'). If None, detects by extension.
+        Args:
+            data (Any): Data to save.
+            result_path (str, optional): Save path.
+            file_type (str, optional): 'image', 'csv', or 'json'.
 
         Returns:
-            str | any: Confirmation message if saved, or the data if not.
+            str or Any: Save message or original data.
 
         Raises:
-            ValueError: If file type or extension is unsupported.
-            TypeError: If inputs are of incorrect type.
+            ValueError: Unsupported file type or extension.
+            TypeError: Invalid input types.
         """
         if file_type is None:
             if result_path is None:
@@ -177,13 +166,13 @@ class IOHandler:
             elif ext == ".json":
                 file_type = "json"
             else:
-                raise ValueError(f"Unsupported file extension '{ext}' for 'result_path'")
-        
+                raise ValueError(f"Unsupported file extension: {ext}")
+
         if file_type == "image":
             return IOHandler.save_image(data, result_path)
         elif file_type == "csv":
             return IOHandler.save_csv(data, result_path)
         elif file_type == "json":
             return IOHandler.save_json(data, result_path)
-        else:
-            raise ValueError(f"Unsupported file type: {file_type}")
+
+        raise ValueError(f"Unsupported file type: {file_type}")

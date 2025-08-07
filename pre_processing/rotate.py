@@ -1,118 +1,94 @@
-import cv2
-from pathlib import Path
 import sys
+from pathlib import Path
 
-# Add parent directory to Python path for importing custom modules
+import cv2
+
+# Add parent directory to sys.path for custom imports
 parent_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(parent_dir))
 
-# Import new IOHandler
 from io_handler import IOHandler
 
 
 def rotate_image_90(image_path=None, np_image=None, result_path=None):
     """
-    Rotates the image 90 degrees clockwise.
-    
-    Parameters:
-        image_path (str): Path to input image file. If provided, `np_image` will be ignored.
-        np_image (np.ndarray): Pre-loaded image as NumPy array. Only used if `image_path` is None.
-        result_path (str): Path to save the rotated image (optional). If not provided, returns the image array.
+    Rotate image 90 degrees clockwise.
+
+    Args:
+        image_path (str, optional): Path to input image file.
+        np_image (np.ndarray, optional): Image as NumPy array.
+        result_path (str, optional): Path to save rotated image.
 
     Returns:
-        str | np.ndarray: If `result_path` is given, returns confirmation message. 
-                          Otherwise, returns the rotated image as a NumPy array.
+        str or np.ndarray: Save message if result_path is given, else rotated image.
     """
-    # Load image
     np_image = IOHandler.load_image(image_path=image_path, np_image=np_image)
-
-    # Rotate
-    rotated_image = cv2.rotate(np_image, cv2.ROTATE_90_CLOCKWISE)
-
-    # Save or return
-    return IOHandler.save_image(rotated_image, result_path)
+    rotated = cv2.rotate(np_image, cv2.ROTATE_90_CLOCKWISE)
+    return IOHandler.save_image(rotated, result_path)
 
 
 def rotate_image_180(image_path=None, np_image=None, result_path=None):
     """
-    Rotates the image 180 degrees.
-    
-    Parameters:
-        image_path (str): Path to input image file. If provided, `np_image` will be ignored.
-        np_image (np.ndarray): Pre-loaded image as NumPy array. Only used if `image_path` is None.
-        result_path (str): Path to save the rotated image (optional). If not provided, returns the image array.
+    Rotate image 180 degrees.
+
+    Args:
+        image_path (str, optional): Path to input image file.
+        np_image (np.ndarray, optional): Image as NumPy array.
+        result_path (str, optional): Path to save rotated image.
 
     Returns:
-        str | np.ndarray: If `result_path` is given, returns confirmation message. 
-                          Otherwise, returns the rotated image as a NumPy array.
+        str or np.ndarray: Save message if result_path is given, else rotated image.
     """
-    # Load image
     np_image = IOHandler.load_image(image_path=image_path, np_image=np_image)
-
-    # Rotate
-    rotated_image = cv2.rotate(np_image, cv2.ROTATE_180)
-
-    # Save or return
-    return IOHandler.save_image(rotated_image, result_path)
+    rotated = cv2.rotate(np_image, cv2.ROTATE_180)
+    return IOHandler.save_image(rotated, result_path)
 
 
 def rotate_image_270(image_path=None, np_image=None, result_path=None):
     """
-    Rotates the image 270 degrees clockwise (same as 90 counter-clockwise).
-    
-    Parameters:
-        image_path (str): Path to input image file. If provided, `np_image` will be ignored.
-        np_image (np.ndarray): Pre-loaded image as NumPy array. Only used if `image_path` is None.
-        result_path (str): Path to save the rotated image (optional). If not provided, returns the image array.
+    Rotate image 270 degrees clockwise (same as 90 degrees counter-clockwise).
+
+    Args:
+        image_path (str, optional): Path to input image file.
+        np_image (np.ndarray, optional): Image as NumPy array.
+        result_path (str, optional): Path to save rotated image.
 
     Returns:
-        str | np.ndarray: If `result_path` is given, returns confirmation message. 
-                          Otherwise, returns the rotated image as a NumPy array.
+        str or np.ndarray: Save message if result_path is given, else rotated image.
     """
-    # Load image
     np_image = IOHandler.load_image(image_path=image_path, np_image=np_image)
-
-    # Rotate
-    rotated_image = cv2.rotate(np_image, cv2.ROTATE_90_COUNTERCLOCKWISE)
-
-    # Save or return
-    return IOHandler.save_image(rotated_image, result_path)
+    rotated = cv2.rotate(np_image, cv2.ROTATE_90_COUNTERCLOCKWISE)
+    return IOHandler.save_image(rotated, result_path)
 
 
 def rotate_image_custom(angle, scale=1.0, image_path=None, np_image=None, result_path=None):
     """
-    Rotates image by a given angle around its center with optional scaling.
-    
-    Parameters:
-        angle (float): Rotation angle in degrees (positive is counter-clockwise).
-        scale (float): Optional scale factor (default = 1.0).
-        image_path (str): Path to input image file. If provided, `np_image` will be ignored.
-        np_image (np.ndarray): Pre-loaded image as NumPy array. Only used if `image_path` is None.
-        result_path (str): Path to save the rotated image (optional). If not provided, returns the image array.
+    Rotate image by custom angle around its center, with optional scaling.
+
+    Args:
+        angle (float): Rotation angle in degrees (positive = counter-clockwise).
+        scale (float): Scale factor (default = 1.0).
+        image_path (str, optional): Path to input image file.
+        np_image (np.ndarray, optional): Image as NumPy array.
+        result_path (str, optional): Path to save rotated image.
 
     Returns:
-        str | np.ndarray: If `result_path` is given, returns confirmation message. 
-                          Otherwise, returns the rotated image as a NumPy array.
+        str or np.ndarray: Save message if result_path is given, else rotated image.
 
     Raises:
-        TypeError: If inputs are of incorrect type.
-        ValueError: If inputs have invalid values.
+        TypeError: If angle or scale are of incorrect type.
+        ValueError: If scale is non-positive.
     """
-    # Input validation - only specific parameters
     if not isinstance(angle, (int, float)):
-        raise TypeError("'angle' must be a number (int or float).")
-
+        raise TypeError("'angle' must be a number.")
     if not isinstance(scale, (int, float)) or scale <= 0:
         raise ValueError("'scale' must be a positive number.")
 
-    # Load image
     np_image = IOHandler.load_image(image_path=image_path, np_image=np_image)
 
-    # Rotate
     height, width = np_image.shape[:2]
-    image_center = (width / 2, height / 2)
-    rotation_matrix = cv2.getRotationMatrix2D(center=image_center, angle=angle, scale=scale)
-    rotated_image = cv2.warpAffine(np_image, rotation_matrix, (width, height))
+    center = (width / 2, height / 2)
+    matrix = cv2.getRotationMatrix2D(center=center, angle=angle, scale=scale)
+    rotated = cv2.warpAffine(np_image, matrix, (width, height))
 
-    # Save or return
-    return IOHandler.save_image(rotated_image, result_path)
+    return IOHandler.save_image(rotated, result_path)

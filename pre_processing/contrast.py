@@ -1,112 +1,105 @@
-import cv2
-from pathlib import Path
 import sys
+from pathlib import Path
 
-# Add parent directory to Python path for importing custom modules
+import cv2
+import numpy as np
+
+# Add parent directory to sys.path for custom module imports
 parent_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(parent_dir))
 
-# Import grayscale utility and IOHandler
-from pre_processing.grayscale import grayscale
+from pre_processing.grayscale import convert_to_grayscale
 from io_handler import IOHandler
 
 
-def apply_clahe_contrast(clipLimit=2.0, tileGridSize=(8, 8), image_path=None, np_image=None, result_path=None):
+def apply_clahe_contrast(
+    clipLimit=2.0,
+    tileGridSize=(8, 8),
+    image_path=None,
+    np_image=None,
+    result_path=None,
+):
     """
-    Enhances image contrast using CLAHE (Contrast Limited Adaptive Histogram Equalization).
-    
-    Parameters:
-        clipLimit (float): Threshold for contrast limiting (higher = more contrast).
-        tileGridSize (tuple): Size of grid for histogram equalization (smaller = finer details).
-        image_path (str): Path to input image file. If provided, `np_image` will be ignored.
-        np_image (np.ndarray): Pre-loaded image as NumPy array. Only used if `image_path` is None.
-        result_path (str): Path to save the enhanced image (optional). If not provided, returns the image array.
+    Enhance contrast using CLAHE (adaptive histogram equalization).
+
+    Args:
+        clipLimit (float): Contrast threshold (must be > 0).
+        tileGridSize (tuple): Grid size for local histogram (e.g., (8, 8)).
+        image_path (str, optional): Path to input image.
+        np_image (np.ndarray, optional): Image array.
+        result_path (str, optional): Path to save result.
 
     Returns:
-        str | np.ndarray: If `result_path` is given, returns confirmation message.
-                          Otherwise, returns the enhanced image as a NumPy array.
+        str or np.ndarray: Confirmation if saved, else enhanced image.
 
     Raises:
-        TypeError: If inputs are of incorrect type.
-        ValueError: If values are out of valid range.
+        ValueError, TypeError: On invalid parameter values.
     """
-    # Validate specific parameters
     if not isinstance(clipLimit, (int, float)) or clipLimit <= 0:
         raise ValueError("'clipLimit' must be a positive number.")
 
-    if not isinstance(tileGridSize, tuple) or len(tileGridSize) != 2:
-        raise TypeError("'tileGridSize' must be a tuple of two integers.")
+    if (
+        not isinstance(tileGridSize, tuple)
+        or len(tileGridSize) != 2
+        or not all(isinstance(i, int) and i > 0 for i in tileGridSize)
+    ):
+        raise TypeError("'tileGridSize' must be a tuple of two positive integers.")
 
-    if not all(isinstance(x, int) and x > 0 for x in tileGridSize):
-        raise ValueError("'tileGridSize' values must be positive integers.")
+    np_image = convert_to_grayscale(np_image=IOHandler.load_image(image_path=image_path, np_image=np_image))
 
-    # Load and convert image to grayscale
-    np_image = grayscale(np_image=IOHandler.load_image(image_path=image_path, np_image=np_image))
-
-    # Create CLAHE object with specified parameters
     clahe = cv2.createCLAHE(clipLimit=clipLimit, tileGridSize=tileGridSize)
+    enhanced = clahe.apply(np_image)
 
-    # Apply CLAHE to enhance contrast
-    enhanced_image = clahe.apply(np_image)
-
-    # Save or return
-    return IOHandler.save_image(enhanced_image, result_path)
+    return IOHandler.save_image(enhanced, result_path)
 
 
 def apply_histogram_equalization(image_path=None, np_image=None, result_path=None):
     """
-    Enhances image contrast using Global Histogram Equalization (GHE).
-    
-    Parameters:
-        image_path (str): Path to input image file. If provided, `np_image` will be ignored.
-        np_image (np.ndarray): Pre-loaded image as NumPy array. Only used if `image_path` is None.
-        result_path (str): Path to save the enhanced image (optional). If not provided, returns the image array.
+    Enhance contrast using global histogram equalization.
+
+    Args:
+        image_path (str, optional): Path to input image.
+        np_image (np.ndarray, optional): Image array.
+        result_path (str, optional): Path to save result.
 
     Returns:
-        str | np.ndarray: If `result_path` is given, returns confirmation message.
-                          Otherwise, returns the enhanced image as a NumPy array.
+        str or np.ndarray: Confirmation if saved, else enhanced image.
     """
-    # Load and convert image to grayscale
-    np_image = grayscale(np_image=IOHandler.load_image(image_path=image_path, np_image=np_image))
-
-    # Apply global histogram equalization
-    enhanced_image = cv2.equalizeHist(np_image)
-
-    # Save or return
-    return IOHandler.save_image(enhanced_image, result_path)
+    np_image = convert_to_grayscale(np_image=IOHandler.load_image(image_path=image_path, np_image=np_image))
+    enhanced = cv2.equalizeHist(np_image)
+    return IOHandler.save_image(enhanced, result_path)
 
 
-def apply_contrast_stretching(alpha, beta, image_path=None, np_image=None, result_path=None):
+def apply_contrast_stretching(
+    alpha,
+    beta,
+    image_path=None,
+    np_image=None,
+    result_path=None,
+):
     """
-    Enhances image contrast using linear stretching with alpha (contrast) and beta (brightness).
-    
-    Parameters:
-        alpha (float): Contrast scaling factor (1.0 means no change).
-        beta (int): Brightness adjustment value (0 means no change).
-        image_path (str): Path to input image file. If provided, `np_image` will be ignored.
-        np_image (np.ndarray): Pre-loaded image as NumPy array. Only used if `image_path` is None.
-        result_path (str): Path to save the enhanced image (optional). If not provided, returns the image array.
+    Enhance contrast by linear contrast stretching (alpha × pixel + beta).
+
+    Args:
+        alpha (float): Contrast factor (>= 0).
+        beta (int): Brightness offset (0–255).
+        image_path (str, optional): Path to input image.
+        np_image (np.ndarray, optional): Image array.
+        result_path (str, optional): Path to save result.
 
     Returns:
-        str | np.ndarray: If `result_path` is given, returns confirmation message.
-                          Otherwise, returns the enhanced image as a NumPy array.
+        str or np.ndarray: Confirmation if saved, else enhanced image.
 
     Raises:
-        TypeError: If inputs are of incorrect type.
-        ValueError: If values are out of valid range.
+        ValueError: If parameters are out of range.
     """
-    # Validate specific parameters
     if not isinstance(alpha, (int, float)) or alpha < 0:
         raise ValueError("'alpha' must be a non-negative number.")
 
-    if not isinstance(beta, int) or beta < 0 or beta > 255:
+    if not isinstance(beta, int) or not (0 <= beta <= 255):
         raise ValueError("'beta' must be an integer between 0 and 255.")
 
-    # Load and convert image to grayscale
-    np_image = grayscale(np_image=IOHandler.load_image(image_path=image_path, np_image=np_image))
+    np_image = convert_to_grayscale(np_image=IOHandler.load_image(image_path=image_path, np_image=np_image))
+    enhanced = cv2.convertScaleAbs(np_image, alpha=alpha, beta=beta)
 
-    # Apply contrast stretching using alpha and beta
-    enhanced_image = cv2.convertScaleAbs(np_image, alpha=alpha, beta=beta)
-
-    # Save or return
-    return IOHandler.save_image(enhanced_image, result_path)
+    return IOHandler.save_image(enhanced, result_path)

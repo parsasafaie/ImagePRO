@@ -1,153 +1,148 @@
-from pathlib import Path
 import sys
+from pathlib import Path
+
 import cv2
 import mediapipe as mp
 
-# Add parent directory to Python path for importing custom modules
+# Add parent directory to sys.path for custom module imports
 parent_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(parent_dir))
 
-# Import custom modules
 from io_handler import IOHandler
 from human_analysis.face_analysis.face_mesh_analysis import analyze_face_mesh
 
 mp_face_mesh = mp.solutions.face_mesh
 
-def estimate_head_pose(max_faces=1, min_confidence=0.7, image_path=None, np_image=None, result_path=None, face_mesh_obj=None):
-    """
-    Estimates the head pose (yaw and pitch) from facial landmarks in an image.
 
-    Parameters:
-        max_faces (int): Maximum number of faces to detect.
-        min_confidence (float): Minimum detection confidence threshold.
-        image_path (str | None): Path to input image file.
-        np_image (np.ndarray | None): Pre-loaded image array.
-        result_path (str | None): Path to save the output CSV results.
-        face_mesh_obj (mp.solutions.face_mesh.FaceMesh): Optional external FaceMesh instance.
-            If provided, this instance will be used instead of creating a new one. Useful for real-time/live use cases to avoid repeated model creation.
+def estimate_head_pose(
+    max_faces=1,
+    min_confidence=0.7,
+    image_path=None,
+    np_image=None,
+    result_path=None,
+    face_mesh_obj=None
+):
+    """
+    Estimate head pose (yaw, pitch) from facial landmarks.
+
+    Args:
+        max_faces (int): Number of faces to detect.
+        min_confidence (float): Confidence threshold (0–1).
+        image_path (str, optional): Path to input image.
+        np_image (np.ndarray, optional): Input image as array.
+        result_path (str, optional): If given, save results as CSV.
+        face_mesh_obj (FaceMesh, optional): Reusable MediaPipe instance.
 
     Returns:
-        str | list[list]: CSV save message if result_path is provided, else list of [face_id, yaw, pitch].
-    """
+        str or list[list]: CSV confirmation if saved, else list of [face_id, yaw, pitch].
 
-    # Validate specific parameters
+    Raises:
+        ValueError: On invalid input or no detected face.
+    """
     if not isinstance(max_faces, int) or max_faces <= 0:
         raise ValueError("'max_faces' must be a positive integer.")
+    if not isinstance(min_confidence, (int, float)) or not (0 <= min_confidence <= 1):
+        raise ValueError("'min_confidence' must be between 0 and 1.")
 
-    if not isinstance(min_confidence, (int, float)) or not (0.0 <= min_confidence <= 1.0):
-        raise ValueError("'min_confidence' must be a float between 0.0 and 1.0.")
-
-    # Load input image
     np_image = IOHandler.load_image(image_path=image_path, np_image=np_image)
 
-    # Define important landmark indices
-    important_indices = [1, 152, 33, 263, 168]
+    # Important landmark indices (MediaPipe 468 model)
+    indices = [1, 152, 33, 263, 168]  # nose_tip, chin, left_eye, right_eye, nasion
 
-    # Detect facial landmarks
     _, landmarks = analyze_face_mesh(
         max_faces=max_faces,
         min_confidence=min_confidence,
-        landmarks_idx=important_indices,
+        landmarks_idx=indices,
         np_image=np_image,
         face_mesh_obj=face_mesh_obj
     )
 
     if not landmarks:
-        raise ValueError("No face landmarks detected in the input image.")
+        raise ValueError("No face landmarks detected.")
 
-    face_yaw_pitch = []
+    results = []
     for face in landmarks:
-        for landmark in face:
-            idx = landmark[1]
-            if idx==1:
-                nose_tip = landmark
-            elif idx==152:
-                chin = landmark
-            elif idx==33:
-                left_eye_outer = landmark
-            elif idx==263:
-                right_eye_outer = landmark
-            elif idx==168:
-                nasion = landmark
+        points = {lm[1]: lm for lm in face}
 
-        # Calculate yaw and pitch using simple proportional differences
-        yaw = 100 * ((right_eye_outer[2] - nasion[2]) - (nasion[2] - left_eye_outer[2]))
-        pitch = 100 * ((chin[3] - nose_tip[3]) - (nose_tip[3] - nasion[3]))
+        try:
+            nose_x, nose_y = points[1][2:4]
+            chin_y = points[152][3]
+            left_x = points[33][2]
+            right_x = points[263][2]
+            nasion_x, nasion_y = points[168][2:4]
+        except KeyError:
+            continue  # skip this face if any point is missing
 
-        face_yaw_pitch.append([face[0][0], yaw, pitch])  # face ID, yaw, pitch
+        # Simplified proportional estimation
+        yaw = 100 * ((right_x - nasion_x) - (nasion_x - left_x))
+        pitch = 100 * ((chin_y - nose_y) - (nose_y - nasion_y))
 
-    # Save or return result
+        results.append([face[0][0], yaw, pitch])  # face_id, yaw, pitch
+
     if result_path:
-        return IOHandler.save_csv(face_yaw_pitch, result_path)
-    else:
-        return face_yaw_pitch
+        return IOHandler.save_csv(results, result_path)
+
+    return results
 
 
 def estimate_head_pose_live(max_faces=1, min_confidence=0.7):
     """
-    Estimates head pose (yaw and pitch) in real-time using webcam input.
-    
-    Parameters:
-        max_faces (int): Maximum number of faces to detect.
-        min_confidence (float): Minimum detection confidence threshold.
-    
-    Raises:
-        ValueError: If invalid parameters are provided.
-        RuntimeError: If webcam cannot be opened.
-    """
+    Live head pose estimation using webcam.
 
-    # Validate specific parameters
+    Args:
+        max_faces (int): Number of faces to detect.
+        min_confidence (float): Confidence threshold (0–1).
+
+    Raises:
+        ValueError, RuntimeError: On invalid inputs or camera failure.
+    """
     if not isinstance(max_faces, int) or max_faces <= 0:
         raise ValueError("'max_faces' must be a positive integer.")
+    if not isinstance(min_confidence, (int, float)) or not (0 <= min_confidence <= 1):
+        raise ValueError("'min_confidence' must be between 0 and 1.")
 
-    if not isinstance(min_confidence, (int, float)) or not (0.0 <= min_confidence <= 1.0):
-        raise ValueError("'min_confidence' must be a float between 0.0 and 1.0.")
-
-    # Start video capture
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
-        raise RuntimeError("Failed to open webcam.")
-    
-    face_Mesh = mp_face_mesh.FaceMesh(
-    max_num_faces=max_faces,
+        raise RuntimeError("Failed to access webcam.")
+
+    face_mesh = mp_face_mesh.FaceMesh(
+        max_num_faces=max_faces,
         min_detection_confidence=min_confidence,
         refine_landmarks=True,
         static_image_mode=True
     )
-    
+
     try:
         while True:
-            success, image = cap.read()
-            if not success:
-                print("Ignoring empty camera frame.")
+            ret, frame = cap.read()
+            if not ret:
+                print("Skipping empty frame.")
                 continue
 
-            # Estimate head pose for each detected face
-            face_yaw_pitch = estimate_head_pose(
-                max_faces=max_faces,
-                min_confidence=min_confidence,
-                np_image=image,
-                face_mesh_obj=face_Mesh
-            )
+            try:
+                face_angles = estimate_head_pose(
+                    max_faces=max_faces,
+                    min_confidence=min_confidence,
+                    np_image=frame,
+                    face_mesh_obj=face_mesh
+                )
+            except ValueError:
+                face_angles = []
 
-            # Overlay yaw and pitch info on the image
-            first_text_h = 50
-            for i, face in enumerate(face_yaw_pitch):
-                text = f"Face {int(face[0]+1)}: Yaw={face[1]:.2f}, Pitch={face[2]:.2f}"
-                cv2.putText(image, text, (10, first_text_h + i * 25),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
+            for i, face in enumerate(face_angles):
+                face_id, yaw, pitch = face
+                text = f"Face {int(face_id)+1}: Yaw={yaw:.2f}, Pitch={pitch:.2f}"
+                cv2.putText(frame, text, (10, 30 + i * 25),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 
-            # Show the resulting frame
-            cv2.imshow('ImagePRO - Live Head Pose Estimator', image)
+            cv2.imshow("ImagePRO - Head Pose Estimation", frame)
 
-            # Exit on ESC key press
-            if cv2.waitKey(5) & 0xFF == 27:
+            if cv2.waitKey(5) & 0xFF == 27:  # ESC
                 break
-
     finally:
-        # Release resources
         cap.release()
         cv2.destroyAllWindows()
 
-if __name__=="__main__":
-    estimate_head_pose_live(max_faces=1)
+
+if __name__ == "__main__":
+    estimate_head_pose_live()

@@ -1,95 +1,86 @@
+import sys
+from pathlib import Path
+
 import cv2
 import mediapipe as mp
-from pathlib import Path
-import sys
 
-# Add parent directory to Python path for importing custom modules
+# Add parent directory to import custom modules
 parent_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(parent_dir))
 
-# Import new IOHandler
 from io_handler import IOHandler
 
 mp_pose = mp.solutions.pose
 
-def detect_body_pose(model_accuracy=0.7, landmarks_idx=None, image_path=None, np_image=None, result_path=None, pose_obj=None):
+def detect_body_pose(
+    model_accuracy=0.7,
+    landmarks_idx=None,
+    image_path=None,
+    np_image=None,
+    result_path=None,
+    pose_obj=None
+):
     """
-    Detects body landmarks using MediaPipe FaceMesh and visualizes or saves them.
+    Detects body landmarks from an image using MediaPipe Pose.
 
-    Parameters:
-        landmarks_idx (list): List of landmark indices to extract/visualize. If None, uses all 33.
-        image_path (str): Path to input image file. If provided, `np_image` will be ignored.
-        np_image (np.ndarray): Pre-loaded image as NumPy array. Only used if `image_path` is None.
-        result_path (str): Path to save output (image with landmarks or CSV). Supports `.jpg` and `.csv`.
+    Args:
+        model_accuracy (float): Confidence threshold (0.0 to 1.0).
+        landmarks_idx (list[int] | None): Indices to extract (default: all 33).
+        image_path (str | None): Path to image file.
+        np_image (np.ndarray | None): Already loaded image (used if image_path is None).
+        result_path (str | None): Path to save image (.jpg) or coordinates (.csv).
+        pose_obj (mp.solutions.pose.Pose | None): Optional pre-initialized pose model.
 
     Returns:
-        str | tuple(np.ndarray, list) | np.ndarray | list:
-            - If `result_path` ends with `.jpg`: returns annotated image or saves it.
-            - If `result_path` ends with `.csv`: returns list of coordinates or saves as CSV.
-            - If no `result_path` is given: returns both annotated image and list of landmarks coordinates.
-
-    Raises:
-        ValueError: If inputs have invalid values or unsupported file extension.
+        str | tuple[np.ndarray, list]: Output message or annotated image and landmark list.
     """
-    # Validate specific parameters
     if landmarks_idx is not None and not isinstance(landmarks_idx, list):
-        raise TypeError("'landmarks_idx' must be a list of integers or None.")
+        raise TypeError("'landmarks_idx' must be a list or None.")
 
-    if result_path is not None and not isinstance(result_path, str):
-        raise TypeError("'result_path' must be a string or None.")
+    if result_path:
+        if not isinstance(result_path, str):
+            raise TypeError("'result_path' must be a string.")
+        if not (result_path.endswith('.jpg') or result_path.endswith('.csv')):
+            raise ValueError("Supported extensions: '.jpg', '.csv'.")
 
-    if result_path and not (result_path.endswith('.jpg') or result_path.endswith('.csv')):
-        raise ValueError("Only '.jpg' and '.csv' extensions are supported for 'result_path'.")
+    np_image = IOHandler.load_image(image_path=image_path, np_image=np_image)
 
-    # Initialize MediaPipe Pose model
+    if landmarks_idx is None:
+        landmarks_idx = list(range(33))
+
     if pose_obj is None:
-        body_Pose = mp_pose.Pose(
+        pose_obj = mp_pose.Pose(
             min_detection_confidence=model_accuracy,
             static_image_mode=True
         )
-    else:
-        body_Pose = pose_obj
 
-    # Load input image
-    np_image = IOHandler.load_image(image_path=image_path, np_image=np_image)
-
-    # Use default indices if none provided
-    if landmarks_idx is None:
-        landmarks_idx = list(range(33))
-    
-    # Convert image to RGB for MediaPipe
     image_rgb = cv2.cvtColor(np_image, cv2.COLOR_BGR2RGB)
-    result = body_Pose.process(image_rgb)
-    
-    # Process detected body
+    result = pose_obj.process(image_rgb)
+
     annotated_image = np_image.copy()
     all_landmarks = []
 
     if result.pose_landmarks:
-        if result_path and result_path.endswith('.jpg') or result_path is None:
+        if result_path is None or result_path.endswith('.jpg'):
             if len(landmarks_idx) == 33:
-                mp_drawing = mp.solutions.drawing_utils
-                mp_drawing_styles = mp.solutions.drawing_styles
-                mp_drawing.draw_landmarks(
+                mp.solutions.drawing_utils.draw_landmarks(
                     annotated_image,
                     result.pose_landmarks,
-                    connections=mp_pose.POSE_CONNECTIONS,
-                    landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style()
+                    mp_pose.POSE_CONNECTIONS,
+                    landmark_drawing_spec=mp.solutions.drawing_styles.get_default_pose_landmarks_style()
                 )
             else:
+                h, w, _ = annotated_image.shape
                 for idx in landmarks_idx:
-                    ih, iw, _ = annotated_image.shape
-                    landmark = result.pose_landmarks.landmark[idx]
-                    x, y = int(iw * landmark.x), int(ih * landmark.y)
+                    lm = result.pose_landmarks.landmark[idx]
+                    x, y = int(w * lm.x), int(h * lm.y)
                     cv2.circle(annotated_image, (x, y), 3, (0, 0, 255), -1)
 
-        if result_path and result_path.endswith('.csv') or result_path is None:
+        if result_path is None or result_path.endswith('.csv'):
             for idx in landmarks_idx:
-                landmark = result.pose_landmarks.landmark[idx]
-                all_landmarks.append([idx, landmark.x, landmark.y, landmark.z])
+                lm = result.pose_landmarks.landmark[idx]
+                all_landmarks.append([idx, lm.x, lm.y, lm.z])
 
-    
-    # Handle output
     if result_path:
         if result_path.endswith('.jpg'):
             return IOHandler.save_image(annotated_image, result_path)
@@ -101,35 +92,31 @@ def detect_body_pose(model_accuracy=0.7, landmarks_idx=None, image_path=None, np
 
 def detect_body_pose_live():
     """
-    Live webcam capture with real-time body landmark detection and overlay.
-
-    Raises:
-        ValueError: If inputs are out of valid range.
-        RuntimeError: If camera cannot be accessed or released.
+    Starts webcam and shows real-time body pose detection.
+    Press ESC to exit.
     """
-    # Start video capture
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
         raise RuntimeError("Failed to open webcam.")
-    
-    body_Pose = mp_pose.Pose(
+
+    pose_obj = mp_pose.Pose(
         min_detection_confidence=0.7,
         static_image_mode=True
     )
 
     try:
         while True:
-            success, image = cap.read()
+            success, frame = cap.read()
             if not success:
                 print("Ignoring empty camera frame.")
                 continue
 
             try:
-                landmarked_image = detect_body_pose(model_accuracy=0.7, np_image=image, pose_obj=body_Pose)[0]
+                annotated_img, _ = detect_body_pose(np_image=frame, pose_obj=pose_obj)
             except ValueError:
-                landmarked_image = image
+                annotated_img = frame
 
-            cv2.imshow('ImagePRO - Live Body pose detection', landmarked_image)
+            cv2.imshow('ImagePRO - Live Body Pose Detection', annotated_img)
 
             if cv2.waitKey(5) & 0xFF == 27:
                 break
@@ -137,5 +124,6 @@ def detect_body_pose_live():
         cap.release()
         cv2.destroyAllWindows()
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     detect_body_pose_live()
