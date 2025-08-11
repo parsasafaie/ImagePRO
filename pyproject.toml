@@ -7,7 +7,7 @@ where = ["src"]
 
 [project]
 name = "ImagePRO-Python"
-version = "0.1.1"
+version = "0.2.0"
 description = "clean, modular, and easy-to-use Python library for image processing tasks."
 readme = "README.md"
 requires-python = "==3.10.*"

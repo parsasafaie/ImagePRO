@@ -21,25 +21,40 @@ Whether you're working on computer vision pipelines, preprocessing images for AI
 
 More features are being added regularly!
 
-## Quick Start
+## Installation
 
-### 1. Clone the Repository
+### From PyPI
+```bash
+pip install ImagePRO-Python
+```
 
+### From Source
+1. Clone the Repository:
 ```bash
 git clone https://github.com/parsasafaie/ImagePRO.git
-cd ImagePro
+cd ImagePRO
 ```
 
-### 2. Create a Virtual Environment (Recommended)
+2. Create a Virtual Environment (Recommended):
 ```bash
 python -m venv .venv
-source .venv\Scripts\activate
+source .venv/bin/activate   # macOS/Linux
+.venv\Scripts\activate      # Windows
 ```
 
-### 3. Install Dependencies
+3. Install Dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
+## Quick Start
+```python
+from pre_processing.grayscale import convert_to_grayscale
+from pre_processing.blur import apply_gaussian_blur
+
+gray = convert_to_grayscale(src_image_path="input.jpg")
+blur = apply_gaussian_blur(src_np_image=gray, kernel_size=(5,5), output_image_path="blurred.jpg")
+```
+
 ## License 
-This project is licensed under the MIT License  – see the LICENSE  file for details
+This project is licensed under the MIT License – see the LICENSE file for details.

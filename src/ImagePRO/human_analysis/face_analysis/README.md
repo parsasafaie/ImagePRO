@@ -1,35 +1,71 @@
-# Human Face Analysis Module
+# Human Face Analysis
 
-A comprehensive module for analyzing human facial features and behavior using MediaPipe and OpenCV.
+Face mesh, eye status, head pose, and face cropping with MediaPipe + OpenCV.  
+Supports both single-image processing and real-time overlays.
 
-This module supports tasks such as face detection, 3D facial landmark extraction, mesh-based tracking, and head pose estimation.
+## Features
+- 468-point **Face Mesh** (full or subset draw)
+- **Head pose** (yaw, pitch) via simple proportional landmark geometry
+- **Eye status** (open/closed) via EAR on right eye
+- **Face cropping** from facial outline landmarks
+- Optional simultaneous annotated-image saving and CSV export
 
+## I/O Conventions
+- Provide either `src_image_path` or `src_np_image` (BGR). If both set, `src_np_image` is used.
+- Saving:
+  - `output_image_path` for annotated images
+  - `output_csv_path` for landmark CSV
+  - Functions print save logs and still return in-memory results.
+- Live helpers open webcam; press **ESC** to exit.
 
-## Submodules
+## Submodules & Functions
+### `face_mesh_analysis.py`
+- `analyze_face_mesh(max_faces=1, min_confidence=0.7, landmarks_idx=None, src_image_path=None, src_np_image=None, output_image_path=None, output_csv_path=None, face_mesh_obj=None) -> tuple[np.ndarray, list]`
+- `analyze_face_mesh_live(max_faces=1, min_confidence=0.7) -> None`
 
-- **`face_detection.py`**  
-  Detects human faces in images or video streams using bounding box-based approaches.  
-  Useful for quickly locating faces before applying finer-grained analysis.
+### `head_pose_estimation.py`
+- `estimate_head_pose(max_faces=1, min_confidence=0.7, src_image_path=None, src_np_image=None, output_csv_path=None, face_mesh_obj=None) -> list[list[float]] | str`
+- `estimate_head_pose_live(max_faces=1, min_confidence=0.7) -> None`
 
-- **`face_mesh_analysis.py`**  
-  Extracts 468 high-fidelity facial landmarks per detected face using MediaPipe FaceMesh.  
-  Capabilities:
-  - Visualize full face mesh or specific landmark indices.
-  - Output landmarks to CSV for further analysis.
-  - Real-time overlay support.
+### `eye_status.py`
+- `analyze_eye_status(min_confidence=0.7, src_image_path=None, src_np_image=None, face_mesh_obj=None, threshold=0.2) -> bool`
+- `analyze_eye_status_live(min_confidence=0.7, threshold=0.2) -> None`
 
-- **`head_pose_estimation.py`**  
-  Estimates head orientation using selected 3D facial landmarks:
-  - `yaw` – rotation around the vertical axis (left ↔ right)
-  - `pitch` – rotation around the lateral axis (up ↕ down)
-  - (Optional extension: `roll` – tilt)
+### `face_crop.py`
+- `detect_faces(max_faces=1, min_confidence=0.7, src_image_path=None, src_np_image=None, output_image_path=None, face_mesh_obj=None) -> list[np.ndarray] | str`
 
-
-## Example Usage
-
+## Quick Start
 ```python
+from human_analysis.face_analysis.face_mesh_analysis import analyze_face_mesh
 from human_analysis.face_analysis.head_pose_estimation import estimate_head_pose
+from human_analysis.face_analysis.eye_status import analyze_eye_status
+from human_analysis.face_analysis.face_crop import detect_faces
 
-pose = estimate_head_pose(np_image=img)
-print(f"Yaw: {pose[0][1]}, Pitch: {pose[0][2]}")
+# Mesh + CSV
+annotated, landmarks = analyze_face_mesh(
+    src_image_path="face.jpg",
+    output_image_path="mesh.jpg",
+    output_csv_path="landmarks.csv"
+)
+
+# Head pose (list of [face_id, yaw, pitch])
+pose = estimate_head_pose(src_np_image=annotated, output_csv_path="pose.csv")
+
+# Eye status (right eye)
+is_open = analyze_eye_status(src_np_image=annotated, threshold=0.22)
+
+# Crop faces from outline
+crops = detect_faces(src_np_image=annotated, output_image_path="crop.jpg")
 ```
+
+## Error Handling
+- `ValueError` / `TypeError`: invalid inputs or missing landmarks
+- `RuntimeError`: webcam unavailable (live)
+- From `IOHandler`:
+  - `FileNotFoundError`, `TypeError`, `ValueError` on load
+  - `IOError` on save
+
+## Notes
+- MediaPipe face coordinates are **normalized** `[0,1]`. Convert to pixels when needed.
+- Head pose here is a **lightweight heuristic** (not PnP). For metric pose, integrate a 3D model + `cv2.solvePnP`.
+- Reuse `face_mesh_obj` across calls to reduce init overhead in batch workflows.
