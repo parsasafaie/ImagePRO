@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project]
+name = "ImagePRO-Python"
+version = "0.1.0"
+description = "clean, modular, and easy-to-use Python library for image processing tasks."
+readme = "README.md"
+requires-python = "==3.10.*"
+license = {text = "MIT"}
+authors = [{name = "Parsa Safaie", email = "parsasafaie.2568@proton.me"}]
+keywords = ["opencv", "mediapipe", "computer-vision", "face", "pose"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Topic :: Scientific/Engineering :: Image Processing",
+]
+
+dependencies = [
+  "numpy>=1.24,<3.0",
+  "opencv-python>=4.8,<5.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ImagePRO"]
