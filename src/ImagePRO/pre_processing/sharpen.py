@@ -8,8 +8,8 @@ import numpy as np
 parent_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(parent_dir))
 
-from io_handler import IOHandler
-from blur import apply_average_blur
+from utils.io_handler import IOHandler
+from pre_processing.blur import apply_average_blur
 
 
 def apply_laplacian_sharpening(

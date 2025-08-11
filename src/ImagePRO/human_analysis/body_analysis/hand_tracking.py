@@ -8,7 +8,7 @@ import mediapipe as mp
 parent_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(parent_dir))
 
-from io_handler import IOHandler
+from utils.io_handler import IOHandler
 
 mp_hands = mp.solutions.hands
 

@@ -8,7 +8,7 @@ import numpy as np
 parent_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(parent_dir))
 
-from io_handler import IOHandler
+from utils.io_handler import IOHandler
 
 
 def apply_average_blur(kernel_size=(5, 5), image_path=None, np_image=None, result_path=None):

@@ -7,7 +7,7 @@ import cv2
 parent_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(parent_dir))
 
-from io_handler import IOHandler
+from utils.io_handler import IOHandler
 
 
 def convert_to_grayscale(image_path=None, np_image=None, result_path=None):

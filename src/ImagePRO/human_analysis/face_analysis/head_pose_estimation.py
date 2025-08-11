@@ -8,7 +8,7 @@ import mediapipe as mp
 parent_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(parent_dir))
 
-from io_handler import IOHandler
+from utils.io_handler import IOHandler
 from human_analysis.face_analysis.face_mesh_analysis import analyze_face_mesh
 
 mp_face_mesh = mp.solutions.face_mesh
