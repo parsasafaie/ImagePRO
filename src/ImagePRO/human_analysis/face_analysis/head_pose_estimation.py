@@ -15,36 +15,53 @@ mp_face_mesh = mp.solutions.face_mesh
 
 
 def estimate_head_pose(
-    max_faces=1,
-    min_confidence=0.7,
-    image_path=None,
-    np_image=None,
-    result_path=None,
-    face_mesh_obj=None
+    max_faces: int = 1,
+    min_confidence: float = 0.7,
+    src_image_path: str | None = None,
+    src_np_image=None,
+    output_csv_path: str | None = None,
+    face_mesh_obj=None,
 ):
     """
-    Estimate head pose (yaw, pitch) from facial landmarks.
+    Estimate head pose (yaw, pitch) from a single image using MediaPipe facial landmarks.
 
-    Args:
-        max_faces (int): Number of faces to detect.
-        min_confidence (float): Confidence threshold (0–1).
-        image_path (str, optional): Path to input image.
-        np_image (np.ndarray, optional): Input image as array.
-        result_path (str, optional): If given, save results as CSV.
-        face_mesh_obj (FaceMesh, optional): Reusable MediaPipe instance.
+    Parameters
+    ----------
+    max_faces : int, default=1
+        Number of faces to detect.
+    min_confidence : float, default=0.7
+        Detection confidence threshold in [0, 1].
+    src_image_path : str | None, optional
+        Path to the input image file.
+    src_np_image : np.ndarray | None, optional
+        Input image array in BGR format. If both are provided, `src_np_image` takes precedence.
+    output_csv_path : str | None, optional
+        If provided, saves the results as CSV rows: [face_id, yaw, pitch].
+    face_mesh_obj : mediapipe.python.solutions.face_mesh.FaceMesh | None, optional
+        Optional reusable FaceMesh instance.
 
-    Returns:
-        str or list[list]: CSV confirmation if saved, else list of [face_id, yaw, pitch].
+    Returns
+    -------
+    list[list[float]] | str
+        Save message from IOHandler.save_csv if `output_csv_path` is provided,
+        otherwise list of [face_id, yaw, pitch] for each detected face.
 
-    Raises:
-        ValueError: On invalid input or no detected face.
+    Raises
+    ------
+    ValueError
+        * If inputs are invalid or no face landmarks are detected (this function).
+        * From IOHandler.load_image when both inputs are None or image loading fails.
+    TypeError
+        From IOHandler.load_image/save_csv on invalid argument types.
+    FileNotFoundError
+        From IOHandler.load_image when `src_image_path` does not exist.
     """
     if not isinstance(max_faces, int) or max_faces <= 0:
         raise ValueError("'max_faces' must be a positive integer.")
     if not isinstance(min_confidence, (int, float)) or not (0 <= min_confidence <= 1):
         raise ValueError("'min_confidence' must be between 0 and 1.")
 
-    np_image = IOHandler.load_image(image_path=image_path, np_image=np_image)
+    np_image = IOHandler.load_image(image_path=src_image_path, np_image=src_np_image)
 
     # Important landmark indices (MediaPipe 468 model)
     indices = [1, 152, 33, 263, 168]  # nose_tip, chin, left_eye, right_eye, nasion
@@ -53,7 +70,7 @@ def estimate_head_pose(
         max_faces=max_faces,
         min_confidence=min_confidence,
         landmarks_idx=indices,
-        np_image=np_image,
+        src_np_image=np_image,
         face_mesh_obj=face_mesh_obj
     )
 
@@ -73,28 +90,40 @@ def estimate_head_pose(
         except KeyError:
             continue  # skip this face if any point is missing
 
-        # Simplified proportional estimation
+        # Simplified proportional estimation on normalized coords
         yaw = 100 * ((right_x - nasion_x) - (nasion_x - left_x))
         pitch = 100 * ((chin_y - nose_y) - (nose_y - nasion_y))
 
-        results.append([face[0][0], yaw, pitch])  # face_id, yaw, pitch
+        results.append([face[0][0], yaw, pitch])
 
-    if result_path:
-        return IOHandler.save_csv(results, result_path)
+    if output_csv_path:
+        print(IOHandler.save_csv(results, output_csv_path))
 
     return results
 
 
-def estimate_head_pose_live(max_faces=1, min_confidence=0.7):
+def estimate_head_pose_live(max_faces: int = 1, min_confidence: float = 0.7):
     """
-    Live head pose estimation using webcam.
+    Live head pose estimation using the default webcam.
 
-    Args:
-        max_faces (int): Number of faces to detect.
-        min_confidence (float): Confidence threshold (0–1).
+    Parameters
+    ----------
+    max_faces : int, default=1
+        Number of faces to detect per frame.
+    min_confidence : float, default=0.7
+        Detection confidence threshold in [0, 1].
 
-    Raises:
-        ValueError, RuntimeError: On invalid inputs or camera failure.
+    Raises
+    ------
+    ValueError
+        On invalid inputs.
+    RuntimeError
+        If the camera cannot be opened.
+
+    Notes
+    -----
+    * Uses static_image_mode=False for better performance on video streams.
+    * Press ESC to exit the preview window.
     """
     if not isinstance(max_faces, int) or max_faces <= 0:
         raise ValueError("'max_faces' must be a positive integer.")
@@ -109,7 +138,7 @@ def estimate_head_pose_live(max_faces=1, min_confidence=0.7):
         max_num_faces=max_faces,
         min_detection_confidence=min_confidence,
         refine_landmarks=True,
-        static_image_mode=True
+        static_image_mode=False
     )
 
     try:
@@ -123,7 +152,7 @@ def estimate_head_pose_live(max_faces=1, min_confidence=0.7):
                 face_angles = estimate_head_pose(
                     max_faces=max_faces,
                     min_confidence=min_confidence,
-                    np_image=frame,
+                    src_np_image=frame,
                     face_mesh_obj=face_mesh
                 )
             except ValueError:
