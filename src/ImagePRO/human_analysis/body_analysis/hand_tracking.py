@@ -14,45 +14,54 @@ mp_hands = mp.solutions.hands
 
 
 def detect_hands(
-    max_hands=2,
-    min_confidence=0.7,
-    landmarks_idx=None,
-    image_path=None,
-    np_image=None,
-    result_path=None,
+    max_hands: int = 2,
+    min_confidence: float = 0.7,
+    landmarks_idx: list | None = None,
+    src_image_path: str | None = None,
+    src_np_image=None,
+    output_image_path: str | None = None,
+    output_csv_path: str | None = None,
     hands_obj=None
 ):
     """
-    Detects hand landmarks in an image using MediaPipe.
+    Detect hand landmarks in an image using MediaPipe Hands.
 
-    Args:
-        max_hands (int): Max number of hands to detect.
-        min_confidence (float): Minimum confidence for detection.
-        landmarks_idx (list[int] | None): Landmark indices to extract (default: all 21).
-        image_path (str | None): Image file path.
-        np_image (np.ndarray | None): Preloaded image array.
-        result_path (str | None): Path to save output image (.jpg) or landmarks (.csv).
-        hands_obj (mp.solutions.hands.Hands | None): Optional pre-initialized model.
+    Parameters
+    ----------
+    max_hands : int, default=2
+        Max number of hands to detect.
+    min_confidence : float, default=0.7
+        Minimum detection confidence [0, 1].
+    landmarks_idx : list[int] | None, optional
+        Landmark indices to extract (default: all 21).
+    src_image_path : str | None, optional
+        Path to image file.
+    src_np_image : np.ndarray | None, optional
+        Preloaded BGR image array.
+    output_image_path : str | None, optional
+        If provided, saves annotated image.
+    output_csv_path : str | None, optional
+        If provided, saves landmarks CSV.
+    hands_obj : mp.solutions.hands.Hands | None, optional
+        Optional pre-initialized model.
 
-    Returns:
-        np.ndarray | list: Annotated image and landmarks list, or saved file confirmation.
+    Returns
+    -------
+    tuple[np.ndarray, list]
+        Annotated image and landmarks list.
+
+    Raises
+    ------
+    ValueError, TypeError, FileNotFoundError, IOError
     """
     if not isinstance(max_hands, int) or max_hands <= 0:
         raise ValueError("'max_hands' must be a positive integer.")
-
     if not isinstance(min_confidence, (int, float)) or not (0.0 <= min_confidence <= 1.0):
         raise ValueError("'min_confidence' must be a float between 0.0 and 1.0.")
+    if landmarks_idx is not None and (not isinstance(landmarks_idx, list) or not all(isinstance(i, int) for i in landmarks_idx)):
+        raise TypeError("'landmarks_idx' must be a list of ints or None.")
 
-    if landmarks_idx is not None and not isinstance(landmarks_idx, list):
-        raise TypeError("'landmarks_idx' must be a list or None.")
-
-    if result_path:
-        if not isinstance(result_path, str):
-            raise TypeError("'result_path' must be a string.")
-        if not (result_path.endswith('.jpg') or result_path.endswith('.csv')):
-            raise ValueError("Only '.jpg' and '.csv' extensions are supported.")
-
-    np_image = IOHandler.load_image(image_path=image_path, np_image=np_image)
+    np_image = IOHandler.load_image(image_path=src_image_path, np_image=src_np_image)
 
     if hands_obj is None:
         hands_obj = mp_hands.Hands(
@@ -72,49 +81,35 @@ def detect_hands(
 
     if results.multi_hand_landmarks:
         for hand_id, hand_landmarks in enumerate(results.multi_hand_landmarks):
-            if result_path is None or result_path.endswith('.jpg'):
-                if len(landmarks_idx) == 21:
-                    mp.solutions.drawing_utils.draw_landmarks(
-                        image=annotated_image,
-                        landmark_list=hand_landmarks,
-                        connections=mp_hands.HAND_CONNECTIONS,
-                        landmark_drawing_spec=mp.solutions.drawing_styles.get_default_hand_landmarks_style(),
-                        connection_drawing_spec=mp.solutions.drawing_styles.get_default_hand_connections_style()
-                    )
-                else:
-                    h, w, _ = annotated_image.shape
-                    for idx in landmarks_idx:
-                        lm = hand_landmarks.landmark[idx]
-                        x, y = int(w * lm.x), int(h * lm.y)
-                        cv2.circle(annotated_image, (x, y), 3, (0, 0, 255), -1)
-
-            if result_path is None or result_path.endswith('.csv'):
-                hand_data = []
+            if len(landmarks_idx) == 21:
+                mp.solutions.drawing_utils.draw_landmarks(
+                    image=annotated_image,
+                    landmark_list=hand_landmarks,
+                    connections=mp_hands.HAND_CONNECTIONS,
+                    landmark_drawing_spec=mp.solutions.drawing_styles.get_default_hand_landmarks_style(),
+                    connection_drawing_spec=mp.solutions.drawing_styles.get_default_hand_connections_style()
+                )
+            else:
+                h, w, _ = annotated_image.shape
                 for idx in landmarks_idx:
                     lm = hand_landmarks.landmark[idx]
-                    hand_data.append([hand_id, idx, lm.x, lm.y, lm.z])
-                all_landmarks.append(hand_data)
-    else:
-        return np_image, []
+                    x, y = int(w * lm.x), int(h * lm.y)
+                    cv2.circle(annotated_image, (x, y), 3, (0, 0, 255), -1)
 
-    if result_path:
-        if result_path.endswith('.jpg'):
-            return IOHandler.save_image(annotated_image, result_path)
-        elif result_path.endswith('.csv'):
-            flat_landmarks = [item for sublist in all_landmarks for item in sublist]
-            return IOHandler.save_csv(flat_landmarks, result_path)
-    else:
-        return annotated_image, all_landmarks
+            for idx in landmarks_idx:
+                lm = hand_landmarks.landmark[idx]
+                all_landmarks.append([hand_id, idx, lm.x, lm.y, lm.z])
+
+    if output_image_path:
+        print(IOHandler.save_image(annotated_image, output_image_path))
+    if output_csv_path:
+        print(IOHandler.save_csv(all_landmarks, output_csv_path))
+
+    return annotated_image, all_landmarks
 
 
-def detect_hands_live(max_hands=2, min_confidence=0.7):
-    """
-    Real-time hand detection via webcam.
-
-    Args:
-        max_hands (int): Maximum hands to detect.
-        min_confidence (float): Detection confidence threshold.
-    """
+def detect_hands_live(max_hands: int = 2, min_confidence: float = 0.7):
+    """Real-time hand detection via webcam. Press ESC to exit."""
     if not isinstance(max_hands, int) or max_hands <= 0:
         raise ValueError("'max_hands' must be a positive integer.")
     if not isinstance(min_confidence, (int, float)) or not (0.0 <= min_confidence <= 1.0):
@@ -127,7 +122,7 @@ def detect_hands_live(max_hands=2, min_confidence=0.7):
     hands_obj = mp_hands.Hands(
         min_detection_confidence=min_confidence,
         max_num_hands=max_hands,
-        static_image_mode=True
+        static_image_mode=False
     )
 
     try:
@@ -140,7 +135,7 @@ def detect_hands_live(max_hands=2, min_confidence=0.7):
             annotated_img, _ = detect_hands(
                 max_hands=max_hands,
                 min_confidence=min_confidence,
-                np_image=frame,
+                src_np_image=frame,
                 hands_obj=hands_obj
             )
 
