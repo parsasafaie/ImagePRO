@@ -1,6 +1,6 @@
 import sys
 from pathlib import Path
-
+import numpy as np
 import cv2
 
 # Add parent directory to sys.path for importing custom modules
@@ -10,18 +10,40 @@ sys.path.append(str(parent_dir))
 from utils.io_handler import IOHandler
 
 
-def convert_to_grayscale(image_path=None, np_image=None, result_path=None):
+def convert_to_grayscale(
+    src_image_path: str | None = None,
+    src_np_image: np.ndarray | None = None,
+    output_image_path: str | None = None
+) -> np.ndarray:
     """
     Convert a BGR image to single-channel grayscale.
 
-    Args:
-        image_path (str, optional): Path to input image file.
-        np_image (np.ndarray, optional): Image array (used if image_path is None).
-        result_path (str, optional): Path to save grayscale image.
+    Parameters
+    ----------
+    src_image_path : str | None, optional
+        Path to the input image file.
+    src_np_image : np.ndarray | None, optional
+        Preloaded BGR image. Used if `src_image_path` is None.
+    output_image_path : str | None, optional
+        Path to save the grayscale image.
 
-    Returns:
-        str or np.ndarray: Confirmation message if saved, else grayscale image.
+    Returns
+    -------
+    np.ndarray
+        Grayscale image.
+
+    Raises
+    ------
+    TypeError
+        If input types are invalid.
+    FileNotFoundError
+        If the provided `src_image_path` does not exist.
+    IOError
+        If saving the image fails.
     """
-    np_image = IOHandler.load_image(image_path=image_path, np_image=np_image)
+    np_image = IOHandler.load_image(image_path=src_image_path, np_image=src_np_image)
     grayscale = cv2.cvtColor(np_image, cv2.COLOR_BGR2GRAY)
-    return IOHandler.save_image(grayscale, result_path)
+
+    if output_image_path:
+        print(IOHandler.save_image(grayscale, output_image_path))
+    return grayscale

@@ -83,7 +83,7 @@ class IOHandler:
                     raise IOError(f"Failed to save image: {path}")
             return f"Images saved using base path {result_path}"
 
-        return np_image
+        return "Skipped saving image because no file path was provided"
 
     @staticmethod
     def save_csv(data, result_path=None):
@@ -111,7 +111,8 @@ class IOHandler:
                 writer.writerows(data)
             return f"CSV saved at {result_path}"
 
-        return data
+        return "Skipped saving csv because no file path was provided"
+
 
     @staticmethod
     def save_json(data, result_path=None):
@@ -135,7 +136,8 @@ class IOHandler:
                 json.dump(data, f, indent=4)
             return f"JSON saved at {result_path}"
 
-        return data
+        return "Skipped saving json because no file path was provided"
+
 
     @staticmethod
     def save(data, result_path=None, file_type=None):

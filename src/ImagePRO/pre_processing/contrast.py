@@ -1,6 +1,5 @@
 import sys
 from pathlib import Path
-
 import cv2
 import numpy as np
 
@@ -13,85 +12,130 @@ from utils.io_handler import IOHandler
 
 
 def apply_clahe_contrast(
-    clipLimit=2.0,
-    tileGridSize=(8, 8),
-    image_path=None,
-    np_image=None,
-    result_path=None,
-):
+    clip_limit: float = 2.0,
+    tile_grid_size: tuple[int, int] = (8, 8),
+    src_image_path: str | None = None,
+    src_np_image=None,
+    output_image_path: str | None = None
+) -> np.ndarray:
     """
-    Enhance contrast using CLAHE (adaptive histogram equalization).
+    Enhance image contrast using CLAHE (adaptive histogram equalization).
 
-    Args:
-        clipLimit (float): Contrast threshold (must be > 0).
-        tileGridSize (tuple): Grid size for local histogram (e.g., (8, 8)).
-        image_path (str, optional): Path to input image.
-        np_image (np.ndarray, optional): Image array.
-        result_path (str, optional): Path to save result.
+    Parameters
+    ----------
+    clip_limit : float, default=2.0
+        Contrast threshold (must be > 0).
+    tile_grid_size : tuple[int, int], default=(8, 8)
+        Grid size for local histogram (positive integers).
+    src_image_path : str | None, optional
+        Path to input image.
+    src_np_image : np.ndarray | None, optional
+        Preloaded image.
+    output_image_path : str | None, optional
+        Path to save the enhanced image.
 
-    Returns:
-        str or np.ndarray: Confirmation if saved, else enhanced image.
+    Returns
+    -------
+    np.ndarray
+        Enhanced grayscale image.
 
-    Raises:
-        ValueError, TypeError: On invalid parameter values.
+    Raises
+    ------
+    ValueError
+        If `clip_limit` <= 0.
+    TypeError
+        If `tile_grid_size` is not valid.
+    FileNotFoundError
+        If image path is invalid.
+    IOError
+        If saving the image fails.
     """
-    if not isinstance(clipLimit, (int, float)) or clipLimit <= 0:
-        raise ValueError("'clipLimit' must be a positive number.")
+    if not isinstance(clip_limit, (int, float)) or clip_limit <= 0:
+        raise ValueError("'clip_limit' must be a positive number.")
 
     if (
-        not isinstance(tileGridSize, tuple)
-        or len(tileGridSize) != 2
-        or not all(isinstance(i, int) and i > 0 for i in tileGridSize)
+        not isinstance(tile_grid_size, tuple)
+        or len(tile_grid_size) != 2
+        or not all(isinstance(i, int) and i > 0 for i in tile_grid_size)
     ):
-        raise TypeError("'tileGridSize' must be a tuple of two positive integers.")
+        raise TypeError("'tile_grid_size' must be a tuple of two positive integers.")
 
-    np_image = convert_to_grayscale(np_image=IOHandler.load_image(image_path=image_path, np_image=np_image))
+    np_image = convert_to_grayscale(
+        np_image=IOHandler.load_image(image_path=src_image_path, np_image=src_np_image)
+    )
 
-    clahe = cv2.createCLAHE(clipLimit=clipLimit, tileGridSize=tileGridSize)
+    clahe = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=tile_grid_size)
     enhanced = clahe.apply(np_image)
 
-    return IOHandler.save_image(enhanced, result_path)
+    if output_image_path:
+        print(IOHandler.save_image(enhanced, output_image_path))
+    return enhanced
 
 
-def apply_histogram_equalization(image_path=None, np_image=None, result_path=None):
+def apply_histogram_equalization(
+    src_image_path: str | None = None,
+    src_np_image=None,
+    output_image_path: str | None = None
+) -> np.ndarray:
     """
     Enhance contrast using global histogram equalization.
 
-    Args:
-        image_path (str, optional): Path to input image.
-        np_image (np.ndarray, optional): Image array.
-        result_path (str, optional): Path to save result.
+    Parameters
+    ----------
+    src_image_path : str | None, optional
+        Path to input image.
+    src_np_image : np.ndarray | None, optional
+        Preloaded image.
+    output_image_path : str | None, optional
+        Path to save the enhanced image.
 
-    Returns:
-        str or np.ndarray: Confirmation if saved, else enhanced image.
+    Returns
+    -------
+    np.ndarray
+        Enhanced grayscale image.
     """
-    np_image = convert_to_grayscale(np_image=IOHandler.load_image(image_path=image_path, np_image=np_image))
+    np_image = convert_to_grayscale(
+        np_image=IOHandler.load_image(image_path=src_image_path, np_image=src_np_image)
+    )
     enhanced = cv2.equalizeHist(np_image)
-    return IOHandler.save_image(enhanced, result_path)
+
+    if output_image_path:
+        print(IOHandler.save_image(enhanced, output_image_path))
+    return enhanced
 
 
 def apply_contrast_stretching(
-    alpha,
-    beta,
-    image_path=None,
-    np_image=None,
-    result_path=None,
-):
+    alpha: float,
+    beta: int,
+    src_image_path: str | None = None,
+    src_np_image=None,
+    output_image_path: str | None = None
+) -> np.ndarray:
     """
-    Enhance contrast by linear contrast stretching (alpha × pixel + beta).
+    Enhance contrast by linear stretching: `alpha × pixel + beta`.
 
-    Args:
-        alpha (float): Contrast factor (>= 0).
-        beta (int): Brightness offset (0–255).
-        image_path (str, optional): Path to input image.
-        np_image (np.ndarray, optional): Image array.
-        result_path (str, optional): Path to save result.
+    Parameters
+    ----------
+    alpha : float
+        Contrast factor (>= 0).
+    beta : int
+        Brightness offset (0–255).
+    src_image_path : str | None, optional
+        Path to input image.
+    src_np_image : np.ndarray | None, optional
+        Preloaded image.
+    output_image_path : str | None, optional
+        Path to save the enhanced image.
 
-    Returns:
-        str or np.ndarray: Confirmation if saved, else enhanced image.
+    Returns
+    -------
+    np.ndarray
+        Enhanced grayscale image.
 
-    Raises:
-        ValueError: If parameters are out of range.
+    Raises
+    ------
+    ValueError
+        If `alpha` or `beta` are out of range.
     """
     if not isinstance(alpha, (int, float)) or alpha < 0:
         raise ValueError("'alpha' must be a non-negative number.")
@@ -99,7 +143,11 @@ def apply_contrast_stretching(
     if not isinstance(beta, int) or not (0 <= beta <= 255):
         raise ValueError("'beta' must be an integer between 0 and 255.")
 
-    np_image = convert_to_grayscale(np_image=IOHandler.load_image(image_path=image_path, np_image=np_image))
+    np_image = convert_to_grayscale(
+        np_image=IOHandler.load_image(image_path=src_image_path, np_image=src_np_image)
+    )
     enhanced = cv2.convertScaleAbs(np_image, alpha=alpha, beta=beta)
 
-    return IOHandler.save_image(enhanced, result_path)
+    if output_image_path:
+        print(IOHandler.save_image(enhanced, output_image_path))
+    return enhanced
