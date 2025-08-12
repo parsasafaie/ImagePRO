@@ -1,25 +1,24 @@
 import sys
-from pathlib import Path
+import time
 import random
+from pathlib import Path
+
 import cv2
 import mediapipe as mp
-import numpy as np
 
 # Add parent directory to sys.path for local imports
 parent_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(parent_dir))
 
-from human_analysis.face_analysis.face_detection import detect_faces  # standardized detect_faces
-
-# Use namespaced imports from pre_processing for clarity/consistency
-from pre_processing.blur import apply_median_blur
-from pre_processing.sharpen import apply_laplacian_sharpening
-from pre_processing.rotate import rotate_image_custom
-from pre_processing.grayscale import convert_to_grayscale
-from pre_processing.resize import resize_image
+from human_analysis.face_analysis.face_detection import detect_faces
+from blur import apply_median_blur
+from sharpen import apply_laplacian_sharpening
+from rotate import rotate_image_custom
+from grayscale import convert_to_grayscale
+from resize import resize_image
 
 
-def capture_bulk_faces(
+def capture_bulk_pictures(
     folder_path: str | Path,
     face_id: str | int,
     num_images: int = 200,
@@ -30,7 +29,8 @@ def capture_bulk_faces(
     apply_grayscale: bool = False,
     apply_sharpen: bool = False,
     apply_rotate: bool = False,
-    apply_resize: tuple[int, int] | None = None,
+    apply_resize: tuple = False,
+    delay: float = 0.1,
 ) -> None:
     """
     Capture frames from webcam and save cropped face images, with optional preprocessing.
@@ -62,6 +62,8 @@ def capture_bulk_faces(
         Apply a random rotation in [-45°, +45°] with random scale {1.0, 1.1, 1.2, 1.3}.
     apply_resize : tuple[int, int] | None, default=None
         If provided, resize to (width, height) before rotation.
+    delay : float, default=0.1
+        Delay between each capture in seconds.
 
     Raises
     ------
@@ -72,13 +74,14 @@ def capture_bulk_faces(
     RuntimeError
         If the webcam cannot be opened.
     """
-    # Basic validations
     if not isinstance(num_images, int) or num_images <= 0:
         raise ValueError("'num_images' must be a positive integer.")
     if not isinstance(start_index, int) or start_index < 0:
         raise ValueError("'start_index' must be a non-negative integer.")
     if not isinstance(min_confidence, (int, float)) or not (0 <= min_confidence <= 1):
         raise ValueError("'min_confidence' must be between 0 and 1.")
+    if not isinstance(delay, (int, float)) or delay < 0:
+        raise ValueError("'delay' must be a non-negative number.")
 
     base_dir = Path(folder_path)
     face_folder = base_dir / str(face_id)
@@ -146,6 +149,10 @@ def capture_bulk_faces(
                     face_mesh_obj=face_mesh,
                 )
                 saved += 1
+
+                if delay > 0:
+                    time.sleep(delay)
+
             except ValueError:
                 # No face detected; skip this frame
                 continue
@@ -155,8 +162,8 @@ def capture_bulk_faces(
 
 
 if __name__ == "__main__":
-    capture_bulk_faces(
-        folder_path="tmp",
+    capture_bulk_pictures(
+        folder_path=r"tmp",
         face_id="0",
         num_images=200,
         start_index=0,
@@ -167,4 +174,5 @@ if __name__ == "__main__":
         apply_grayscale=True,
         apply_resize=(224, 224),
         apply_rotate=True,
+        delay=0.1
     )
