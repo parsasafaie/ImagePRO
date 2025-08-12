@@ -45,6 +45,16 @@ Includes resizing, cropping, rotation, grayscale conversion, blurring, sharpenin
 - `apply_laplacian_sharpening(coefficient=3.0, src_image_path=None, src_np_image=None, output_image_path=None) -> np.ndarray`
 - `apply_unsharp_masking(coefficient=1.0, src_image_path=None, src_np_image=None, output_image_path=None) -> np.ndarray`
 
+### `sharpen.py`
+- `apply_laplacian_sharpening(coefficient=3.0, src_image_path=None, src_np_image=None, output_image_path=None) -> np.ndarray`
+- `apply_unsharp_masking(coefficient=1.0, src_image_path=None, src_np_image=None, output_image_path=None) -> np.ndarray`
+
+### `dataset_generator()`
+- `capture_bulk_pictures(folder_path: str | Path, face_id: str | int, num_images: int = 200, start_index: int = 0, min_confidence: float = 0.7, camera_index: int = 0, apply_blur: bool = False, apply_grayscale: bool = False, apply_sharpen: bool = False, apply_rotate: bool = False, apply_resize: tuple | None = None, delay: float = 0.1) -> None`  
+  Capture multiple cropped face images from webcam into a new folder `<folder_path>/<face_id>` with optional preprocessing steps.  
+  Processing order: **median blur → laplacian sharpen → grayscale → resize → random rotate**.
+
+
 ## Quick Start
 ```python
 from pre_processing.grayscale import convert_to_grayscale
@@ -62,6 +72,10 @@ resized = resize_image(new_size=(640, 480), src_np_image=blur)
   - `TypeError`, `FileNotFoundError`, `ValueError` (bad path, both inputs None, or load failure)
 - From `IOHandler.save_image`:
   - `TypeError`, `IOError` (invalid path or write failure)
+- From `capture_bulk_pictures`:
+  - `FileExistsError`: destination folder `<folder_path>/<face_id>` already exists
+  - `RuntimeError`: webcam cannot be opened
+
 
 ## Notes
 - All operations expect **BGR** input (OpenCV default).

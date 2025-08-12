@@ -15,6 +15,7 @@ Whether you're working on computer vision pipelines, preprocessing images for AI
 - Blur filters (average, Gaussian, median, bilateral)
 - Contrast enhancement (CLAHE, GHE, stretching)
 - Sharpening filters (Laplacian, Unsharp Masking)
+- Dataset Generator
 - Face mesh analyzer
 - Face detector
 - Head Position Estimator
