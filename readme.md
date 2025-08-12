@@ -19,6 +19,9 @@ Whether you're working on computer vision pipelines, preprocessing images for AI
 - Face mesh analyzer
 - Face detector
 - Head Position Estimator
+- Eye Status analyzer
+- Hnad tracker
+- Body Position Estimator
 
 More features are being added regularly!
 
