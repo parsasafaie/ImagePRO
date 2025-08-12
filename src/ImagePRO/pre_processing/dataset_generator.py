@@ -1,7 +1,9 @@
 import sys
 from pathlib import Path
+import random
 import cv2
 import mediapipe as mp
+import numpy as np
 
 # Add parent directory to sys.path for local imports
 parent_dir = Path(__file__).resolve().parent.parent
@@ -9,17 +11,32 @@ sys.path.append(str(parent_dir))
 
 from human_analysis.face_analysis.face_detection import detect_faces  # standardized detect_faces
 
+# Use namespaced imports from pre_processing for clarity/consistency
+from pre_processing.blur import apply_median_blur
+from pre_processing.sharpen import apply_laplacian_sharpening
+from pre_processing.rotate import rotate_image_custom
+from pre_processing.grayscale import convert_to_grayscale
+from pre_processing.resize import resize_image
 
-def capture_bulk_pictures(
+
+def capture_bulk_faces(
     folder_path: str | Path,
     face_id: str | int,
     num_images: int = 200,
     start_index: int = 0,
     min_confidence: float = 0.7,
     camera_index: int = 0,
+    apply_blur: bool = False,
+    apply_grayscale: bool = False,
+    apply_sharpen: bool = False,
+    apply_rotate: bool = False,
+    apply_resize: tuple[int, int] | None = None,
 ) -> None:
     """
-    Capture frames from webcam and save cropped face images.
+    Capture frames from webcam and save cropped face images, with optional preprocessing.
+
+    Processing order (if enabled):
+    median blur → laplacian sharpen → grayscale → resize → random rotate
 
     Parameters
     ----------
@@ -35,6 +52,16 @@ def capture_bulk_pictures(
         Detection confidence for MediaPipe FaceMesh.
     camera_index : int, default=0
         OpenCV camera index.
+    apply_blur : bool, default=False
+        Apply median blur (filter_size=3) before other steps.
+    apply_grayscale : bool, default=False
+        Convert frame to single-channel grayscale.
+    apply_sharpen : bool, default=False
+        Apply Laplacian-based sharpening (coefficient=1.0).
+    apply_rotate : bool, default=False
+        Apply a random rotation in [-45°, +45°] with random scale {1.0, 1.1, 1.2, 1.3}.
+    apply_resize : tuple[int, int] | None, default=None
+        If provided, resize to (width, height) before rotation.
 
     Raises
     ------
@@ -45,6 +72,7 @@ def capture_bulk_pictures(
     RuntimeError
         If the webcam cannot be opened.
     """
+    # Basic validations
     if not isinstance(num_images, int) or num_images <= 0:
         raise ValueError("'num_images' must be a positive integer.")
     if not isinstance(start_index, int) or start_index < 0:
@@ -55,7 +83,7 @@ def capture_bulk_pictures(
     base_dir = Path(folder_path)
     face_folder = base_dir / str(face_id)
 
-    # Create destination folder
+    # Create destination folder (fail if exists to avoid accidental overwrite)
     try:
         face_folder.mkdir(parents=True, exist_ok=False)
     except FileExistsError as e:
@@ -82,21 +110,44 @@ def capture_bulk_pictures(
                 print("Skipping empty frame.")
                 continue
 
+            # Optional preprocessing steps
+            proc = frame
+
+            if apply_blur:
+                # Small kernel to keep facial details while reducing salt-and-pepper noise
+                proc = apply_median_blur(src_np_image=proc, filter_size=3)
+
+            if apply_sharpen:
+                # Gentle sharpening; adjust coefficient if needed
+                proc = apply_laplacian_sharpening(src_np_image=proc, coefficient=1.0)
+
+            if apply_grayscale:
+                proc = convert_to_grayscale(src_np_image=proc)
+
+            if apply_resize is not None:
+                proc = resize_image(new_size=apply_resize, src_np_image=proc)
+
+            if apply_rotate:
+                angle = float(random.randint(-45, 45))
+                scale = random.choice([1.0, 1.1, 1.2, 1.3])
+                proc = rotate_image_custom(src_np_image=proc, angle=angle, scale=scale)
+
             # Zero-padded filenames for better ordering
             filename = f"{start_index + saved:04d}.jpg"
             out_path = face_folder / filename
 
             try:
+                # Save cropped face image via standardized detect_faces
                 detect_faces(
                     max_faces=1,
                     min_confidence=min_confidence,
-                    src_np_image=frame,
+                    src_np_image=proc,
                     output_image_path=str(out_path),
                     face_mesh_obj=face_mesh,
                 )
                 saved += 1
             except ValueError:
-                # No face detected; skip frame
+                # No face detected; skip this frame
                 continue
     finally:
         cap.release()
@@ -104,11 +155,16 @@ def capture_bulk_pictures(
 
 
 if __name__ == "__main__":
-    capture_bulk_pictures(
-        folder_path=r"tmp",
+    capture_bulk_faces(
+        folder_path="tmp",
         face_id="0",
         num_images=200,
         start_index=0,
         min_confidence=0.7,
         camera_index=0,
+        apply_blur=True,
+        apply_sharpen=True,
+        apply_grayscale=True,
+        apply_resize=(224, 224),
+        apply_rotate=True,
     )
