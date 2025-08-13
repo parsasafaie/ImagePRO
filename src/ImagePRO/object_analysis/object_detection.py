@@ -43,4 +43,4 @@ def detect_objects(model=None, accuracy_level=1, src_image_path=None, src_np_ima
             lines.append([box_class,[x1, y1, x2, y2], conf])
         IOHandler.save_csv(data=lines, result_path=output_csv_path)
 
-    return result
+    return result.plot(), lines
