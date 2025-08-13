@@ -2,7 +2,7 @@
 
 > **Professional & Modular Image Processing Library in Python**
 
-**ImagePRO** is a clean, modular, and easy-to-use Python library for image processing tasks, built with OpenCV and designed to be extensible for developers.
+**ImagePRO** is a clean, modular, and easy-to-use Python library for image processing tasks, built with OpenCV, Mediapipe, YOLO and designed to be extensible for developers.
 
 Whether you're working on computer vision pipelines, preprocessing images for AI models, or simply automating batch image edits — **ImagePRO** gives you powerful tools with minimal effort.
 
@@ -22,6 +22,7 @@ Whether you're working on computer vision pipelines, preprocessing images for AI
 - Eye Status analyzer
 - Hnad tracker
 - Body Position Estimator
+- Object Detection
 
 More features are being added regularly!
 
