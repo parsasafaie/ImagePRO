@@ -34,7 +34,12 @@ def detect_objects(accuracy_level=1, src_image_path=None, src_np_image=None, out
         IOHandler.save_image(np_image=result.plot(), result_path=output_image_path)
     if output_csv_path:
         boxes = result.boxes
-        lines = [[box.cls, box.xyxyn] for box in boxes]
+        lines = []
+        for box in boxes:
+            box_class = int(box.cls)
+            conf  = float(box.conf)
+            x1, y1, x2, y2 = [float(c) for c in box.xyxyn.squeeze().tolist()]
+            lines.append([box_class,[x1, y1, x2, y2], conf])
         IOHandler.save_csv(data=lines, result_path=output_csv_path)
 
     return result
