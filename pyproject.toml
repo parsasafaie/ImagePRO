@@ -7,7 +7,7 @@ where = ["src"]
 
 [project]
 name = "ImagePRO-Python"
-version = "0.3.0"
+version = "0.4.0"
 description = "clean, modular, and easy-to-use Python library for image processing tasks."
 readme = "README.md"
 requires-python = "==3.10.*"
@@ -24,6 +24,8 @@ classifiers = [
 dependencies = [
   "numpy>=1.24,<3.0",
   "opencv-python>=4.8,<5.0",
+  "ultralytics>=8.2.0,<9.0",
+  "mediapipe>=0.10.0,<1.0", 
 ]
 
 [tool.hatch.build.targets.wheel]
