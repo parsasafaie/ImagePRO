@@ -9,21 +9,22 @@ sys.path.append(str(parent_dir))
 
 from utils.io_handler import IOHandler
 
-def detect_objects(accuracy_level=1, src_image_path=None, src_np_image=None, output_image_path=None, output_csv_path=None, show_result=False):
-    if accuracy_level==1:
-        model_name = "yolo11n.pt"
-    elif accuracy_level==2:
-        model_name = "yolo11s.pt"
-    elif accuracy_level==3:
-        model_name = "yolo11m.pt"
-    elif accuracy_level==4:
-        model_name = "yolo11l.pt"
-    elif accuracy_level==5:
-        model_name = "yolo11x.pt"
-    else:
-        raise ValueError('Unknown accuracy level.')
+def detect_objects(model=None, accuracy_level=1, src_image_path=None, src_np_image=None, output_image_path=None, output_csv_path=None, show_result=False):
+    if model is None:
+        if accuracy_level==1:
+            model_name = "yolo11n.pt"
+        elif accuracy_level==2:
+            model_name = "yolo11s.pt"
+        elif accuracy_level==3:
+            model_name = "yolo11m.pt"
+        elif accuracy_level==4:
+            model_name = "yolo11l.pt"
+        elif accuracy_level==5:
+            model_name = "yolo11x.pt"
+        else:
+            raise ValueError('Unknown accuracy level.')
 
-    model = YOLO(model=model_name)
+        model = YOLO(model=model_name)
 
     frame = IOHandler.load_image(image_path=src_image_path, np_image=src_np_image)
     result = model(frame)[0]
