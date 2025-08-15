@@ -127,7 +127,7 @@ def capture_bulk_pictures(
             if apply_grayscale:
                 proc = convert_to_grayscale(src_np_image=proc)
 
-            if apply_resize is not None:
+            if apply_resize is not False:
                 proc = resize_image(new_size=apply_resize, src_np_image=proc)
 
             if apply_rotate:
