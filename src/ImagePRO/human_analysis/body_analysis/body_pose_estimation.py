@@ -99,7 +99,7 @@ def detect_body_pose(
 
 def detect_body_pose_live():
     """Starts webcam and shows real-time body pose detection. Press ESC to exit."""
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
     if not cap.isOpened():
         raise RuntimeError("Failed to open webcam.")
 

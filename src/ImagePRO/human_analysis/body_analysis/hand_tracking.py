@@ -115,7 +115,7 @@ def detect_hands_live(max_hands: int = 2, min_confidence: float = 0.7):
     if not isinstance(min_confidence, (int, float)) or not (0.0 <= min_confidence <= 1.0):
         raise ValueError("'min_confidence' must be a float between 0.0 and 1.0.")
 
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
     if not cap.isOpened():
         raise RuntimeError("Failed to open webcam.")
 
