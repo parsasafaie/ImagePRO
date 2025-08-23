@@ -131,7 +131,7 @@ def analyze_eye_status_live(min_confidence: float = 0.7, threshold: float = 0.2)
     if not isinstance(min_confidence, (int, float)) or not (0 <= min_confidence <= 1):
         raise ValueError("'min_confidence' must be between 0 and 1.")
 
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
     if not cap.isOpened():
         raise RuntimeError("Cannot access webcam.")
 
