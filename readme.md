@@ -52,14 +52,5 @@ source .venv/bin/activate   # macOS/Linux
 pip install -r requirements.txt
 ```
 
-## Quick Start
-```python
-from pre_processing.grayscale import convert_to_grayscale
-from pre_processing.blur import apply_gaussian_blur
-
-gray = convert_to_grayscale(src_image_path="input.jpg")
-blur = apply_gaussian_blur(src_np_image=gray, kernel_size=(5,5), output_image_path="blurred.jpg")
-```
-
 ## License 
 This project is licensed under the MIT License – see the LICENSE file for details.
