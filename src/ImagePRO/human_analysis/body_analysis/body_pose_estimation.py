@@ -8,7 +8,8 @@ import mediapipe as mp
 parent_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(parent_dir))
 
-from utils.io_handler import IOHandler
+from ImagePRO.utils.image import Image
+from ImagePRO.utils.result import Result
 
 # Constants
 mp_pose = mp.solutions.pose
@@ -18,61 +19,55 @@ LANDMARK_RADIUS = 3
 LANDMARK_COLOR = (0, 0, 255)  # Red color for landmarks
 
 def detect_body_pose(
-    model_accuracy: float = DEFAULT_CONFIDENCE, 
+    *,
+    image: Image,
+    min_confidence: float = DEFAULT_CONFIDENCE,
     landmarks_idx: list | None = None,
-    src_image_path: str | None = None,
-    src_np_image=None,
-    output_image_path: str | None = None,
-    output_csv_path: str | None = None,
     pose_obj=None
-):
+) -> Result:
     """
     Detect body landmarks from an image using MediaPipe Pose.
 
     Parameters
     ----------
-    model_accuracy : float, default=0.7
+    image : Image
+        Image instance (BGR) to process.
+    min_confidence : float, default=0.7
         Minimum detection confidence [0, 1].
     landmarks_idx : list[int] | None, optional
         Indices of landmarks to extract. Default: all 33.
-    src_image_path : str | None, optional
-        Path to image file.
-    src_np_image : np.ndarray | None, optional
-        Preloaded BGR image array.
-    output_image_path : str | None, optional
-        If provided, saves annotated image.
-    output_csv_path : str | None, optional
-        If provided, saves landmarks CSV.
     pose_obj : mp.solutions.pose.Pose | None, optional
         Optional pre-initialized pose model.
 
     Returns
     -------
-    tuple[np.ndarray, list]
-        Annotated image and landmarks list.
-
-    Raises
-    ------
-    ValueError, TypeError, FileNotFoundError, IOError
+    Result
+        Result with `image` as annotated image and `data` as landmark rows [idx, x, y, z].
     """
+    if not isinstance(image, Image):
+        raise ValueError("'image' must be an instance of Image.")
+    if not isinstance(min_confidence, (int, float)) or not (0.0 <= min_confidence <= 1.0):
+        raise ValueError("'min_confidence' must be a float between 0.0 and 1.0.")
     if landmarks_idx is not None and (not isinstance(landmarks_idx, list) or not all(isinstance(i, int) for i in landmarks_idx)):
         raise TypeError("'landmarks_idx' must be a list of ints or None.")
 
-    np_image = IOHandler.load_image(image_path=src_image_path, np_image=src_np_image)
+    h, w = image.shape[:2]
+    np_image = image._data
 
     if landmarks_idx is None:
         landmarks_idx = list(range(TOTAL_LANDMARKS))
 
     if pose_obj is None:
         pose_obj = mp_pose.Pose(
-            min_detection_confidence=model_accuracy,
+            min_detection_confidence=min_confidence,
             static_image_mode=True
         )
 
-    image_rgb = cv2.cvtColor(np_image, cv2.COLOR_BGR2RGB)
+    annotated_image = np_image.copy()
+
+    image_rgb = cv2.cvtColor(annotated_image, cv2.COLOR_BGR2RGB)
     result = pose_obj.process(image_rgb)
 
-    annotated_image = np_image.copy()
     all_landmarks = []
 
     if result.pose_landmarks:
@@ -84,7 +79,6 @@ def detect_body_pose(
                 landmark_drawing_spec=mp.solutions.drawing_styles.get_default_pose_landmarks_style()
             )
         else:
-            h, w, _ = annotated_image.shape
             for idx in landmarks_idx:
                 lm = result.pose_landmarks.landmark[idx]
                 x, y = int(w * lm.x), int(h * lm.y)
@@ -94,12 +88,7 @@ def detect_body_pose(
             lm = result.pose_landmarks.landmark[idx]
             all_landmarks.append([idx, lm.x, lm.y, lm.z])
 
-    if output_image_path:
-        print(IOHandler.save_image(annotated_image, output_image_path))
-    if output_csv_path:
-        print(IOHandler.save_csv(all_landmarks, output_csv_path))
-
-    return annotated_image, all_landmarks
+    return Result(image=annotated_image, data=all_landmarks, meta={"source": image, "operation": "detect_body_pose", "min_confidence": min_confidence, "landmarks_idx": landmarks_idx})
 
 
 def detect_body_pose_live():
@@ -121,7 +110,9 @@ def detect_body_pose_live():
                 continue
 
             try:
-                annotated_img, _ = detect_body_pose(src_np_image=frame, pose_obj=pose_obj)
+                img = Image.from_array(frame)
+                result = detect_body_pose(image=img, min_confidence=DEFAULT_CONFIDENCE, pose_obj=pose_obj)
+                annotated_img = result.image if result.image is not None else frame
             except ValueError:
                 annotated_img = frame
 

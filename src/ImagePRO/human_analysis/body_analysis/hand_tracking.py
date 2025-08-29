@@ -8,7 +8,8 @@ import mediapipe as mp
 parent_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(parent_dir))
 
-from utils.io_handler import IOHandler
+from ImagePRO.utils.image import Image
+from ImagePRO.utils.result import Result
 
 # Constants
 mp_hands = mp.solutions.hands
@@ -20,46 +21,36 @@ LANDMARK_COLOR = (0, 0, 255)  # Red color for landmarks
 
 
 def detect_hands(
+    *,
+    image: Image,
     max_hands: int = DEFAULT_MAX_HANDS,
     min_confidence: float = DEFAULT_MIN_CONFIDENCE,
     landmarks_idx: list | None = None,
-    src_image_path: str | None = None,
-    src_np_image=None,
-    output_image_path: str | None = None,
-    output_csv_path: str | None = None,
     hands_obj=None
-):
+) -> Result:
     """
     Detect hand landmarks in an image using MediaPipe Hands.
 
     Parameters
     ----------
+    image : Image
+        Image instance (BGR) to process.
     max_hands : int, default=2
         Max number of hands to detect.
     min_confidence : float, default=0.7
         Minimum detection confidence [0, 1].
     landmarks_idx : list[int] | None, optional
         Landmark indices to extract (default: all 21).
-    src_image_path : str | None, optional
-        Path to image file.
-    src_np_image : np.ndarray | None, optional
-        Preloaded BGR image array.
-    output_image_path : str | None, optional
-        If provided, saves annotated image.
-    output_csv_path : str | None, optional
-        If provided, saves landmarks CSV.
     hands_obj : mp.solutions.hands.Hands | None, optional
         Optional pre-initialized model.
 
     Returns
     -------
-    tuple[np.ndarray, list]
-        Annotated image and landmarks list.
-
-    Raises
-    ------
-    ValueError, TypeError, FileNotFoundError, IOError
+    Result
+        Result with `image` annotated and `data` as rows [hand_id, idx, x, y, z].
     """
+    if not isinstance(image, Image):
+        raise ValueError("'image' must be an instance of Image.")
     if not isinstance(max_hands, int) or max_hands <= 0:
         raise ValueError("'max_hands' must be a positive integer.")
     if not isinstance(min_confidence, (int, float)) or not (0.0 <= min_confidence <= 1.0):
@@ -67,7 +58,7 @@ def detect_hands(
     if landmarks_idx is not None and (not isinstance(landmarks_idx, list) or not all(isinstance(i, int) for i in landmarks_idx)):
         raise TypeError("'landmarks_idx' must be a list of ints or None.")
 
-    np_image = IOHandler.load_image(image_path=src_image_path, np_image=src_np_image)
+    np_image = image._data
 
     if hands_obj is None:
         hands_obj = mp_hands.Hands(
@@ -79,10 +70,10 @@ def detect_hands(
     if landmarks_idx is None:
         landmarks_idx = list(range(TOTAL_HAND_LANDMARKS))
 
-    rgb_image = cv2.cvtColor(np_image, cv2.COLOR_BGR2RGB)
+    annotated_image = np_image.copy()
+    rgb_image = cv2.cvtColor(annotated_image, cv2.COLOR_BGR2RGB)
     results = hands_obj.process(rgb_image)
 
-    annotated_image = np_image.copy()
     all_landmarks = []
 
     if results.multi_hand_landmarks:
@@ -106,12 +97,7 @@ def detect_hands(
                 lm = hand_landmarks.landmark[idx]
                 all_landmarks.append([hand_id, idx, lm.x, lm.y, lm.z])
 
-    if output_image_path:
-        print(IOHandler.save_image(annotated_image, output_image_path))
-    if output_csv_path:
-        print(IOHandler.save_csv(all_landmarks, output_csv_path))
-
-    return annotated_image, all_landmarks
+    return Result(image=annotated_image, data=all_landmarks, meta={"source": image, "operation": "detect_hands", "max_hands": max_hands, "min_confidence": min_confidence})
 
 
 def detect_hands_live(max_hands: int = DEFAULT_MAX_HANDS, min_confidence: float = DEFAULT_MIN_CONFIDENCE):
@@ -138,12 +124,13 @@ def detect_hands_live(max_hands: int = DEFAULT_MAX_HANDS, min_confidence: float 
                 print("Ignoring empty camera frame.")
                 continue
 
-            annotated_img, _ = detect_hands(
+            result = detect_hands(
+                image=Image.from_array(frame),
                 max_hands=max_hands,
                 min_confidence=min_confidence,
-                src_np_image=frame,
                 hands_obj=hands_obj
             )
+            annotated_img = result.image if result.image is not None else frame
 
             cv2.imshow('Live hand detector - ImagePRO', annotated_img)
 
