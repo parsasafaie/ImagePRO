@@ -8,7 +8,8 @@ import mediapipe as mp
 parent_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(parent_dir))
 
-from utils.io_handler import IOHandler
+from ImagePRO.utils.image import Image
+from ImagePRO.utils.result import Result
 
 # Constants
 mp_face_mesh = mp.solutions.face_mesh
@@ -23,10 +24,7 @@ def analyze_face_mesh(
     max_faces: int = DEFAULT_MAX_FACES,
     min_confidence: float = DEFAULT_MIN_CONFIDENCE,
     landmarks_idx: list | None = None,
-    src_image_path: str | None = None,
-    src_np_image=None,
-    output_image_path: str | None = None,
-    output_csv_path: str | None = None,
+    image: Image | None = None,
     face_mesh_obj=None,
 ):
     """
@@ -94,6 +92,8 @@ def analyze_face_mesh(
         if not isinstance(landmarks_idx, list) or not all(isinstance(i, int) for i in landmarks_idx):
             raise TypeError("'landmarks_idx' must be a list of integers or None.")
 
+    if image is None or not isinstance(image, Image):
+        raise ValueError("'image' must be an instance of Image.")
     # --- Create or reuse FaceMesh instance ----------------------------------
     if face_mesh_obj is None:
         face_Mesh = mp_face_mesh.FaceMesh(
@@ -106,10 +106,11 @@ def analyze_face_mesh(
         face_Mesh = face_mesh_obj
 
     # --- Load image (path or ndarray) ---------------------------------------
-    np_image = IOHandler.load_image(image_path=src_image_path, np_image=src_np_image)
+    np_image = image._data
 
     # Convert BGR -> RGB for MediaPipe
-    rgb_image = cv2.cvtColor(np_image, cv2.COLOR_BGR2RGB)
+    annotated_image = np_image.copy()
+    rgb_image = cv2.cvtColor(annotated_image, cv2.COLOR_BGR2RGB)
     results = face_Mesh.process(rgb_image)
 
     if not results.multi_face_landmarks:
@@ -117,25 +118,24 @@ def analyze_face_mesh(
 
     landmarks_idx = landmarks_idx or list(range(468))
 
-    annotated = np_image.copy()
     all_landmarks = []
 
     for face_id, face_landmarks in enumerate(results.multi_face_landmarks):
         # Draw either the full tessellation or specific landmark dots
         if len(landmarks_idx) == TOTAL_FACE_LANDMARKS:
             mp_drawing_utils.draw_landmarks(
-                image=annotated,
+                image=annotated_image,
                 landmark_list=face_landmarks,
                 connections=mp_face_mesh.FACEMESH_TESSELATION,
                 landmark_drawing_spec=None,
                 connection_drawing_spec=mp_drawing_styles.get_default_face_mesh_tesselation_style(),
             )
         else:
-            h, w = annotated.shape[:2]
+            h, w = annotated_image.shape[:2]
             for idx in landmarks_idx:
                 lm = face_landmarks.landmark[idx]
                 cx, cy = int(w * lm.x), int(h * lm.y)
-                cv2.circle(annotated, (cx, cy), 3, (0, 0, 255), -1)
+                cv2.circle(annotated_image, (cx, cy), 3, (0, 0, 255), -1)
 
         # Collect normalized coordinates for requested indices
         face_data = [
@@ -145,15 +145,8 @@ def analyze_face_mesh(
         all_landmarks.append(face_data)
 
     # --- Output handling -----------------------------------------------------
-    if output_image_path is not None:
-        # IOHandler.save_image returns a message/path; echo to stdout for logs
-        print(IOHandler.save_image(annotated, output_image_path))
 
-    if output_csv_path is not None:
-        flat_data = [row for face in all_landmarks for row in face]
-        print(IOHandler.save_csv(flat_data, output_csv_path))
-
-    return annotated, all_landmarks
+    return Result(image=annotated_image, data=all_landmarks, meta={"source":image, "operation":"analyze_face_mesh", "landmarks_idx": landmarks_idx, "max_faces": max_faces, "min_confidence": min_confidence})
 
 
 def analyze_face_mesh_live(max_faces: int = DEFAULT_MAX_FACES, min_confidence: float = DEFAULT_MIN_CONFIDENCE):

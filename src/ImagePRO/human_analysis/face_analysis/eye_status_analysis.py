@@ -8,8 +8,9 @@ import mediapipe as mp
 parent_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(parent_dir))
 
-from utils.io_handler import IOHandler
-from human_analysis.face_analysis.face_mesh_analysis import analyze_face_mesh
+from ImagePRO.utils.image import Image
+from ImagePRO.utils.result import Result
+from ImagePRO.human_analysis.face_analysis.face_mesh_analysis import analyze_face_mesh
 
 # Constants
 mp_face_mesh = mp.solutions.face_mesh
@@ -19,23 +20,21 @@ RIGHT_EYE_INDICES = [386, 374, 263, 362]  # MediaPipe 468-point model
 
 
 def analyze_eye_status(
+    *,
+    image: Image,
     min_confidence: float = DEFAULT_MIN_CONFIDENCE,
-    src_image_path: str | None = None,
-    src_np_image=None,
     face_mesh_obj=None,
     threshold: float = DEFAULT_THRESHOLD,
-) -> bool:
+) -> Result:
     """
     Analyze right-eye open/closed status via Eye Aspect Ratio (EAR).
 
     Parameters
     ----------
+    image : Image
+        Image instance (BGR) to process.
     min_confidence : float, default=0.7
         Minimum detection confidence for FaceMesh in [0, 1].
-    src_image_path : str | None, optional
-        Path to input image file.
-    src_np_image : np.ndarray | None, optional
-        Image array in BGR (OpenCV). If both provided, ``src_np_image`` takes precedence.
     face_mesh_obj : mediapipe.python.solutions.face_mesh.FaceMesh | None, optional
         Reusable FaceMesh instance; if ``None``, one is created (static image mode).
     threshold : float, default=0.2
@@ -43,30 +42,15 @@ def analyze_eye_status(
 
     Returns
     -------
-    bool
-        ``True`` if eye is open, ``False`` if closed.
-
-    Raises
-    ------
-    ValueError
-        * If ``min_confidence`` is out of range, or landmarks are not detected.
-        * From ``IOHandler.load_image`` when both inputs are ``None`` or image loading fails.
-    TypeError
-        From ``IOHandler.load_image`` on invalid argument types.
-    FileNotFoundError
-        From ``IOHandler.load_image`` when ``src_image_path`` does not exist.
-
-    Notes
-    -----
-    * Uses MediaPipe indices for the right eye:
-      386 (upper lid), 374 (lower lid), 263 (outer corner), 362 (inner corner).
-    * EAR is computed as ``vertical / horizontal`` on pixel coordinates.
+    Result
+        `data` is a boolean: True if eye is open, False if closed. `image` is None.
     """
+    if not isinstance(image, Image):
+        raise ValueError("'image' must be an instance of Image.")
     if not isinstance(min_confidence, (int, float)) or not (0 <= min_confidence <= 1):
         raise ValueError("'min_confidence' must be between 0 and 1.")
 
-    np_image = IOHandler.load_image(image_path=src_image_path, np_image=src_np_image)
-    h, w = np_image.shape[:2]
+    h, w = image.shape[:2]
 
     if face_mesh_obj is None:
         face_mesh_obj = mp_face_mesh.FaceMesh(
@@ -75,16 +59,16 @@ def analyze_eye_status(
             static_image_mode=True,
         )
 
-    # Landmark indices for right eye (MediaPipe 468-point model)
     indices = RIGHT_EYE_INDICES
 
-    _, landmarks = analyze_face_mesh(
+    mesh_result = analyze_face_mesh(
         max_faces=1,
         min_confidence=min_confidence,
         landmarks_idx=indices,
-        src_np_image=np_image,
+        image=image,
         face_mesh_obj=face_mesh_obj,
     )
+    landmarks = mesh_result.data
 
     if not landmarks:
         raise ValueError("No face landmarks detected.")
@@ -102,11 +86,12 @@ def analyze_eye_status(
     vertical_dist = abs(bottom_y - top_y)
     horizontal_dist = abs(right_x - left_x)
 
-    if horizontal_dist == 0:
-        return False  # avoid division by zero
+    is_open = False
+    if horizontal_dist != 0:
+        ear = vertical_dist / horizontal_dist
+        is_open = ear > threshold
 
-    ear = vertical_dist / horizontal_dist
-    return ear > threshold
+    return Result(image=None, data=is_open, meta={"source":image, "operation": "analyze_eye_status", "min_confidence": min_confidence, "threshold": threshold})
 
 
 def analyze_eye_status_live(min_confidence: float = 0.7, threshold: float = 0.2) -> None:
@@ -119,18 +104,6 @@ def analyze_eye_status_live(min_confidence: float = 0.7, threshold: float = 0.2)
         Minimum detection confidence in [0, 1].
     threshold : float, default=0.2
         EAR threshold to consider eyes open.
-
-    Raises
-    ------
-    ValueError
-        If ``min_confidence`` is invalid.
-    RuntimeError
-        If the webcam cannot be accessed.
-
-    Notes
-    -----
-    * Uses ``static_image_mode=False`` for better performance on video streams.
-    * Press **ESC** to exit.
     """
     if not isinstance(min_confidence, (int, float)) or not (0 <= min_confidence <= 1):
         raise ValueError("'min_confidence' must be between 0 and 1.")
@@ -154,13 +127,14 @@ def analyze_eye_status_live(min_confidence: float = 0.7, threshold: float = 0.2)
                 continue
 
             try:
-                is_open = analyze_eye_status(
+                img = Image.from_array(frame)
+                result = analyze_eye_status(
+                    image=img,
                     min_confidence=min_confidence,
-                    src_np_image=frame,
                     face_mesh_obj=face_mesh,
                     threshold=threshold,
                 )
-                status = "Open" if is_open else "Closed"
+                status = "Open" if result.data else "Closed"
             except ValueError:
                 status = "No face"
 
