@@ -10,10 +10,16 @@ sys.path.append(str(parent_dir))
 from pre_processing.grayscale import convert_to_grayscale
 from utils.io_handler import IOHandler
 
+# Constants
+DEFAULT_CLIP_LIMIT = 2.0
+DEFAULT_TILE_GRID_SIZE = (8, 8)
+DEFAULT_ALPHA = 1.5
+DEFAULT_BETA = 10
+
 
 def apply_clahe_contrast(
-    clip_limit: float = 2.0,
-    tile_grid_size: tuple[int, int] = (8, 8),
+    clip_limit: float = DEFAULT_CLIP_LIMIT,
+    tile_grid_size: tuple[int, int] = DEFAULT_TILE_GRID_SIZE,
     src_image_path: str | None = None,
     src_np_image=None,
     output_image_path: str | None = None

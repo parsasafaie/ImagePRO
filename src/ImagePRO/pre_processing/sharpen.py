@@ -10,9 +10,13 @@ sys.path.append(str(parent_dir))
 from utils.io_handler import IOHandler
 from pre_processing.blur import apply_average_blur
 
+# Constants
+DEFAULT_LAPLACIAN_COEFFICIENT = 3.0
+DEFAULT_UNSHARP_COEFFICIENT = 1.0
+
 
 def apply_laplacian_sharpening(
-    coefficient: float = 3.0,
+    coefficient: float = DEFAULT_LAPLACIAN_COEFFICIENT,
     src_image_path: str | None = None,
     src_np_image: np.ndarray | None = None,
     output_image_path: str | None = None
@@ -52,7 +56,7 @@ def apply_laplacian_sharpening(
 
 
 def apply_unsharp_masking(
-    coefficient: float = 1.0,
+    coefficient: float = DEFAULT_UNSHARP_COEFFICIENT,
     src_image_path: str | None = None,
     src_np_image: np.ndarray | None = None,
     output_image_path: str | None = None

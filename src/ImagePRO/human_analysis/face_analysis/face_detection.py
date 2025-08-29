@@ -11,10 +11,19 @@ sys.path.append(str(parent_dir))
 from utils.io_handler import IOHandler
 from human_analysis.face_analysis.face_mesh_analysis import analyze_face_mesh
 
+# Constants
+DEFAULT_MAX_FACES = 1
+DEFAULT_MIN_CONFIDENCE = 0.7
+FACE_OUTLINE_INDICES = [
+    10, 338, 297, 332, 284, 251, 389, 356, 454, 323,
+    361, 288, 397, 365, 379, 378, 400, 377, 152, 148,
+    176, 149, 150, 136, 164, 163, 153, 157
+]
+
 
 def detect_faces(
-    max_faces: int = 1,
-    min_confidence: float = 0.7,
+    max_faces: int = DEFAULT_MAX_FACES,
+    min_confidence: float = DEFAULT_MIN_CONFIDENCE,
     src_image_path: str | None = None,
     src_np_image=None,
     output_image_path: str | None = None,
@@ -68,11 +77,7 @@ def detect_faces(
     height, width = np_image.shape[:2]
 
     # Selected face outline landmark indices (MediaPipe 468-point model)
-    face_outline_indices = [
-        10, 338, 297, 332, 284, 251, 389, 356, 454, 323,
-        361, 288, 397, 365, 379, 378, 400, 377, 152, 148,
-        176, 149, 150, 136, 164, 163, 153, 157
-    ]
+    face_outline_indices = FACE_OUTLINE_INDICES
 
     # --- Run face mesh analysis ----------------------------------------------
     _, raw_landmarks = analyze_face_mesh(

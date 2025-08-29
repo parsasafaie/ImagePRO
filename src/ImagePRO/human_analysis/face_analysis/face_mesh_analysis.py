@@ -10,14 +10,18 @@ sys.path.append(str(parent_dir))
 
 from utils.io_handler import IOHandler
 
+# Constants
 mp_face_mesh = mp.solutions.face_mesh
 mp_drawing_utils = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
+DEFAULT_MAX_FACES = 1
+DEFAULT_MIN_CONFIDENCE = 0.7
+TOTAL_FACE_LANDMARKS = 468
 
 
 def analyze_face_mesh(
-    max_faces: int = 1,
-    min_confidence: float = 0.7,
+    max_faces: int = DEFAULT_MAX_FACES,
+    min_confidence: float = DEFAULT_MIN_CONFIDENCE,
     landmarks_idx: list | None = None,
     src_image_path: str | None = None,
     src_np_image=None,
@@ -118,7 +122,7 @@ def analyze_face_mesh(
 
     for face_id, face_landmarks in enumerate(results.multi_face_landmarks):
         # Draw either the full tessellation or specific landmark dots
-        if len(landmarks_idx) == 468:
+        if len(landmarks_idx) == TOTAL_FACE_LANDMARKS:
             mp_drawing_utils.draw_landmarks(
                 image=annotated,
                 landmark_list=face_landmarks,
@@ -152,7 +156,7 @@ def analyze_face_mesh(
     return annotated, all_landmarks
 
 
-def analyze_face_mesh_live(max_faces: int = 1, min_confidence: float = 0.7):
+def analyze_face_mesh_live(max_faces: int = DEFAULT_MAX_FACES, min_confidence: float = DEFAULT_MIN_CONFIDENCE):
     """
     Launch webcam preview with real-time FaceMesh overlay.
 

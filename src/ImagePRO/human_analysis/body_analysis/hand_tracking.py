@@ -10,12 +10,18 @@ sys.path.append(str(parent_dir))
 
 from utils.io_handler import IOHandler
 
+# Constants
 mp_hands = mp.solutions.hands
+DEFAULT_MAX_HANDS = 2
+DEFAULT_MIN_CONFIDENCE = 0.7
+TOTAL_HAND_LANDMARKS = 21
+LANDMARK_RADIUS = 3
+LANDMARK_COLOR = (0, 0, 255)  # Red color for landmarks
 
 
 def detect_hands(
-    max_hands: int = 2,
-    min_confidence: float = 0.7,
+    max_hands: int = DEFAULT_MAX_HANDS,
+    min_confidence: float = DEFAULT_MIN_CONFIDENCE,
     landmarks_idx: list | None = None,
     src_image_path: str | None = None,
     src_np_image=None,
@@ -71,7 +77,7 @@ def detect_hands(
         )
 
     if landmarks_idx is None:
-        landmarks_idx = list(range(21))
+        landmarks_idx = list(range(TOTAL_HAND_LANDMARKS))
 
     rgb_image = cv2.cvtColor(np_image, cv2.COLOR_BGR2RGB)
     results = hands_obj.process(rgb_image)
@@ -81,7 +87,7 @@ def detect_hands(
 
     if results.multi_hand_landmarks:
         for hand_id, hand_landmarks in enumerate(results.multi_hand_landmarks):
-            if len(landmarks_idx) == 21:
+            if len(landmarks_idx) == TOTAL_HAND_LANDMARKS:
                 mp.solutions.drawing_utils.draw_landmarks(
                     image=annotated_image,
                     landmark_list=hand_landmarks,
@@ -94,7 +100,7 @@ def detect_hands(
                 for idx in landmarks_idx:
                     lm = hand_landmarks.landmark[idx]
                     x, y = int(w * lm.x), int(h * lm.y)
-                    cv2.circle(annotated_image, (x, y), 3, (0, 0, 255), -1)
+                    cv2.circle(annotated_image, (x, y), LANDMARK_RADIUS, LANDMARK_COLOR, -1)
 
             for idx in landmarks_idx:
                 lm = hand_landmarks.landmark[idx]
@@ -108,7 +114,7 @@ def detect_hands(
     return annotated_image, all_landmarks
 
 
-def detect_hands_live(max_hands: int = 2, min_confidence: float = 0.7):
+def detect_hands_live(max_hands: int = DEFAULT_MAX_HANDS, min_confidence: float = DEFAULT_MIN_CONFIDENCE):
     """Real-time hand detection via webcam. Press ESC to exit."""
     if not isinstance(max_hands, int) or max_hands <= 0:
         raise ValueError("'max_hands' must be a positive integer.")
@@ -149,4 +155,4 @@ def detect_hands_live(max_hands: int = 2, min_confidence: float = 0.7):
 
 
 if __name__ == "__main__":
-    detect_hands_live(max_hands=2)
+    detect_hands_live(max_hands=DEFAULT_MAX_HANDS)

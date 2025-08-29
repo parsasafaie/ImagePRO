@@ -2,31 +2,34 @@
 
 > **Professional & Modular Image Processing Library in Python**
 
-**ImagePRO** is a clean, modular, and easy-to-use Python library for image processing tasks, built with OpenCV, Mediapipe, YOLO and designed to be extensible for developers.
+**ImagePRO** is a clean, modular, and easy-to-use Python library for image processing tasks, built with OpenCV, MediaPipe, YOLO and designed to be extensible for developers.
 
 Whether you're working on computer vision pipelines, preprocessing images for AI models, or simply automating batch image edits — **ImagePRO** gives you powerful tools with minimal effort.
 
-## Features (So Far)
+## ✨ Features
 
-- Image I/O management
-- Rotation (90°, 180°, 270°, custom angles)
-- Resize & Crop
-- Grayscale conversion
-- Blur filters (average, Gaussian, median, bilateral)
-- Contrast enhancement (CLAHE, GHE, stretching)
-- Sharpening filters (Laplacian, Unsharp Masking)
-- Dataset Generator
-- Face mesh analyzer
-- Face detector
-- Head Position Estimator
-- Eye Status analyzer
-- Hnad tracker
-- Body Position Estimator
-- Object Detection
+### **Image I/O & Management**
+- Flexible input/output handling (file paths or numpy arrays)
+- Batch processing capabilities
+- Multiple format support (JPEG, PNG, etc.)
 
-More features are being added regularly!
+### **Pre-processing & Enhancement**
+- **Basic Operations**: Resize, crop, rotate (90°, 180°, 270°, custom angles), grayscale conversion
+- **Filtering**: Blur filters (average, Gaussian, median, bilateral), sharpening filters (Laplacian, Unsharp Masking)
+- **Enhancement**: Contrast enhancement (CLAHE, GHE, stretching)
+- **Dataset Generation**: Automated image capture with preprocessing pipeline
 
-## Installation
+### **Human Analysis**
+- **Face Analysis**: 468-point mesh, head pose estimation, eye status detection, face comparison, face cropping
+- **Body Analysis**: Pose estimation, hand tracking (21 landmarks)
+- **Real-time Processing**: Live webcam analysis for all modules
+
+### **Object Detection**
+- **YOLO Integration**: Multiple accuracy levels (nano to extra-large)
+- **Flexible Models**: Pre-trained or custom model support
+- **Batch Processing**: Efficient handling of multiple images
+
+## 🚀 Installation
 
 ### From PyPI
 ```bash
@@ -34,23 +37,59 @@ pip install ImagePRO-Python
 ```
 
 ### From Source
-1. Clone the Repository:
 ```bash
 git clone https://github.com/parsasafaie/ImagePRO.git
 cd ImagePRO
-```
-
-2. Create a Virtual Environment (Recommended):
-```bash
 python -m venv .venv
 source .venv/bin/activate   # macOS/Linux
 .venv\Scripts\activate      # Windows
-```
-
-3. Install Dependencies:
-```bash
 pip install -r requirements.txt
 ```
 
-## License 
-This project is licensed under the MIT License – see the LICENSE file for details.
+## 📖 Quick Start
+
+```python
+from ImagePRO.pre_processing.grayscale import convert_to_grayscale
+from ImagePRO.pre_processing.blur import apply_gaussian_blur
+from ImagePRO.human_analysis.face_analysis.face_mesh_analysis import analyze_face_mesh
+
+# Convert to grayscale
+gray = convert_to_grayscale(src_image_path="input.jpg")
+
+# Apply Gaussian blur
+blur = apply_gaussian_blur(
+    src_np_image=gray, 
+    kernel_size=(5, 5), 
+    output_image_path="blurred.jpg"
+)
+
+# Analyze face mesh
+annotated, landmarks = analyze_face_mesh(
+    src_image_path="person.jpg",
+    output_image_path="mesh.jpg",
+    output_csv_path="landmarks.csv"
+)
+```
+
+## 📚 Documentation
+
+Each module includes comprehensive documentation:
+- **Pre-processing**: Image manipulation and enhancement
+- **Human Analysis**: Face and body analysis tools
+- **Object Analysis**: YOLO-based detection
+- **Utils**: Shared utilities and I/O handling
+
+## 🏗️ Architecture
+
+ImagePRO is built with a modular architecture:
+- **Clean separation of concerns**
+- **Consistent API patterns** across all modules
+- **Shared utilities** for common operations
+- **Professional error handling** and validation
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📄 License 
+This project is licensed under the MIT License – see the [LICENSE](LICENSE) file for details.

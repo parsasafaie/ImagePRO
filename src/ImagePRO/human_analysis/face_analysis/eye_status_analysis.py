@@ -11,15 +11,19 @@ sys.path.append(str(parent_dir))
 from utils.io_handler import IOHandler
 from human_analysis.face_analysis.face_mesh_analysis import analyze_face_mesh
 
+# Constants
 mp_face_mesh = mp.solutions.face_mesh
+DEFAULT_MIN_CONFIDENCE = 0.7
+DEFAULT_THRESHOLD = 0.2
+RIGHT_EYE_INDICES = [386, 374, 263, 362]  # MediaPipe 468-point model
 
 
 def analyze_eye_status(
-    min_confidence: float = 0.7,
+    min_confidence: float = DEFAULT_MIN_CONFIDENCE,
     src_image_path: str | None = None,
     src_np_image=None,
     face_mesh_obj=None,
-    threshold: float = 0.2,
+    threshold: float = DEFAULT_THRESHOLD,
 ) -> bool:
     """
     Analyze right-eye open/closed status via Eye Aspect Ratio (EAR).
@@ -72,7 +76,7 @@ def analyze_eye_status(
         )
 
     # Landmark indices for right eye (MediaPipe 468-point model)
-    indices = [386, 374, 263, 362]
+    indices = RIGHT_EYE_INDICES
 
     _, landmarks = analyze_face_mesh(
         max_faces=1,

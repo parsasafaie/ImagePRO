@@ -17,20 +17,28 @@ from rotate import rotate_image_custom
 from grayscale import convert_to_grayscale
 from resize import resize_image
 
+# Constants
+DEFAULT_NUM_IMAGES = 200
+DEFAULT_START_INDEX = 0
+DEFAULT_MIN_CONFIDENCE = 0.7
+DEFAULT_CAMERA_INDEX = 0
+DEFAULT_DELAY = 0.1
+DEFAULT_FACE_ID = "unknown"
+
 
 def capture_bulk_pictures(
     folder_path: str | Path,
-    face_id: str | int,
-    num_images: int = 200,
-    start_index: int = 0,
-    min_confidence: float = 0.7,
-    camera_index: int = 0,
+    face_id: str | int = DEFAULT_FACE_ID,
+    num_images: int = DEFAULT_NUM_IMAGES,
+    start_index: int = DEFAULT_START_INDEX,
+    min_confidence: float = DEFAULT_MIN_CONFIDENCE,
+    camera_index: int = DEFAULT_CAMERA_INDEX,
     apply_blur: bool = False,
     apply_grayscale: bool = False,
     apply_sharpen: bool = False,
     apply_rotate: bool = False,
     apply_resize: tuple = False,
-    delay: float = 0.1,
+    delay: float = DEFAULT_DELAY,
 ) -> None:
     """
     Capture frames from webcam and save cropped face images, with optional preprocessing.

@@ -9,6 +9,10 @@ sys.path.append(str(parent_dir))
 
 from utils.io_handler import IOHandler
 
+# Constants
+DEFAULT_SCALE = 1.0
+DEFAULT_ANGLE = 45.0
+
 
 def rotate_image_90(
     src_image_path: str | None = None,
@@ -67,7 +71,7 @@ def rotate_image_270(
 
 def rotate_image_custom(
     angle: float,
-    scale: float = 1.0,
+    scale: float = DEFAULT_SCALE,
     src_image_path: str | None = None,
     src_np_image: np.ndarray | None = None,
     output_image_path: str | None = None

@@ -11,12 +11,16 @@ sys.path.append(str(parent_dir))
 from utils.io_handler import IOHandler
 from human_analysis.face_analysis.face_mesh_analysis import analyze_face_mesh
 
+# Constants
 mp_face_mesh = mp.solutions.face_mesh
+DEFAULT_MAX_FACES = 1
+DEFAULT_MIN_CONFIDENCE = 0.7
+HEAD_POSE_INDICES = [1, 152, 33, 263, 168]  # nose_tip, chin, left_eye, right_eye, nasion
 
 
 def estimate_head_pose(
-    max_faces: int = 1,
-    min_confidence: float = 0.7,
+    max_faces: int = DEFAULT_MAX_FACES,
+    min_confidence: float = DEFAULT_MIN_CONFIDENCE,
     src_image_path: str | None = None,
     src_np_image=None,
     output_csv_path: str | None = None,
@@ -64,7 +68,7 @@ def estimate_head_pose(
     np_image = IOHandler.load_image(image_path=src_image_path, np_image=src_np_image)
 
     # Important landmark indices (MediaPipe 468 model)
-    indices = [1, 152, 33, 263, 168]  # nose_tip, chin, left_eye, right_eye, nasion
+    indices = HEAD_POSE_INDICES
 
     _, landmarks = analyze_face_mesh(
         max_faces=max_faces,

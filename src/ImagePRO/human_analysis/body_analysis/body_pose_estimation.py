@@ -10,10 +10,15 @@ sys.path.append(str(parent_dir))
 
 from utils.io_handler import IOHandler
 
+# Constants
 mp_pose = mp.solutions.pose
+TOTAL_LANDMARKS = 33
+DEFAULT_CONFIDENCE = 0.7
+LANDMARK_RADIUS = 3
+LANDMARK_COLOR = (0, 0, 255)  # Red color for landmarks
 
 def detect_body_pose(
-    model_accuracy: float = 0.7,
+    model_accuracy: float = DEFAULT_CONFIDENCE, 
     landmarks_idx: list | None = None,
     src_image_path: str | None = None,
     src_np_image=None,
@@ -56,7 +61,7 @@ def detect_body_pose(
     np_image = IOHandler.load_image(image_path=src_image_path, np_image=src_np_image)
 
     if landmarks_idx is None:
-        landmarks_idx = list(range(33))
+        landmarks_idx = list(range(TOTAL_LANDMARKS))
 
     if pose_obj is None:
         pose_obj = mp_pose.Pose(
@@ -71,7 +76,7 @@ def detect_body_pose(
     all_landmarks = []
 
     if result.pose_landmarks:
-        if len(landmarks_idx) == 33:
+        if len(landmarks_idx) == TOTAL_LANDMARKS:
             mp.solutions.drawing_utils.draw_landmarks(
                 annotated_image,
                 result.pose_landmarks,
@@ -83,7 +88,7 @@ def detect_body_pose(
             for idx in landmarks_idx:
                 lm = result.pose_landmarks.landmark[idx]
                 x, y = int(w * lm.x), int(h * lm.y)
-                cv2.circle(annotated_image, (x, y), 3, (0, 0, 255), -1)
+                cv2.circle(annotated_image, (x, y), LANDMARK_RADIUS, LANDMARK_COLOR, -1)
 
         for idx in landmarks_idx:
             lm = result.pose_landmarks.landmark[idx]
@@ -104,7 +109,7 @@ def detect_body_pose_live():
         raise RuntimeError("Failed to open webcam.")
 
     pose_obj = mp_pose.Pose(
-        min_detection_confidence=0.7,
+        min_detection_confidence=DEFAULT_CONFIDENCE,
         static_image_mode=False
     )
 

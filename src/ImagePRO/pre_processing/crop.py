@@ -8,6 +8,10 @@ sys.path.append(str(parent_dir))
 
 from utils.io_handler import IOHandler
 
+# Constants
+DEFAULT_START_POINT = (0, 0)
+DEFAULT_END_POINT = (100, 100)
+
 
 def crop_image(
     start_point: tuple[int, int],

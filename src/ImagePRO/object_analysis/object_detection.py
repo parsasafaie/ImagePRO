@@ -8,15 +8,26 @@ sys.path.append(str(parent_dir))
 
 from utils.io_handler import IOHandler
 
+# Constants
+DEFAULT_ACCURACY_LEVEL = 1
+DEFAULT_CONFIDENCE = 0.5
+MODEL_MAPPING = {
+    1: "yolo11n.pt",
+    2: "yolo11s.pt", 
+    3: "yolo11m.pt",
+    4: "yolo11l.pt",
+    5: "yolo11x.pt"
+}
+
 
 def detect_objects(
     model=None,
-    accuracy_level=1,
-    src_image_path=None,
+    accuracy_level: int = DEFAULT_ACCURACY_LEVEL,
+    src_image_path: str | None = None,
     src_np_image=None,
-    output_image_path=None,
-    output_csv_path=None,
-    show_result=False
+    output_image_path: str | None = None,
+    output_csv_path: str | None = None,
+    show_result: bool = False
 ):
     """
     Run object detection on a single image using Ultralytics YOLO.
@@ -56,19 +67,10 @@ def detect_objects(
     """
     # Create a model from preset if not provided by caller
     if model is None:
-        if accuracy_level == 1:
-            model_name = "yolo11n.pt"
-        elif accuracy_level == 2:
-            model_name = "yolo11s.pt"
-        elif accuracy_level == 3:
-            model_name = "yolo11m.pt"
-        elif accuracy_level == 4:
-            model_name = "yolo11l.pt"
-        elif accuracy_level == 5:
-            model_name = "yolo11x.pt"
-        else:
-            raise ValueError('Unknown accuracy level.')
-
+        if accuracy_level not in MODEL_MAPPING:
+            raise ValueError(f"'accuracy_level' must be in {list(MODEL_MAPPING.keys())}, got {accuracy_level}")
+        
+        model_name = MODEL_MAPPING[accuracy_level]
         model = YOLO(model=model_name)
 
     # Load image from path or ndarray using the shared IO helper
@@ -90,9 +92,9 @@ def detect_objects(
     if show_result:
         result.show()
     if output_image_path:
-        IOHandler.save_image(np_image=result.plot(), result_path=output_image_path)
+        print(IOHandler.save_image(np_image=result.plot(), result_path=output_image_path))
     if output_csv_path:
-        IOHandler.save_csv(data=lines, result_path=output_csv_path)
+        print(IOHandler.save_csv(data=lines, result_path=output_csv_path))
 
     # Return the plotted image and the CSV-friendly rows
     return result.plot(), lines

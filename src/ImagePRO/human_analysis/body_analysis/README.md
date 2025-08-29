@@ -1,63 +1,71 @@
-# Human Body Analysis
+# Body Analysis Module
 
-Pose and hand landmark detection for images and live webcam input (MediaPipe).  
-Designed for lightweight overlays, CSV export, and downstream tasks like gesture analysis.
+Advanced body pose estimation and hand tracking using MediaPipe technology.
 
-## Features
-- 33-point **Pose** landmarks + connections
-- 21-point **Hands** landmarks per hand (up to 2 hands)
-- Optional **simultaneous** annotated-image saving and CSV export
-- Live utilities for quick demos and prototyping
+## ✨ Features
 
-## I/O Conventions
-- For image functions, provide:
-  - `src_image_path: str` or `src_np_image: np.ndarray` (BGR). `src_np_image` wins if both set.
-- Saving:
-  - `output_image_path`: saves annotated image (prints a log, returns image)
-  - `output_csv_path`: saves flattened landmarks CSV (prints a log)
-- Live functions open the default webcam; press **ESC** to exit.
+- **Body Pose Estimation**: 33-point body landmark detection
+- **Hand Tracking**: 21-point hand landmark analysis
+- **Real-time Processing**: Live webcam analysis capabilities
+- **Flexible Output**: Optional image annotation and CSV export
+- **Performance Optimized**: Efficient processing for both images and video
 
-## Submodules & Functions
-### `body_pose_estimation.py`
-- `detect_body_pose(model_accuracy=0.7, landmarks_idx=None, src_image_path=None, src_np_image=None, output_image_path=None, output_csv_path=None, pose_obj=None) -> tuple[np.ndarray, list]`
-- `detect_body_pose_live() -> None`
+## 🔧 I/O Conventions
 
-### `hand_tracking.py`
-- `detect_hands(max_hands=2, min_confidence=0.7, landmarks_idx=None, src_image_path=None, src_np_image=None, output_image_path=None, output_csv_path=None, hands_obj=None) -> tuple[np.ndarray, list]`
-- `detect_hands_live(max_hands=2, min_confidence=0.7) -> None`
+- **Input**: Support for both file paths and numpy arrays
+- **Output**: Optional saving of annotated images and landmark data
+- **Precedence**: Numpy arrays take priority when both inputs provided
+- **Live Mode**: Webcam functions with ESC key to exit
 
-## Quick Start
+## 📚 Available Functions
+
+### **Body Analysis**
+- **`body_pose_estimation.py`**: Full body pose detection (33 landmarks)
+- **`hand_tracking.py`**: Hand landmark detection and tracking (21 points)
+
+## 🚀 Quick Start
+
 ```python
-from human_analysis.body_analysis.body_pose_estimation import detect_body_pose
-from human_analysis.body_analysis.hand_tracking import detect_hands
+from ImagePRO.human_analysis.body_analysis.body_pose_estimation import detect_body_pose
+from ImagePRO.human_analysis.body_analysis.hand_tracking import detect_hands
 
-# Single image
-img_annotated, pose_landmarks = detect_body_pose(
+# Detect body pose
+annotated_body, body_landmarks = detect_body_pose(
     src_image_path="person.jpg",
     output_image_path="pose.jpg",
-    output_csv_path="pose.csv"
+    output_csv_path="body_landmarks.csv"
 )
 
-# Hands
-hand_img, hands_landmarks = detect_hands(
-    src_np_image=img_annotated,
-    output_image_path="hands.jpg",
-    output_csv_path="hands.csv"
+# Track hands
+annotated_hands, hand_landmarks = detect_hands(
+    src_np_image=annotated_body,
+    max_hands=2,
+    output_image_path="hands.jpg"
 )
-
-# Live
-from human_analysis.body_analysis.body_pose_estimation import detect_body_pose_live
-detect_body_pose_live()
 ```
 
-## Error Handling
-- `ValueError` / `TypeError`: invalid arguments (e.g., counts, confidences, indices)
-- `RuntimeError`: webcam unavailable (live)
-- From `IOHandler`:
-  - `FileNotFoundError`, `TypeError`, `ValueError` on load
-  - `IOError` on save
+## 📊 Output Formats
 
-## Notes
-- Coordinates from MediaPipe are **normalized** in `[0,1]` (x,y,z).  
-  Multiply by image `width/height` for pixel coordinates when needed.
-- For live, models are created with `static_image_mode=False` for better throughput.
+### **Body Landmarks CSV**
+- **Format**: `[landmark_index, x, y, z]`
+- **Coordinates**: Normalized values [0, 1] from MediaPipe
+- **Total Points**: 33 body landmarks
+
+### **Hand Landmarks CSV**
+- **Format**: `[hand_id, landmark_index, x, y, z]`
+- **Coordinates**: Normalized values [0, 1] from MediaPipe
+- **Total Points**: 21 hand landmarks per hand
+
+## ⚠️ Error Handling
+
+- **`ValueError`**: Invalid parameters or no landmarks detected
+- **`TypeError`**: Incorrect input types
+- **`RuntimeError`**: Webcam access failures
+- **`FileNotFoundError`**: Image file not found
+
+## 📝 Technical Notes
+
+- **MediaPipe Integration**: Uses state-of-the-art pose and hand models
+- **Coordinate System**: Normalized coordinates for cross-platform compatibility
+- **Performance**: Optimized for both static images and video streams
+- **Multi-person Support**: Configurable for single or multiple subjects

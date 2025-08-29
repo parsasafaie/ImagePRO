@@ -2,6 +2,12 @@ from insightface.app import FaceAnalysis
 import cv2
 import numpy as np
 
+# Constants
+DEFAULT_SIMILARITY_THRESHOLD = 0.5
+DEFAULT_MODEL_NAME = "buffalo_l"
+DEFAULT_PROVIDER = "CPUExecutionProvider"
+
+
 def compare_faces(src_image_path_1, src_image_path_2, app=None):
     """
     Compare two face images using FaceAnalysis embeddings.
@@ -24,8 +30,8 @@ def compare_faces(src_image_path_1, src_image_path_2, app=None):
     # Prepare FaceAnalysis model if not provided
     if app is None:
         app = FaceAnalysis(
-            name="buffalo_l",
-            providers=["CPUExecutionProvider"],
+            name=DEFAULT_MODEL_NAME,
+            providers=[DEFAULT_PROVIDER],
         )
         app.prepare(ctx_id=0)  # Run on CPU
 
@@ -57,4 +63,4 @@ def compare_faces(src_image_path_1, src_image_path_2, app=None):
     sim = np.dot(emb1, emb2) / (np.linalg.norm(emb1) * np.linalg.norm(emb2))
 
     # Return match result based on threshold
-    return True if sim > 0.5 else False
+    return True if sim > DEFAULT_SIMILARITY_THRESHOLD else False

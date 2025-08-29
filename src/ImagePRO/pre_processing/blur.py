@@ -9,9 +9,15 @@ sys.path.append(str(parent_dir))
 
 from utils.io_handler import IOHandler
 
+# Constants
+DEFAULT_KERNEL_SIZE = (5, 5)
+DEFAULT_FILTER_SIZE = 5
+DEFAULT_SIGMA_COLOR = 75
+DEFAULT_SIGMA_SPACE = 75
+
 
 def apply_average_blur(
-    kernel_size: tuple[int, int] = (5, 5),
+    kernel_size: tuple[int, int] = DEFAULT_KERNEL_SIZE,
     src_image_path: str | None = None,
     src_np_image=None,
     output_image_path: str | None = None
@@ -55,13 +61,15 @@ def apply_average_blur(
 
     np_image = IOHandler.load_image(image_path=src_image_path, np_image=src_np_image)
     blurred = cv2.blur(np_image, kernel_size)
+    
     if output_image_path:
         print(IOHandler.save_image(blurred, output_image_path))
+    
     return blurred
 
 
 def apply_gaussian_blur(
-    kernel_size: tuple[int, int] = (5, 5),
+    kernel_size: tuple[int, int] = DEFAULT_KERNEL_SIZE,
     src_image_path: str | None = None,
     src_np_image=None,
     output_image_path: str | None = None
@@ -98,14 +106,16 @@ def apply_gaussian_blur(
         raise ValueError("'kernel_size' must be a tuple of two odd positive integers.")
 
     np_image = IOHandler.load_image(image_path=src_image_path, np_image=src_np_image)
-    blurred = cv2.GaussianBlur(np_image, kernel_size, sigmaX=0)
+    blurred = cv2.GaussianBlur(np_image, kernel_size, 0)
+    
     if output_image_path:
         print(IOHandler.save_image(blurred, output_image_path))
+    
     return blurred
 
 
 def apply_median_blur(
-    filter_size: int = 5,
+    filter_size: int = DEFAULT_FILTER_SIZE,
     src_image_path: str | None = None,
     src_np_image=None,
     output_image_path: str | None = None
@@ -143,30 +153,32 @@ def apply_median_blur(
 
     np_image = IOHandler.load_image(image_path=src_image_path, np_image=src_np_image)
     blurred = cv2.medianBlur(np_image, filter_size)
+    
     if output_image_path:
         print(IOHandler.save_image(blurred, output_image_path))
+    
     return blurred
 
 
 def apply_bilateral_blur(
     filter_size: int = 9,
-    sigma_color: float = 75,
-    sigma_space: float = 75,
+    sigma_color: float = DEFAULT_SIGMA_COLOR,
+    sigma_space: float = DEFAULT_SIGMA_SPACE,
     src_image_path: str | None = None,
     src_np_image=None,
     output_image_path: str | None = None
 ) -> np.ndarray:
     """
-    Apply bilateral filter to smooth while preserving edges.
+    Apply bilateral blur to an image.
 
     Parameters
     ----------
     filter_size : int, default=9
-        Diameter of pixel neighborhood.
+        Filter size, must be a positive integer.
     sigma_color : float, default=75
-        Color-space standard deviation.
+        Color sigma, higher values mean more colors will be mixed.
     sigma_space : float, default=75
-        Coordinate-space standard deviation.
+        Space sigma, higher values mean farther pixels will influence each other.
     src_image_path : str | None, optional
         Path to input image.
     src_np_image : np.ndarray | None, optional
@@ -182,9 +194,9 @@ def apply_bilateral_blur(
     Raises
     ------
     ValueError
-        If parameters are invalid.
+        If filter size or sigma parameters are invalid.
     """
-    if not isinstance(filter_size, int) or filter_size < 1:
+    if not isinstance(filter_size, int) or filter_size <= 0:
         raise ValueError("'filter_size' must be a positive integer.")
     if not isinstance(sigma_color, (int, float)) or sigma_color <= 0:
         raise ValueError("'sigma_color' must be a positive number.")
@@ -193,6 +205,8 @@ def apply_bilateral_blur(
 
     np_image = IOHandler.load_image(image_path=src_image_path, np_image=src_np_image)
     blurred = cv2.bilateralFilter(np_image, filter_size, sigma_color, sigma_space)
+    
     if output_image_path:
         print(IOHandler.save_image(blurred, output_image_path))
+    
     return blurred

@@ -1,82 +1,74 @@
-# Pre-Processing
+# Pre-processing Module
 
-Utilities to prepare images for analysis, training, or enhancement.  
-Includes resizing, cropping, rotation, grayscale conversion, blurring, sharpening, and contrast adjustments.
+Professional image manipulation, filtering, and enhancement utilities for computer vision pipelines.
 
-## Features
-- Consistent I/O: `src_image_path` or `src_np_image` (ndarray), optional `output_image_path`
-- Drop-in functions for common ops (no classes)
-- Safe argument validation + clear errors
-- Plays nicely with OpenCV BGR images
+## ✨ Features
 
-## I/O Conventions
-- Provide either:
-  - `src_image_path: str` **or**
-  - `src_np_image: np.ndarray` (BGR). If both provided, `src_np_image` takes precedence.
-- If `output_image_path` is given, the function saves to disk and prints a log message; it still returns the processed `np.ndarray`.
-- Paths are not prefixed with `src.` in imports.
+- **Consistent I/O**: Support for both `src_image_path` and `src_np_image` (numpy arrays)
+- **Drop-in Functions**: Simple, stateless operations with no class instantiation required
+- **Safe Validation**: Comprehensive argument validation with clear error messages
+- **OpenCV Compatible**: Designed to work seamlessly with OpenCV BGR images
+- **Batch Support**: Functions can be easily chained for complex processing pipelines
 
-## Submodules & Functions
-### `grayscale.py`
-- `convert_to_grayscale(src_image_path=None, src_np_image=None, output_image_path=None) -> np.ndarray`
+## 🔧 I/O Conventions
 
-### `resize.py`
-- `resize_image(new_size: tuple[int, int], src_image_path=None, src_np_image=None, output_image_path=None) -> np.ndarray`
+- **Input**: Provide either:
+  - `src_image_path: str` **OR**
+  - `src_np_image: np.ndarray` (BGR format)
+- **Output**: If `output_image_path` is given, the function saves to disk and prints a log message
+- **Return**: All functions return the processed `np.ndarray` for further processing
+- **Precedence**: If both inputs are provided, `src_np_image` takes precedence
 
-### `crop.py`
-- `crop_image(start_point: tuple[int,int], end_point: tuple[int,int], src_image_path=None, src_np_image=None, output_image_path=None) -> np.ndarray`
+## 📚 Available Functions
 
-### `rotate.py`
-- `rotate_image_90/180/270(src_image_path=None, src_np_image=None, output_image_path=None) -> np.ndarray`
-- `rotate_image_custom(angle: float, scale: float = 1.0, src_image_path=None, src_np_image=None, output_image_path=None) -> np.ndarray`
+### **Basic Operations**
+- **`grayscale.py`**: Convert images to single-channel grayscale
+- **`resize.py`**: Resize images to specified dimensions
+- **`crop.py`**: Crop images using coordinate-based selection
+- **`rotate.py`**: Rotate images (90°, 180°, 270°, custom angles)
 
-### `blur.py`
-- `apply_average_blur(kernel_size=(5,5), src_image_path=None, src_np_image=None, output_image_path=None) -> np.ndarray`
-- `apply_gaussian_blur(kernel_size=(5,5), src_image_path=None, src_np_image=None, output_image_path=None) -> np.ndarray`
-- `apply_median_blur(filter_size=5, src_image_path=None, src_np_image=None, output_image_path=None) -> np.ndarray`
-- `apply_bilateral_blur(filter_size=9, sigma_color=75, sigma_space=75, src_image_path=None, src_np_image=None, output_image_path=None) -> np.ndarray`
+### **Filtering & Enhancement**
+- **`blur.py`**: Multiple blur algorithms (average, Gaussian, median, bilateral)
+- **`sharpen.py`**: Sharpening filters (Laplacian, Unsharp Masking)
+- **`contrast.py`**: Contrast enhancement (CLAHE, GHE, stretching)
 
-### `contrast.py`
-- `apply_histogram_equalization(src_image_path=None, src_np_image=None, output_image_path=None) -> np.ndarray`
-- `apply_clahe_contrast(clip_limit=2.0, tile_grid_size=(8,8), src_image_path=None, src_np_image=None, output_image_path=None) -> np.ndarray`
-- `apply_contrast_stretching(alpha: float, beta: int, src_image_path=None, src_np_image=None, output_image_path=None) -> np.ndarray`
+### **Advanced Features**
+- **`dataset_generator.py`**: Automated image capture with preprocessing pipeline
 
-### `sharpen.py`
-- `apply_laplacian_sharpening(coefficient=3.0, src_image_path=None, src_np_image=None, output_image_path=None) -> np.ndarray`
-- `apply_unsharp_masking(coefficient=1.0, src_image_path=None, src_np_image=None, output_image_path=None) -> np.ndarray`
+## 🚀 Quick Start
 
-### `sharpen.py`
-- `apply_laplacian_sharpening(coefficient=3.0, src_image_path=None, src_np_image=None, output_image_path=None) -> np.ndarray`
-- `apply_unsharp_masking(coefficient=1.0, src_image_path=None, src_np_image=None, output_image_path=None) -> np.ndarray`
-
-### `dataset_generator()`
-- `capture_bulk_pictures(folder_path: str | Path, face_id: str | int, num_images: int = 200, start_index: int = 0, min_confidence: float = 0.7, camera_index: int = 0, apply_blur: bool = False, apply_grayscale: bool = False, apply_sharpen: bool = False, apply_rotate: bool = False, apply_resize: tuple | None = None, delay: float = 0.1) -> None`  
-  Capture multiple cropped face images from webcam into a new folder `<folder_path>/<face_id>` with optional preprocessing steps.  
-  Processing order: **median blur → laplacian sharpen → grayscale → resize → random rotate**.
-
-
-## Quick Start
 ```python
-from pre_processing.grayscale import convert_to_grayscale
-from pre_processing.blur import apply_gaussian_blur
-from pre_processing.resize import resize_image
+from ImagePRO.pre_processing.grayscale import convert_to_grayscale
+from ImagePRO.pre_processing.blur import apply_gaussian_blur
+from ImagePRO.pre_processing.resize import resize_image
 
-gray = convert_to_grayscale(src_np_image=my_bgr)
-blur = apply_gaussian_blur(src_np_image=gray, kernel_size=(5, 5), output_image_path="blur.jpg")
-resized = resize_image(new_size=(640, 480), src_np_image=blur)
+# Load and convert to grayscale
+gray = convert_to_grayscale(src_image_path="input.jpg")
+
+# Apply Gaussian blur
+blurred = apply_gaussian_blur(
+    src_np_image=gray, 
+    kernel_size=(5, 5)
+)
+
+# Resize the result
+final = resize_image(
+    new_size=(640, 480), 
+    src_np_image=blurred,
+    output_image_path="processed.jpg"
+)
 ```
 
-## Error Handling
-- `ValueError` / `TypeError`: invalid arguments (e.g., kernel sizes, coordinates)
-- From `IOHandler.load_image`:
-  - `TypeError`, `FileNotFoundError`, `ValueError` (bad path, both inputs None, or load failure)
-- From `IOHandler.save_image`:
-  - `TypeError`, `IOError` (invalid path or write failure)
-- From `capture_bulk_pictures`:
-  - `FileExistsError`: destination folder `<folder_path>/<face_id>` already exists
-  - `RuntimeError`: webcam cannot be opened
+## ⚠️ Error Handling
 
+- **`ValueError`**: Invalid parameters (e.g., negative kernel sizes, invalid coordinates)
+- **`TypeError`**: Incorrect input types
+- **`FileNotFoundError`**: Image file not found
+- **`IOError`**: File saving/loading failures
 
-## Notes
-- All operations expect **BGR** input (OpenCV default).
-- Functions are pure & stateless; reuse them freely in pipelines.
+## 📝 Notes
+
+- All operations expect **BGR** input (OpenCV default)
+- Functions are **pure and stateless** - safe to reuse in loops
+- **Processing order** matters in pipelines - consider dependencies
+- **Memory efficient** - operations performed in-place when possible
