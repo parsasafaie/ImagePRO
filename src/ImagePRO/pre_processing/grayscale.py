@@ -7,44 +7,36 @@ import numpy as np
 parent_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(parent_dir))
 
-from utils.io_handler import IOHandler
+from ImagePRO.utils.image import Image
+from ImagePRO.utils.result import Result
 
 
 def convert_to_grayscale(
-    src_image_path: str | None = None,
-    src_np_image=None,
-    output_image_path: str | None = None
+    *,
+    image: Image | None = None,
 ) -> np.ndarray:
     """
     Convert an image to grayscale.
 
     Parameters
     ----------
-    src_image_path : str | None, optional
-        Path to input image.
-    src_np_image : np.ndarray | None, optional
-        Preloaded BGR image array.
-    output_image_path : str | None, optional
-        If provided, save the grayscale image.
+    image : Image
+        Image instance (BGR data expected) to convert.
 
     Returns
     -------
-    np.ndarray
-        Grayscale image.
+    Result
+        `image` is the converted image as a np.ndarray; `data` is None.
 
     Raises
     ------
-    TypeError
-        If input types are invalid.
-    FileNotFoundError
-        If image path does not exist.
-    IOError
-        If saving the image fails.
+    ValueError
+        If image is invalid.
     """
-    np_image = IOHandler.load_image(image_path=src_image_path, np_image=src_np_image)
-    grayscale = cv2.cvtColor(np_image, cv2.COLOR_BGR2GRAY)
+    if image is None or not isinstance(image, Image):
+        raise ValueError("'image' must be an instance of Image.")
     
-    if output_image_path:
-        print(IOHandler.save_image(grayscale, output_image_path))
+    annotated_image = image._date
+    grayscale = cv2.cvtColor(annotated_image, cv2.COLOR_BGR2GRAY)
     
-    return grayscale
+    return Result(image=grayscale, data=None, meta={"source":image, "operation":"convert_to_grayscale"})

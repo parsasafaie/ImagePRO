@@ -7,8 +7,10 @@ import cv2
 parent_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(parent_dir))
 
-from utils.io_handler import IOHandler
-from pre_processing.blur import apply_average_blur
+from ImagePRO.utils.image import Image
+from ImagePRO.utils.result import Result
+
+from ImagePRO.pre_processing.blur import apply_average_blur
 
 # Constants
 DEFAULT_LAPLACIAN_COEFFICIENT = 3.0
@@ -16,79 +18,81 @@ DEFAULT_UNSHARP_COEFFICIENT = 1.0
 
 
 def apply_laplacian_sharpening(
+    *,
+    image: Image | None = None,
     coefficient: float = DEFAULT_LAPLACIAN_COEFFICIENT,
-    src_image_path: str | None = None,
-    src_np_image: np.ndarray | None = None,
-    output_image_path: str | None = None
 ) -> np.ndarray:
     """
     Apply Laplacian filter to enhance image sharpness.
 
     Parameters
     ----------
+    image : Image
+        Image instance (BGR data expected) to convert.
     coefficient : float, default=3.0
         Intensity of sharpening effect (>= 0).
-    src_image_path : str | None
-        Path to the input image file.
-    src_np_image : np.ndarray | None
-        Preloaded image array.
-    output_image_path : str | None
-        Path to save the sharpened image.
 
     Returns
     -------
-    np.ndarray
-        Sharpened image.
+    Result
+        `image` is the sharpen image as a np.ndarray; `data` is None.
+    
+    Raises
+    ------
+    ValueError
+        If coefficient is nan or negative or image is invalid.
     """
     if not isinstance(coefficient, (int, float)) or coefficient < 0:
         raise ValueError("'coefficient' must be a non-negative number.")
+    
+    if image is None or not isinstance(image, Image):
+        raise ValueError("'image' must be an instance of Image.")
 
-    np_image = IOHandler.load_image(image_path=src_image_path, np_image=src_np_image)
-    laplacian = cv2.Laplacian(np_image, cv2.CV_64F)
+    annotated_image = image._data.copy()
+    laplacian = cv2.Laplacian(annotated_image, cv2.CV_64F)
     laplacian = np.uint8(np.absolute(laplacian))
 
-    sharpened = np_image + coefficient * laplacian
+    sharpened = annotated_image + coefficient * laplacian
     sharpened = np.uint8(np.clip(sharpened, 0, 255))
 
-    if output_image_path:
-        print(IOHandler.save_image(sharpened, output_image_path))
-    return sharpened
+    return Result(image=sharpened, data=None, meta={"source":image, "operation":"apply_laplacian_sharpening", "coefficient":coefficient})
 
 
 def apply_unsharp_masking(
+    *,
+    image: Image | None = None,
     coefficient: float = DEFAULT_UNSHARP_COEFFICIENT,
-    src_image_path: str | None = None,
-    src_np_image: np.ndarray | None = None,
-    output_image_path: str | None = None
 ) -> np.ndarray:
     """
     Apply Unsharp Masking to enhance image sharpness.
 
     Parameters
     ----------
-    coefficient : float, default=1.0
+    image : Image
+        Image instance (BGR data expected) to convert.
+    coefficient : float, default=3.0
         Intensity of sharpening effect (>= 0).
-    src_image_path : str | None
-        Path to the input image file.
-    src_np_image : np.ndarray | None
-        Preloaded image array.
-    output_image_path : str | None
-        Path to save the sharpened image.
 
     Returns
     -------
-    np.ndarray
-        Sharpened image.
+    Result
+        `image` is the sharpen image as a np.ndarray; `data` is None.
+    
+    Raises
+    ------
+    ValueError
+        If coefficient is nan or negative or image is invalid.
     """
     if not isinstance(coefficient, (int, float)) or coefficient < 0:
         raise ValueError("'coefficient' must be a non-negative number.")
+    
+    if image is None or not isinstance(image, Image):
+        raise ValueError("'image' must be an instance of Image.")
 
-    np_image = IOHandler.load_image(image_path=src_image_path, np_image=src_np_image)
-    blurred = apply_average_blur(np_image=np_image)
+    annotated_image = image._data.copy()
+    blurred = apply_average_blur(image=Image.from_array(annotated_image))
 
-    mask = cv2.subtract(np_image, blurred)
-    sharpened = cv2.addWeighted(np_image, 1 + coefficient, mask, -coefficient, 0)
+    mask = cv2.subtract(annotated_image, blurred)
+    sharpened = cv2.addWeighted(annotated_image, 1 + coefficient, mask, -coefficient, 0)
 
-    if output_image_path:
-        print(IOHandler.save_image(sharpened, output_image_path))
-    return sharpened
+    return Result(image=sharpened, data=None, meta={"source":image, "operation":"apply_unsharp_masking", "coefficient":coefficient})

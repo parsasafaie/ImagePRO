@@ -7,44 +7,36 @@ import numpy as np
 parent_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(parent_dir))
 
-from utils.io_handler import IOHandler
+from ImagePRO.utils.image import Image
+from ImagePRO.utils.result import Result
 
 
 def resize_image(
+    *,
+    image: Image | None = None,
     new_size: tuple[int, int],
-    src_image_path: str | None = None,
-    src_np_image=None,
-    output_image_path: str | None = None
 ) -> np.ndarray:
     """
     Resize an image to new dimensions.
 
     Parameters
     ----------
+    image : Image
+        Image instance (BGR data expected) to convert.
     new_size : tuple[int, int]
         New image size as (width, height).
-    src_image_path : str | None, optional
-        Path to input image.
-    src_np_image : np.ndarray | None, optional
-        Preloaded BGR image array.
-    output_image_path : str | None, optional
-        If provided, save the resized image.
 
     Returns
     -------
-    np.ndarray
-        Resized image.
+    Result
+        `image` is the resized image as a np.ndarray; `data` is None.
 
     Raises
     ------
     ValueError
-        If new_size is invalid.
+        If new_size or image are invalid.
     TypeError
         If input types are invalid.
-    FileNotFoundError
-        If image path does not exist.
-    IOError
-        If saving the image fails.
     """
     if (
         not isinstance(new_size, tuple)
@@ -52,11 +44,11 @@ def resize_image(
         or not all(isinstance(dim, int) and dim > 0 for dim in new_size)
     ):
         raise ValueError("'new_size' must be a tuple of two positive integers.")
+    
+    if image is None or not isinstance(image, Image):
+        raise ValueError("'image' must be an instance of Image.")
 
-    np_image = IOHandler.load_image(image_path=src_image_path, np_image=src_np_image)
-    resized = cv2.resize(np_image, new_size, interpolation=cv2.INTER_LINEAR)
+    annotated_image = image._data
+    resized = cv2.resize(annotated_image, new_size, interpolation=cv2.INTER_LINEAR)
     
-    if output_image_path:
-        print(IOHandler.save_image(resized, output_image_path))
-    
-    return resized
+    return Result(image=resized, data=None, meta={"source":image, "operation":"resize_image", "new_size":new_size})
