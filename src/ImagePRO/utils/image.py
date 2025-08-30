@@ -7,10 +7,6 @@ from typing import Optional, Tuple, Literal
 import numpy as np
 import cv2
 
-from .io_handler import IOHandler
-from ..pre_processing.resize import resize_image
-
-
 Colorspace = Literal["BGR", "RGB", "GRAY"]
 SourceType = Literal["path", "array"]
 

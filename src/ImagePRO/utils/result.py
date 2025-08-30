@@ -25,15 +25,6 @@ class Result:
     data: Optional[Any] = None
     meta: dict[str, Any] = field(default_factory=dict)
 
-    # ---- Introspection --------------------------------------------------------
-
-    def to_numpy(self, *, copy: bool = False) -> np.ndarray:
-        if self.image is None:
-            raise ValueError("This result does not contain an image.")
-        if isinstance(self.image, list):
-            return [image.copy() if copy else image for image in self.image] 
-        return self.image.copy() if copy else self.image
-
     # ---- Saving helpers (IOHandler-compatible validation) ---------------------
     def save_as_img(self, path: str | Path) -> "Result":
         if self.image is None:
