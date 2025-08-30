@@ -13,9 +13,8 @@ Advanced facial landmark detection, pose estimation, and analysis using MediaPip
 
 ## 🔧 I/O Conventions
 
-- **Input**: Provide either `src_image_path` or `src_np_image` (BGR format)
-- **Output**: Optional saving of annotated images and landmark data
-- **Precedence**: If both inputs provided, `src_np_image` takes priority
+- **Input**: A `Image` instance created by path or array
+- **Output**: A `Result` instance contains image(np.ndarray), data(any other data like landmarks list) and meta(some additional info about process)
 - **Live Mode**: Webcam functions with ESC key to exit
 
 ## 📚 Available Functions
@@ -31,30 +30,30 @@ Advanced facial landmark detection, pose estimation, and analysis using MediaPip
 
 ```python
 from ImagePRO.human_analysis.face_analysis.face_mesh_analysis import analyze_face_mesh
-from ImagePRO.human_analysis.face_analysis.head_pose_estimation import estimate_head_pose
-from ImagePRO.human_analysis.face_analysis.eye_status_analysis import analyze_eye_status
+from ImagePRO.utils.image import Image
 
-# Detect facial landmarks
-annotated, landmarks = analyze_face_mesh(
-    src_image_path="face.jpg",
-    output_image_path="mesh.jpg",
-    output_csv_path="landmarks.csv"
+import cv2
+
+image = Image.from_path('input.jpg') # Or -> image = Image.from_array(np_image)
+
+# Analyze face mesh
+mesh_result = analyze_face_mesh(
+    image=image,
+    landmarks_idx=[i*5 for i in range(5)] # *5 to get 5 landmarks (0, 5, 10, 15, 20) in different points of face
 )
 
-# Estimate head pose
-pose_data = estimate_head_pose(
-    src_np_image=annotated,
-    output_csv_path="pose.csv"
-)
+# Better to use pre-loaded model for faster processing and lower memory usage (see docstring of analyze_face_mesh)
 
-# Analyze eye status
-is_open = analyze_eye_status(
-    src_np_image=annotated,
-    threshold=0.22
-)
+print(type(mesh_result))  # Should print: <class 'ImagePRO.utils.result.Result'>
+print(mesh_result.data)  # Should print a list of 5 landmark info
+print(mesh_result.meta)  # Should print metadata about the operation
+
+cv2.imshow("Landmark Image", mesh_result.image) # Display the result image
+cv2.waitKey(0)
+cv2.destroyAllWindows()
 ```
 
-## 📊 Output Formats
+## 📊 Data Formats
 
 ### **Landmarks CSV**
 - **Format**: `[face_id, landmark_index, x, y, z]`

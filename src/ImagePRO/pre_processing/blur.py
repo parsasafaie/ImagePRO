@@ -1,57 +1,49 @@
-import sys
-from pathlib import Path
+from __future__ import annotations
+
 import cv2
-import numpy as np
 
-# Add parent directory to sys.path for custom module imports
-parent_dir = Path(__file__).resolve().parent.parent
-sys.path.append(str(parent_dir))
+from ImagePRO.utils.image import Image
+from ImagePRO.utils.result import Result
 
-from utils.io_handler import IOHandler
 
-# Constants
-DEFAULT_KERNEL_SIZE = (5, 5)
-DEFAULT_FILTER_SIZE = 5
-DEFAULT_SIGMA_COLOR = 75
-DEFAULT_SIGMA_SPACE = 75
+# Constants for blur operations
+DEFAULT_KERNEL_SIZE = (5, 5)  # For average and Gaussian blur
+DEFAULT_FILTER_SIZE = 5       # For median blur
+DEFAULT_SIGMA_COLOR = 75      # For bilateral filter
+DEFAULT_SIGMA_SPACE = 75      # For bilateral filter
 
 
 def apply_average_blur(
-    kernel_size: tuple[int, int] = DEFAULT_KERNEL_SIZE,
-    src_image_path: str | None = None,
-    src_np_image=None,
-    output_image_path: str | None = None
-) -> np.ndarray:
+    image: Image,
+    *,
+    kernel_size: tuple[int, int] = DEFAULT_KERNEL_SIZE
+) -> Result:
     """
-    Apply average blur (box filter) to an image.
+    Apply average (box) blur to an image.
 
-    Parameters
-    ----------
-    kernel_size : tuple[int, int], default=(5, 5)
-        Blur kernel size (width, height). Both must be positive integers.
-    src_image_path : str | None, optional
-        Path to input image.
-    src_np_image : np.ndarray | None, optional
-        Preloaded BGR image array.
-    output_image_path : str | None, optional
-        If provided, save the blurred image.
+    Uses a simple box filter where each output pixel is the mean of its kernel neighbors.
+    Good for basic noise reduction but may create unwanted artifacts on edges.
 
-    Returns
-    -------
-    np.ndarray
-        Blurred image.
+    Args:
+        image (Image):
+            Input image to blur. Can be BGR (default) or RGB.
+        kernel_size (tuple[int, int], optional):
+            Blur kernel size as (width, height). Both must be positive integers.
+            Larger values create stronger blur effect. Defaults to (5, 5).
 
-    Raises
-    ------
-    ValueError
-        If kernel size is invalid.
-    TypeError
-        If input types are invalid.
-    FileNotFoundError
-        If image path does not exist.
-    IOError
-        If saving the image fails.
+    Returns:
+        Result: Result object with blurred image.
+            - image (np.ndarray): Blurred output image
+            - data (None): No additional data
+            - meta (dict): Contains kernel size and operation info
+
+    Raises:
+        TypeError: If image is not an Image instance
+        ValueError: If kernel_size contains invalid values
     """
+    if not isinstance(image, Image):
+        raise TypeError("'image' must be an Image instance.")
+
     if (
         not isinstance(kernel_size, tuple)
         or len(kernel_size) != 2
@@ -59,45 +51,50 @@ def apply_average_blur(
     ):
         raise ValueError("'kernel_size' must be a tuple of two positive integers.")
 
-    np_image = IOHandler.load_image(image_path=src_image_path, np_image=src_np_image)
-    blurred = cv2.blur(np_image, kernel_size)
+    # Apply box filter blur
+    blurred = cv2.blur(image._data.copy(), kernel_size)
     
-    if output_image_path:
-        print(IOHandler.save_image(blurred, output_image_path))
-    
-    return blurred
+    return Result(
+        image=blurred,
+        meta={
+            "source": image,
+            "operation": "apply_average_blur",
+            "kernel_size": kernel_size
+        }
+    )
 
 
 def apply_gaussian_blur(
-    kernel_size: tuple[int, int] = DEFAULT_KERNEL_SIZE,
-    src_image_path: str | None = None,
-    src_np_image=None,
-    output_image_path: str | None = None
-) -> np.ndarray:
+    image: Image,
+    *,
+    kernel_size: tuple[int, int] = DEFAULT_KERNEL_SIZE
+) -> Result:
     """
     Apply Gaussian blur to an image.
 
-    Parameters
-    ----------
-    kernel_size : tuple[int, int], default=(5, 5)
-        Kernel size (width, height), both odd positive integers.
-    src_image_path : str | None, optional
-        Path to input image.
-    src_np_image : np.ndarray | None, optional
-        Preloaded BGR image array.
-    output_image_path : str | None, optional
-        If provided, save the blurred image.
+    Uses a Gaussian kernel for smoother, more natural-looking blur than box filter.
+    Ideal for general noise reduction and pre-processing for edge detection.
 
-    Returns
-    -------
-    np.ndarray
-        Blurred image.
+    Args:
+        image (Image):
+            Input image to blur. Can be BGR (default) or RGB.
+        kernel_size (tuple[int, int], optional):
+            Gaussian kernel size as (width, height). Both must be odd positive integers.
+            Larger values create stronger blur effect. Defaults to (5, 5).
 
-    Raises
-    ------
-    ValueError
-        If kernel size is invalid.
+    Returns:
+        Result: Result object with blurred image.
+            - image (np.ndarray): Blurred output image
+            - data (None): No additional data
+            - meta (dict): Contains kernel size and operation info
+
+    Raises:
+        TypeError: If image is not an Image instance
+        ValueError: If kernel_size values are not odd positive integers
     """
+    if not isinstance(image, Image):
+        raise TypeError("'image' must be an Image instance.")
+
     if (
         not isinstance(kernel_size, tuple)
         or len(kernel_size) != 2
@@ -105,97 +102,107 @@ def apply_gaussian_blur(
     ):
         raise ValueError("'kernel_size' must be a tuple of two odd positive integers.")
 
-    np_image = IOHandler.load_image(image_path=src_image_path, np_image=src_np_image)
-    blurred = cv2.GaussianBlur(np_image, kernel_size, 0)
+    # Apply Gaussian blur with automatic sigma calculation
+    blurred = cv2.GaussianBlur(image._data.copy(), kernel_size, 0)
     
-    if output_image_path:
-        print(IOHandler.save_image(blurred, output_image_path))
-    
-    return blurred
+    return Result(
+        image=blurred,
+        meta={
+            "source": image,
+            "operation": "apply_gaussian_blur",
+            "kernel_size": kernel_size
+        }
+    )
 
 
 def apply_median_blur(
-    filter_size: int = DEFAULT_FILTER_SIZE,
-    src_image_path: str | None = None,
-    src_np_image=None,
-    output_image_path: str | None = None
-) -> np.ndarray:
+    image: Image,
+    *,
+    filter_size: int = DEFAULT_FILTER_SIZE
+) -> Result:
     """
     Apply median blur to remove salt-and-pepper noise.
 
-    Parameters
-    ----------
-    filter_size : int, default=5
-        Must be an odd integer greater than 1.
-    src_image_path : str | None, optional
-        Path to input image.
-    src_np_image : np.ndarray | None, optional
-        Preloaded BGR image array.
-    output_image_path : str | None, optional
-        If provided, save the blurred image.
+    Uses median filtering which is particularly effective at removing salt-and-pepper
+    noise while preserving edges better than linear filters (average, Gaussian).
 
-    Returns
-    -------
-    np.ndarray
-        Blurred image.
+    Args:
+        image (Image):
+            Input image to blur. Can be BGR (default) or RGB.
+        filter_size (int, optional):
+            Size of the median filter kernel. Must be an odd integer > 1.
+            Larger values create stronger noise reduction but slower processing.
+            Defaults to 5.
 
-    Raises
-    ------
-    TypeError
-        If filter_size is not an integer.
-    ValueError
-        If filter_size is not an odd integer greater than 1.
+    Returns:
+        Result: Result object with denoised image.
+            - image (np.ndarray): Denoised output image
+            - data (None): No additional data
+            - meta (dict): Contains filter size and operation info
+
+    Raises:
+        TypeError: If image is not an Image instance
+        ValueError: If filter_size is not an odd integer > 1
     """
-    if not isinstance(filter_size, int):
-        raise TypeError("'filter_size' must be an integer.")
-    if filter_size <= 1 or filter_size % 2 == 0:
+    if not isinstance(image, Image):
+        raise TypeError("'image' must be an Image instance.")
+
+    if not isinstance(filter_size, int) or filter_size <= 1 or filter_size % 2 == 0:
         raise ValueError("'filter_size' must be an odd integer greater than 1.")
 
-    np_image = IOHandler.load_image(image_path=src_image_path, np_image=src_np_image)
-    blurred = cv2.medianBlur(np_image, filter_size)
+    # Apply median filtering
+    blurred = cv2.medianBlur(image._data.copy(), filter_size)
     
-    if output_image_path:
-        print(IOHandler.save_image(blurred, output_image_path))
-    
-    return blurred
+    return Result(
+        image=blurred,
+        meta={
+            "source": image,
+            "operation": "apply_median_blur",
+            "filter_size": filter_size
+        }
+    )
 
 
 def apply_bilateral_blur(
+    image: Image,
+    *,
     filter_size: int = 9,
     sigma_color: float = DEFAULT_SIGMA_COLOR,
-    sigma_space: float = DEFAULT_SIGMA_SPACE,
-    src_image_path: str | None = None,
-    src_np_image=None,
-    output_image_path: str | None = None
-) -> np.ndarray:
+    sigma_space: float = DEFAULT_SIGMA_SPACE
+) -> Result:
     """
-    Apply bilateral blur to an image.
+    Apply bilateral blur for edge-preserving smoothing.
 
-    Parameters
-    ----------
-    filter_size : int, default=9
-        Filter size, must be a positive integer.
-    sigma_color : float, default=75
-        Color sigma, higher values mean more colors will be mixed.
-    sigma_space : float, default=75
-        Space sigma, higher values mean farther pixels will influence each other.
-    src_image_path : str | None, optional
-        Path to input image.
-    src_np_image : np.ndarray | None, optional
-        Preloaded BGR image array.
-    output_image_path : str | None, optional
-        If provided, save the blurred image.
+    Uses bilateral filtering which smooths images while preserving edges by combining
+    domain and range filtering. Effective for noise reduction while keeping sharp edges,
+    but significantly slower than other blurring methods.
 
-    Returns
-    -------
-    np.ndarray
-        Blurred image.
+    Args:
+        image (Image):
+            Input image to blur. Can be BGR (default) or RGB.
+        filter_size (int, optional):
+            Diameter of pixel neighborhood. Larger values affect larger areas.
+            Must be positive. Defaults to 9.
+        sigma_color (float, optional):
+            Filter sigma in color space. Larger values mean more dissimilar colors
+            will be mixed together. Defaults to 75.
+        sigma_space (float, optional):
+            Filter sigma in coordinate space. Larger values mean more distant pixels
+            will influence each other. Defaults to 75.
 
-    Raises
-    ------
-    ValueError
-        If filter size or sigma parameters are invalid.
+    Returns:
+        Result: Result object with smoothed image.
+            - image (np.ndarray): Edge-preserving smoothed output
+            - data (None): No additional data
+            - meta (dict): Contains filter *,parameters and operation info
+
+    Raises:
+        TypeError: If image is not an Image instance
+        ValueError: If any numeric parameter is not positive
     """
+    if not isinstance(image, Image):
+        raise TypeError("'image' must be an Image instance.")
+
     if not isinstance(filter_size, int) or filter_size <= 0:
         raise ValueError("'filter_size' must be a positive integer.")
     if not isinstance(sigma_color, (int, float)) or sigma_color <= 0:
@@ -203,10 +210,21 @@ def apply_bilateral_blur(
     if not isinstance(sigma_space, (int, float)) or sigma_space <= 0:
         raise ValueError("'sigma_space' must be a positive number.")
 
-    np_image = IOHandler.load_image(image_path=src_image_path, np_image=src_np_image)
-    blurred = cv2.bilateralFilter(np_image, filter_size, sigma_color, sigma_space)
+    # Apply bilateral filter
+    blurred = cv2.bilateralFilter(
+        image._data.copy(),
+        filter_size,
+        sigma_color,
+        sigma_space
+    )
     
-    if output_image_path:
-        print(IOHandler.save_image(blurred, output_image_path))
-    
-    return blurred
+    return Result(
+        image=blurred,
+        meta={
+            "source": image,
+            "operation": "apply_bilateral_blur",
+            "filter_size": filter_size,
+            "sigma_color": sigma_color,
+            "sigma_space": sigma_space,
+        }
+    )

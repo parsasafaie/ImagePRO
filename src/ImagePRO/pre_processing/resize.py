@@ -1,62 +1,54 @@
-import sys
-from pathlib import Path
+from __future__ import annotations
+
 import cv2
-import numpy as np
 
-# Add parent directory to sys.path for custom module imports
-parent_dir = Path(__file__).resolve().parent.parent
-sys.path.append(str(parent_dir))
-
-from utils.io_handler import IOHandler
+from ImagePRO.utils.image import Image
+from ImagePRO.utils.result import Result
 
 
 def resize_image(
-    new_size: tuple[int, int],
-    src_image_path: str | None = None,
-    src_np_image=None,
-    output_image_path: str | None = None
-) -> np.ndarray:
+    image: Image,
+    *,
+    new_size: tuple[int, int]
+) -> Result:
+    """Resize an image to specified dimensions.
+
+    Changes image size while maintaining aspect ratio.
+    Uses bilinear interpolation for smooth resizing.
+
+    Args:
+        image: Input image to resize.
+        new_size: Target size as (width, height) in pixels.
+            Both dimensions must be positive integers.
+
+    Returns:
+        Result object with resized image and metadata:
+        - image: Resized image array
+        - data: None
+        - meta: Operation info and new size used
+
+    Raises:
+        TypeError: If image is not an Image instance
+        ValueError: If new_size is not valid (tuple of 2 positive ints)
     """
-    Resize an image to new dimensions.
+    if not isinstance(image, Image):
+        raise TypeError("'image' must be an Image instance")
 
-    Parameters
-    ----------
-    new_size : tuple[int, int]
-        New image size as (width, height).
-    src_image_path : str | None, optional
-        Path to input image.
-    src_np_image : np.ndarray | None, optional
-        Preloaded BGR image array.
-    output_image_path : str | None, optional
-        If provided, save the resized image.
-
-    Returns
-    -------
-    np.ndarray
-        Resized image.
-
-    Raises
-    ------
-    ValueError
-        If new_size is invalid.
-    TypeError
-        If input types are invalid.
-    FileNotFoundError
-        If image path does not exist.
-    IOError
-        If saving the image fails.
-    """
     if (
         not isinstance(new_size, tuple)
         or len(new_size) != 2
         or not all(isinstance(dim, int) and dim > 0 for dim in new_size)
     ):
-        raise ValueError("'new_size' must be a tuple of two positive integers.")
+        raise ValueError("'new_size' must be a tuple of two positive integers")
 
-    np_image = IOHandler.load_image(image_path=src_image_path, np_image=src_np_image)
-    resized = cv2.resize(np_image, new_size, interpolation=cv2.INTER_LINEAR)
+    # Resize using bilinear interpolation
+    resized = cv2.resize(image._data, new_size, interpolation=cv2.INTER_LINEAR)
     
-    if output_image_path:
-        print(IOHandler.save_image(resized, output_image_path))
-    
-    return resized
+    return Result(
+        image=resized,
+        meta={
+            "source": image,
+            "operation": "resize_image",
+            "new_size": new_size
+        }
+    )

@@ -11,7 +11,7 @@ Whether you're working on computer vision pipelines, preprocessing images for AI
 ### **Image I/O & Management**
 - Flexible input/output handling (file paths or numpy arrays)
 - Batch processing capabilities
-- Multiple format support (JPEG, PNG, etc.)
+- Multiple format support (JPEG, PNG, CSV, etc.)
 
 ### **Pre-processing & Enhancement**
 - **Basic Operations**: Resize, crop, rotate (90°, 180°, 270°, custom angles), grayscale conversion
@@ -49,26 +49,37 @@ pip install -r requirements.txt
 ## 📖 Quick Start
 
 ```python
-from ImagePRO.pre_processing.grayscale import convert_to_grayscale
-from ImagePRO.pre_processing.blur import apply_gaussian_blur
+from ImagePRO.pre_processing.blur import apply_average_blur
 from ImagePRO.human_analysis.face_analysis.face_mesh_analysis import analyze_face_mesh
+from ImagePRO.human_analysis.body_analysis.body_pose_estimation import detect_body_pose
+from ImagePRO.object_analysis.object_detection import detect_objects
 
-# Convert to grayscale
-gray = convert_to_grayscale(src_image_path="input.jpg")
+from ImagePRO.utils.image import Image
 
-# Apply Gaussian blur
-blur = apply_gaussian_blur(
-    src_np_image=gray, 
-    kernel_size=(5, 5), 
-    output_image_path="blurred.jpg"
+image = Image.from_path("person_and_objects.jpg")
+
+# Apply Average blur
+blur_result = apply_average_blur(
+    image=image, 
 )
 
 # Analyze face mesh
-annotated, landmarks = analyze_face_mesh(
-    src_image_path="person.jpg",
-    output_image_path="mesh.jpg",
-    output_csv_path="landmarks.csv"
+face_mesh_result = analyze_face_mesh(
+    image=image
 )
+
+# Detect body pose
+body_pose_result = detect_body_pose(
+    image=image
+)   
+
+# Detect objects                
+object_detection_result = detect_objects(
+    image=image,
+)
+
+# There is 4 example from each module, there is more functions and utilities in each module, and more customization options in each function. explore the codebase for more details.
+# If you have any feature requests or suggestions, please open an issue on the GitHub repository.
 ```
 
 ## 📚 Documentation

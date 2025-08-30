@@ -12,10 +12,10 @@ YOLO-based object detection with multiple accuracy levels and flexible model sup
 
 ## 🔧 I/O Conventions
 
-- **Input**: Support for both file paths and numpy arrays
-- **Output**: Optional saving of annotated images and detection data
-- **Precedence**: Numpy arrays take priority when both inputs provided
+- **Input**: A `Image` instance created by path or array
+- **Output**: A `Result` instance contains image(np.ndarray), data(any other data like detections) and meta(some additional info about process)
 - **Model Management**: Automatic model loading or custom model injection
+- **Live Mode**: Available for real-time detection
 
 ## 📚 Available Functions
 
@@ -26,24 +26,35 @@ YOLO-based object detection with multiple accuracy levels and flexible model sup
 
 ```python
 from ImagePRO.object_analysis.object_detection import detect_objects
+from ImagePRO.utils.image import Image
+import cv2
+
+# Load image
+image = Image.from_path("image.jpg")  # Or -> image = Image.from_array(np_image)
 
 # Detect objects with nano model (fastest)
-results = detect_objects(
-    src_image_path="image.jpg",
+result = detect_objects(
+    image=image,
     accuracy_level=1,  # 1=nano, 2=small, 3=medium, 4=large, 5=extra-large
-    confidence=0.5,
-    output_image_path="detected.jpg",
-    output_csv_path="detections.csv"
+    confidence=0.5
 )
+
+print(type(result))  # Should print: <class 'ImagePRO.utils.result.Result'>
+print(result.data)   # Should print: List of detections
+print(result.meta)   # Should print: Operation metadata
+
+# Display result
+cv2.imshow("Detections", result.image)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
 
 # Use custom model
 from ultralytics import YOLO
 custom_model = YOLO("path/to/custom.pt")
 
-results = detect_objects(
-    src_np_image=image_array,
-    model=custom_model,
-    output_image_path="custom_detected.jpg"
+result = detect_objects(
+    image=image,
+    model=custom_model
 )
 ```
 

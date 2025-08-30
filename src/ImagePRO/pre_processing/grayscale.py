@@ -1,50 +1,50 @@
-import sys
-from pathlib import Path
+from __future__ import annotations
+
 import cv2
-import numpy as np
 
-# Add parent directory to sys.path for custom module imports
-parent_dir = Path(__file__).resolve().parent.parent
-sys.path.append(str(parent_dir))
-
-from utils.io_handler import IOHandler
+from ImagePRO.utils.image import Image
+from ImagePRO.utils.result import Result
 
 
-def convert_to_grayscale(
-    src_image_path: str | None = None,
-    src_np_image=None,
-    output_image_path: str | None = None
-) -> np.ndarray:
+def convert_to_grayscale(image: Image) -> Result:
     """
     Convert an image to grayscale.
 
-    Parameters
-    ----------
-    src_image_path : str | None, optional
-        Path to input image.
-    src_np_image : np.ndarray | None, optional
-        Preloaded BGR image array.
-    output_image_path : str | None, optional
-        If provided, save the grayscale image.
+    Converts BGR or RGB image to single-channel grayscale using OpenCV.
+    For BGR images (default), uses standard ITU-R BT.601 conversion.
+    For RGB images, automatically handles colorspace conversion.
 
-    Returns
-    -------
-    np.ndarray
-        Grayscale image.
+    Args:
+        image (Image):
+            Input image to convert. Must be BGR or RGB format.
 
-    Raises
-    ------
-    TypeError
-        If input types are invalid.
-    FileNotFoundError
-        If image path does not exist.
-    IOError
-        If saving the image fails.
+    Returns:
+        Result: Result object with converted grayscale image.
+            - image (np.ndarray): Single-channel grayscale image
+            - data (None): No additional data
+            - meta (dict): Contains source object and operation info
+
+    Raises:
+        TypeError: If image is not an Image instance
+        ValueError: If image colorspace is already GRAY
     """
-    np_image = IOHandler.load_image(image_path=src_image_path, np_image=src_np_image)
-    grayscale = cv2.cvtColor(np_image, cv2.COLOR_BGR2GRAY)
-    
-    if output_image_path:
-        print(IOHandler.save_image(grayscale, output_image_path))
-    
-    return grayscale
+    if not isinstance(image, Image):
+        raise TypeError("'image' must be an Image instance.")
+
+    if image.colorspace == "GRAY":
+        raise ValueError("Image is already in grayscale format.")
+
+    # Convert based on source colorspace
+    if image.colorspace == "RGB":
+        grayscale = cv2.cvtColor(image._data, cv2.COLOR_RGB2GRAY)
+    else:  # BGR is default
+        grayscale = cv2.cvtColor(image._data, cv2.COLOR_BGR2GRAY)
+
+    return Result(
+        image=grayscale,
+        data=None,
+        meta={
+            "source": image,
+            "operation": "convert_to_grayscale"
+        }
+    )

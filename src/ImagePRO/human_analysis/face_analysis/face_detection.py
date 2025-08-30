@@ -1,15 +1,13 @@
-import sys
-from pathlib import Path
+from __future__ import annotations
 
 import cv2
+import mediapipe as mp
 import numpy as np
 
-# Add parent directory to sys.path for custom module imports
-parent_dir = Path(__file__).resolve().parent.parent.parent
-sys.path.append(str(parent_dir))
+from ImagePRO.human_analysis.face_analysis.face_mesh_analysis import analyze_face_mesh
+from ImagePRO.utils.image import Image
+from ImagePRO.utils.result import Result
 
-from utils.io_handler import IOHandler
-from human_analysis.face_analysis.face_mesh_analysis import analyze_face_mesh
 
 # Constants
 DEFAULT_MAX_FACES = 1
@@ -22,93 +20,102 @@ FACE_OUTLINE_INDICES = [
 
 
 def detect_faces(
+    image: Image, 
+    *,
     max_faces: int = DEFAULT_MAX_FACES,
     min_confidence: float = DEFAULT_MIN_CONFIDENCE,
-    src_image_path: str | None = None,
-    src_np_image=None,
-    output_image_path: str | None = None,
-    face_mesh_obj=None,
-):
+    face_mesh_obj: mp.solutions.face_mesh.FaceMesh | None = None
+) -> Result:
+    """Detect and crop face regions using facial landmarks.
+
+    Uses face mesh to locate face outline points,
+    then extracts rectangular regions containing each face.
+
+    Args:
+        image: Input image to process.
+        max_faces: Maximum number of faces to detect.
+            Must be positive.
+            Default: 1
+        min_confidence: Detection confidence threshold.
+            Must be between 0 and 1.
+            Default: 0.7
+        face_mesh_obj: Pre-initialized face mesh detector.
+            If None, creates new instance.
+            Default: None
+
+    Returns:
+        Result object with detections:
+        - image: List of cropped face images
+            None if no faces detected
+        - data: List of face outline polygons
+            None if no faces detected
+        - meta: Operation info and parameters
+            Includes error info if detection fails
+
+    Raises:
+        TypeError: If image is not an Image instance
+        ValueError: If max_faces is not positive
+        ValueError: If min_confidence not in [0,1]
     """
-    Detect and crop face regions using MediaPipe facial landmarks.
+    if not isinstance(image, Image):
+        raise TypeError("'image' must be an Image instance")
 
-    Parameters
-    ----------
-    max_faces : int, default=1
-        Maximum number of faces to detect.
-    min_confidence : float, default=0.7
-        Detection confidence threshold in [0, 1].
-    src_image_path : str | None, optional
-        Path to input image file.
-    src_np_image : np.ndarray | None, optional
-        Image array in BGR format. If both provided, `src_np_image` takes precedence.
-    output_image_path : str | None, optional
-        If provided, saves cropped faces to disk (single path used as base name for multiple faces).
-    face_mesh_obj : mediapipe.python.solutions.face_mesh.FaceMesh | None, optional
-        Optional reusable FaceMesh instance.
-
-    Returns
-    -------
-    list[np.ndarray] | str
-        If `output_image_path` is provided, returns the save message from
-        `IOHandler.save_image`. Otherwise, returns a list of cropped face images.
-
-    Raises
-    ------
-    ValueError
-        * If inputs are invalid or no face landmarks are detected (this function).
-        * From IOHandler.load_image when both inputs are None or image loading fails.
-    TypeError
-        From IOHandler.load_image/save_image on invalid argument types.
-    FileNotFoundError
-        From IOHandler.load_image when `src_image_path` does not exist.
-    IOError
-        From IOHandler.save_image when saving the image fails.
-    """
-    # --- Validate inputs -----------------------------------------------------
     if not isinstance(max_faces, int) or max_faces <= 0:
-        raise ValueError("'max_faces' must be a positive integer.")
+        raise ValueError("'max_faces' must be positive")
 
     if not isinstance(min_confidence, (int, float)) or not (0 <= min_confidence <= 1):
-        raise ValueError("'min_confidence' must be a float between 0 and 1.")
+        raise ValueError("'min_confidence' must be between 0 and 1")
 
-    # --- Load image -----------------------------------------------------------
-    np_image = IOHandler.load_image(image_path=src_image_path, np_image=src_np_image)
-    height, width = np_image.shape[:2]
+    # Get image dimensions
+    height, width = image.shape[:2]
 
-    # Selected face outline landmark indices (MediaPipe 468-point model)
-    face_outline_indices = FACE_OUTLINE_INDICES
-
-    # --- Run face mesh analysis ----------------------------------------------
-    _, raw_landmarks = analyze_face_mesh(
+    # Get face landmarks
+    result_mesh = analyze_face_mesh(
+        image=image,
         max_faces=max_faces,
         min_confidence=min_confidence,
-        landmarks_idx=face_outline_indices,
-        src_np_image=np_image,
+        landmarks_idx=FACE_OUTLINE_INDICES,
         face_mesh_obj=face_mesh_obj
     )
+    raw_landmarks = result_mesh.data
 
+    # Handle no detections
     if not raw_landmarks:
-        raise ValueError("No face landmarks detected in the input image.")
+        return Result(
+            image=None,
+            data=None,
+            meta={
+                "source": image,
+                "operation": "detect_faces",
+                "max_faces": max_faces,
+                "min_confidence": min_confidence,
+                "error": "No face landmarks detected"
+            }
+        )
 
-    # --- Convert normalized landmark coordinates to pixel positions ----------
-    all_polygons = []
+    # Convert landmarks to pixel coordinates
+    face_polygons = []
     for face in raw_landmarks:
         polygon = [
             (int(x * width), int(y * height))
             for _, _, x, y, _ in face
         ]
-        all_polygons.append(np.array(polygon, dtype=np.int32))
+        face_polygons.append(np.array(polygon, dtype=np.int32))
 
-    # --- Crop faces using boundingRect ---------------------------------------
-    cropped_faces = []
-    for polygon in all_polygons:
+    # Extract face regions
+    face_regions = []
+    for polygon in face_polygons:
         x, y, w, h = cv2.boundingRect(polygon)
-        cropped = np_image[y:y + h, x:x + w]
-        cropped_faces.append(cropped)
+        face_region = image._data[y:y + h, x:x + w]
+        face_regions.append(face_region)
 
-    # --- Output handling ------------------------------------------------------
-    if output_image_path:
-        print(IOHandler.save_image(cropped_faces, output_image_path))
-
-    return cropped_faces
+    return Result(
+        image=face_regions,
+        data=face_polygons,
+        meta={
+            "source": image,
+            "operation": "detect_faces",
+            "max_faces": max_faces,
+            "min_confidence": min_confidence
+        }
+    )

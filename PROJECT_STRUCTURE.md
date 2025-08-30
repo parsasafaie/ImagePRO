@@ -1,7 +1,28 @@
 # ImagePRO Project Structure
 
 ## Overview
-ImagePRO is organized into logical modules that provide specific functionality while maintaining clean separation of concerns.
+ImagePRO is organized into logical modules that### Import Patterns
+
+### Standard Import Order
+```python
+from __future__ import annotations  # Always first
+
+# Python standard library
+import os
+import sys
+from pathlib import Path
+from typing import List, Tuple, Optional
+
+# Third-party libraries
+import cv2
+import numpy as np
+import mediapipe as mp
+from ultralytics import YOLO
+
+# Local imports
+from ImagePRO.utils.image import Image
+from ImagePRO.utils.result import Result
+```
 
 ## Directory Structure
 ```
@@ -9,7 +30,10 @@ src/ImagePRO/
 ├── __init__.py                 # Main package initialization
 ├── utils/                      # Shared utilities
 │   ├── __init__.py
-│   └── io_handler.py          # Image I/O operations
+│   ├── image.py               # Image class for standardized input
+│   ├── result.py              # Result class for standardized output
+│   ├── io_handler.py          # I/O utilities
+│   └── README.md
 ├── pre_processing/             # Image manipulation and enhancement
 │   ├── __init__.py
 │   ├── blur.py                # Blur filters (average, Gaussian, median, bilateral)
@@ -53,10 +77,12 @@ src/ImagePRO/
 - **InsightFace**: Advanced face analysis
 
 ### Internal Dependencies
-- **utils.io_handler**: Used by all modules for I/O operations
-- **pre_processing**: Independent, no internal dependencies
-- **human_analysis**: Uses utils.io_handler
-- **object_analysis**: Uses utils.io_handler
+- **utils.image**: Core Image class used by all modules
+- **utils.result**: Core Result class used by all modules
+- **utils.io_handler**: I/O utilities used by Image class
+- **pre_processing**: Uses utils.image and utils.result
+- **human_analysis**: Uses utils.image, utils.result, and face_mesh_analysis as base
+- **object_analysis**: Uses utils.image and utils.result
 
 ## Code Standards
 
@@ -67,13 +93,17 @@ src/ImagePRO/
 
 ### Function Signatures
 - Consistent parameter naming across all modules
-- Support for both file paths and numpy arrays
-- Optional output parameters for saving results
+- Standard Image class input parameter
+- Standard Result class return type
+- Keyword-only arguments with defaults
+- Type hints for all parameters and returns
 
 ### Error Handling
 - Comprehensive input validation
-- Clear error messages
-- Proper exception types (ValueError, TypeError, etc.)
+- Separation of TypeError and ValueError
+- Clear, descriptive error messages
+- Result object with error information in meta
+- Consistent error patterns across modules
 
 ### Documentation
 - Detailed docstrings for all functions
@@ -82,15 +112,6 @@ src/ImagePRO/
 - Exception documentation
 
 ## Import Patterns
-
-### Internal Imports
-```python
-# Add parent directory to path for custom module imports
-parent_dir = Path(__file__).resolve().parent.parent
-sys.path.append(str(parent_dir))
-
-from utils.io_handler import IOHandler
-```
 
 ### External Imports
 ```python
@@ -110,16 +131,17 @@ from ultralytics import YOLO
 5. Include constants for configurable values
 
 ### Adding New Functions
-1. Follow existing function signature patterns
-2. Include comprehensive docstrings
-3. Add input validation
-4. Use consistent error handling
-5. Support both file paths and numpy arrays
+1. Use Google-style docstrings with Args/Returns/Raises
+2. Accept Image class input and return Result class
+3. Use keyword-only arguments with type hints
+4. Implement proper error validation with TypeError/ValueError
+5. Follow consistent error handling patterns with Result.meta
 
 ### Testing
-- Test with both file paths and numpy arrays
-- Verify error handling with invalid inputs
-- Check output saving functionality
+- Test with both Image.from_path and Image.from_array
+- Test Result object contents and metadata
+- Verify type and value error handling
+- Test error information in Result.meta
 - Test edge cases and boundary conditions
 
 ## Future Enhancements
@@ -148,8 +170,10 @@ from ultralytics import YOLO
 - Review and update constants as needed
 
 ### Code Quality
-- All modules follow PEP 8 style guidelines
-- Consistent error handling patterns
-- Comprehensive input validation
-- Clear and maintainable code structure
+- Follows PEP 8 style guidelines
+- Uses type hints throughout codebase
+- Consistent I/O with Image and Result classes
+- Google-style docstrings for all functions
+- Clear separation of concerns
+- Proper error handling hierarchy
 - Professional-grade documentation
