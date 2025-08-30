@@ -86,4 +86,4 @@ def detect_objects(
         result.show()
     
     # Return the Result instance
-    return Result(image=result.plot(), data=lines, meta={"source"})
+    return Result(image=result.plot(), data=lines, meta={"source": image, "operation": "detect_objects", "model": model_name})
