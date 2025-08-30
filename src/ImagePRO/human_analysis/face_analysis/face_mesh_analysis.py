@@ -26,12 +26,14 @@ def analyze_face_mesh(
     landmarks_idx: list | None = None,
     image: Image | None = None,
     face_mesh_obj=None,
-):
+) -> Result:
     """
     Detect facial landmarks using MediaPipe FaceMesh on a single image (path or ndarray).
 
     Parameters
     ----------
+    image : Image
+        Image instance (BGR data expected) to process.
     max_faces : int, default=1
         Maximum number of faces to detect.
     min_confidence : float, default=0.7
@@ -39,39 +41,23 @@ def analyze_face_mesh(
     landmarks_idx : list[int] | None, optional
         Specific landmark indices to extract/draw. If ``None``, uses the full
         468-point mesh.
-    src_image_path : str | None, optional
-        Path to the input image (BGR/RGB supported by ``IOHandler.load_image``).
-    src_np_image : np.ndarray | None, optional
-        Image array in BGR (as returned by OpenCV). If both ``src_image_path`` and
-        ``src_np_image`` are provided, the ndarray takes precedence.
-    output_image_path : str | None, optional
-        If provided (e.g. "out.jpg"/"out.png"), the annotated image is saved there.
-    output_csv_path : str | None, optional
-        If provided (e.g. "landmarks.csv"), landmark coordinates are saved there as
-        rows: ``[face_id, index, x, y, z]`` with normalized x/y/z from MediaPipe.
     face_mesh_obj : mediapipe.python.solutions.face_mesh.FaceMesh | None, optional
         Reusable external FaceMesh instance. If ``None``, a new one is created
         with ``static_image_mode=True`` and ``refine_landmarks=True``.
 
     Returns
     -------
-    tuple
-        ``(annotated_image: np.ndarray, all_landmarks: list[list[list[float]]])``
-        where ``all_landmarks`` is a list per face, each containing rows of
-        ``[face_id, index, x, y, z]``.
+    Result
+        Result where `image` is the annotated image (np.ndarray) with landmarks and
+        `data` contains landmarks coordinates per face as a list of lists. 
+        except if no face landmarks are detected, then `image` is None and `data` is None and meta has error info.
 
     Raises
     ------
     ValueError
-        * If inputs are invalid or no face landmarks are detected (this function).
-        * From ``IOHandler.load_image`` when both inputs are ``None`` or image loading fails.
+        If inputs are invalid or no face landmarks.
     TypeError
-        * If ``landmarks_idx`` is not a list of integers (this function).
-        * From ``IOHandler.load_image``/``save_image``/``save_csv`` on invalid argument types.
-    FileNotFoundError
-        From ``IOHandler.load_image`` when ``image_path`` does not exist.
-    IOError
-        From ``IOHandler.save_image`` when saving the image fails.
+        If ``landmarks_idx`` is not a list of integers .
 
     Notes
     -----
@@ -114,7 +100,7 @@ def analyze_face_mesh(
     results = face_Mesh.process(rgb_image)
 
     if not results.multi_face_landmarks:
-        raise ValueError("No face landmarks detected.")
+        return Result(image=None, data=None, meta={"source":image, "operation":"analyze_face_mesh", "landmarks_idx": landmarks_idx, "max_faces": max_faces, "min_confidence": min_confidence, "error": "No face landmarks detected"})
 
     landmarks_idx = landmarks_idx or list(range(468))
 

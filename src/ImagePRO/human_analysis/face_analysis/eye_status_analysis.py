@@ -43,7 +43,12 @@ def analyze_eye_status(
     Returns
     -------
     Result
-        `data` is a boolean: True if eye is open, False if closed. `image` is None.
+        `data` is a boolean: True if eye is open, False if closed. `image` is None. except when no face is detected or missing landmarks, then `data` is None and `meta` contains error info.
+
+    Raises
+    -------
+    ValueError
+        If inputs are invalid or no face landmarks detected or missing landmarks.
     """
     if not isinstance(image, Image):
         raise ValueError("'image' must be an instance of Image.")
@@ -71,7 +76,7 @@ def analyze_eye_status(
     landmarks = mesh_result.data
 
     if not landmarks:
-        raise ValueError("No face landmarks detected.")
+        return Result(image=None, data=None, meta={"source":image, "operation":"analyze_eye_status", "min_confidence": min_confidence, "threshold": threshold, "error": "No face landmarks detected"})
 
     eye_points = {lm[1]: lm for lm in landmarks[0]}
 
@@ -81,7 +86,7 @@ def analyze_eye_status(
         left_x = eye_points[263][2] * w
         right_x = eye_points[362][2] * w
     except KeyError as e:
-        raise ValueError("Missing necessary eye landmarks.") from e
+        return Result(image=None, data=None, meta={"source":image, "operation":"analyze_eye_status", "min_confidence": min_confidence, "threshold": threshold, "error": f"Missing landmark: {e}"})
 
     vertical_dist = abs(bottom_y - top_y)
     horizontal_dist = abs(right_x - left_x)

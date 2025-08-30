@@ -43,7 +43,12 @@ def estimate_head_pose(
     Returns
     -------
     Result
-        `data` is a list of [face_id, yaw, pitch] per face; `image` is None.
+        `data` is a list of [face_id, yaw, pitch] per face; `image` is None. except if no face is detected or missing landmarks, then `data` is None and `meta` contains error info.
+
+    Raises
+    -------
+    ValueError
+        If inputs are invalid or no face landmarks detected or missing landmarks.
     """
     if not isinstance(image, Image):
         raise ValueError("'image' must be an instance of Image.")
@@ -65,7 +70,7 @@ def estimate_head_pose(
     landmarks = mesh_result.data
 
     if not landmarks:
-        raise ValueError("No face landmarks detected.")
+        return Result(image=None, data=None, meta={"source":image, "operation": "estimate_head_pose", "max_faces": max_faces, "min_confidence": min_confidence, "error": "No face landmarks detected."})
 
     results = []
     for face in landmarks:
@@ -77,7 +82,8 @@ def estimate_head_pose(
             right_x = points[263][2]
             nasion_x, nasion_y = points[168][2:4]
         except KeyError:
-            continue
+            return Result(image=None, data=None, meta={"source":image, "operation": "estimate_head_pose", "max_faces": max_faces, "min_confidence": min_confidence, "error": "Missing necessary landmarks."})
+
 
         yaw = 100 * ((right_x - nasion_x) - (nasion_x - left_x))
         pitch = 100 * ((chin_y - nose_y) - (nose_y - nasion_y))

@@ -1,3 +1,6 @@
+from ImagePRO.human_analysis.face_analysis.face_mesh_analysis import analyze_face_mesh
+from ImagePRO.utils.result import Result
+from ImagePRO.utils.image import Image
 import sys
 from pathlib import Path
 
@@ -8,9 +11,6 @@ import numpy as np
 parent_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(parent_dir))
 
-from ImagePRO.utils.image import Image
-from ImagePRO.utils.result import Result
-from ImagePRO.human_analysis.face_analysis.face_mesh_analysis import analyze_face_mesh
 
 # Constants
 DEFAULT_MAX_FACES = 1
@@ -24,7 +24,7 @@ FACE_OUTLINE_INDICES = [
 
 def detect_faces(
     *,
-    image: Image,
+    image: Image, 
     max_faces: int = DEFAULT_MAX_FACES,
     min_confidence: float = DEFAULT_MIN_CONFIDENCE,
     face_mesh_obj=None,
@@ -47,12 +47,13 @@ def detect_faces(
     -------
     Result
         Result where `image` may be a list[np.ndarray] of cropped faces.
-        `data` contains polygon points per face in pixel coordinates.
+        `data` contains landmark points per face in pixel coordinates. 
+        except if no face is detected or missing landmarks, then `image` is None and `data` is None and meta has error info.
 
     Raises
     ------
     ValueError
-        If inputs are invalid or no face landmarks are detected.
+        If inputs are invalid.
     """
     if not isinstance(image, Image):
         raise ValueError("'image' must be an instance of Image.")
@@ -78,7 +79,7 @@ def detect_faces(
     raw_landmarks = result_mesh.data
 
     if not raw_landmarks:
-        raise ValueError("No face landmarks detected in the input image.")
+        return Result(image=None, data=None, meta={"source": image, "operation": "detect_faces", "max_faces": max_faces, "min_confidence": min_confidence, "error": "No face landmarks detected."})
 
     # Convert normalized coords to pixels
     all_polygons = []
@@ -96,4 +97,4 @@ def detect_faces(
         cropped = np_image[y:y + h, x:x + w]
         cropped_faces.append(cropped)
 
-    return Result(image=cropped_faces, data=all_polygons, meta={"source":image, "operation": "detect_faces", "max_faces": max_faces, "min_confidence": min_confidence})
+    return Result(image=cropped_faces, data=all_polygons, meta={"source": image, "operation": "detect_faces", "max_faces": max_faces, "min_confidence": min_confidence})
