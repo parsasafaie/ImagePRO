@@ -10,12 +10,9 @@ import mediapipe as mp
 parent_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(parent_dir))
 
-from human_analysis.face_analysis.face_detection import detect_faces
-from blur import apply_median_blur
-from sharpen import apply_laplacian_sharpening
-from rotate import rotate_image_custom
-from grayscale import convert_to_grayscale
-from resize import resize_image
+from ImagePRO.human_analysis.face_analysis.face_detection import detect_faces
+from ImagePRO.pre_processing import *
+from ImagePRO.utils.image import Image
 
 # Constants
 DEFAULT_NUM_IMAGES = 200
@@ -126,22 +123,22 @@ def capture_bulk_pictures(
 
             if apply_blur:
                 # Small kernel to keep facial details while reducing salt-and-pepper noise
-                proc = apply_median_blur(src_np_image=proc, filter_size=3)
+                proc = blur.apply_average_blur(image=Image.from_array(proc), filter_size=3).image
 
             if apply_sharpen:
                 # Gentle sharpening; adjust coefficient if needed
-                proc = apply_laplacian_sharpening(src_np_image=proc, coefficient=1.0)
+                proc = sharpen.apply_laplacian_sharpening(image=Image.from_array(proc), coefficient=1.0).image
 
             if apply_grayscale:
-                proc = convert_to_grayscale(src_np_image=proc)
+                proc = grayscale.convert_to_grayscale(image=Image.from_array(proc)).image
 
             if apply_resize is not False:
-                proc = resize_image(new_size=apply_resize, src_np_image=proc)
+                proc = resize.resize_image(image=Image.from_array(proc), new_size=apply_resize).image
 
             if apply_rotate:
                 angle = float(random.randint(-45, 45))
                 scale = random.choice([1.0, 1.1, 1.2, 1.3])
-                proc = rotate_image_custom(src_np_image=proc, angle=angle, scale=scale)
+                proc = rotate.rotate_image_custom(image=Image.from_array(proc), angle=angle, scale=scale).image
 
             # Zero-padded filenames for better ordering
             filename = f"{start_index + saved:04d}.jpg"
