@@ -26,41 +26,13 @@ Full body pose estimation and hand tracking:
 - **Hand Tracking**: 21-point hand landmark analysis
 - **Multi-person Support**: Configurable for single or multiple subjects
 
-## 🚀 Quick Start
-
-```python
-from ImagePRO.human_analysis.face_analysis.face_mesh_analysis import analyze_face_mesh
-from ImagePRO.human_analysis.body_analysis.body_pose_estimation import detect_body_pose
-from ImagePRO.human_analysis.body_analysis.hand_tracking import detect_hands
-
-# Analyze face
-face_result, face_landmarks = analyze_face_mesh(
-    src_image_path="person.jpg",
-    output_image_path="face_mesh.jpg"
-)
-
-# Detect body pose
-body_result, body_landmarks = detect_body_pose(
-    src_np_image=face_result,
-    output_image_path="body_pose.jpg"
-)
-
-# Track hands
-hands_result, hand_landmarks = detect_hands(
-    src_np_image=body_result,
-    max_hands=2,
-    output_image_path="hands.jpg"
-)
-```
-
 ## 🔧 I/O Conventions
 
-- **Input**: Support for both file paths and numpy arrays
-- **Output**: Optional saving of annotated images and landmark data
-- **Precedence**: Numpy arrays take priority when both inputs provided
+- **Input**: A `Image` instance created by path or array
+- **Output**: A `Result` instance contains image(np.ndarray), data(any other data like landmarks list) and meta(some additional info about process)
 - **Live Mode**: Webcam functions with ESC key to exit
 
-## 📊 Output Formats
+## 📊 Data Formats
 
 ### **Landmark Data**
 - **Format**: `[id, landmark_index, x, y, z]`
@@ -73,7 +45,7 @@ hands_result, hand_landmarks = detect_hands(
 
 ## ⚠️ Error Handling
 
-- **`ValueError`**: Invalid parameters or no landmarks detected
+- **`ValueError`**: Invalid parameters(like invalid image) or no landmarks detected
 - **`TypeError`**: Incorrect input types
 - **`RuntimeError`**: Webcam access failures
 - **`FileNotFoundError`**: Image file not found

@@ -12,9 +12,8 @@ Advanced body pose estimation and hand tracking using MediaPipe technology.
 
 ## 🔧 I/O Conventions
 
-- **Input**: Support for both file paths and numpy arrays
-- **Output**: Optional saving of annotated images and landmark data
-- **Precedence**: Numpy arrays take priority when both inputs provided
+- **Input**: A `Image` instance created by path or array
+- **Output**: A `Result` instance contains image(np.ndarray), data(any other data like landmarks list) and meta(some additional info about process)
 - **Live Mode**: Webcam functions with ESC key to exit
 
 ## 📚 Available Functions
@@ -27,24 +26,30 @@ Advanced body pose estimation and hand tracking using MediaPipe technology.
 
 ```python
 from ImagePRO.human_analysis.body_analysis.body_pose_estimation import detect_body_pose
-from ImagePRO.human_analysis.body_analysis.hand_tracking import detect_hands
+from ImagePRO.utils.image import Image
+
+import cv2
+
+image = Image.from_path('input.jpg') # Or -> image = Image.from_array(np_image)
 
 # Detect body pose
-annotated_body, body_landmarks = detect_body_pose(
-    src_image_path="person.jpg",
-    output_image_path="pose.jpg",
-    output_csv_path="body_landmarks.csv"
+body_pose_result = detect_body_pose(
+    image=image,
+    landmarks_idx=[i*5 for i in range(5)] # *5 to get 5 landmarks (0, 5, 10, 15, 20) in different points of body
 )
 
-# Track hands
-annotated_hands, hand_landmarks = detect_hands(
-    src_np_image=annotated_body,
-    max_hands=2,
-    output_image_path="hands.jpg"
-)
+# Better to use pre-loaded model for faster processing and lower memory usage (see docstring of detect_body_pose)
+
+print(type(body_pose_result))  # Should print: <class 'ImagePRO.utils.result.Result'>
+print(body_pose_result.data)  # Should print a list of 5 landmark info
+print(body_pose_result.meta)  # Should print metadata about the operation
+
+cv2.imshow("Landmark Image", body_pose_result.image) # Display the result image
+cv2.waitKey(0)
+cv2.destroyAllWindows()
 ```
 
-## 📊 Output Formats
+## 📊 Data Formats
 
 ### **Body Landmarks CSV**
 - **Format**: `[landmark_index, x, y, z]`
