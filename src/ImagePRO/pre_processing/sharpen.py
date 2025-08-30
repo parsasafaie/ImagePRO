@@ -1,15 +1,10 @@
-import sys
-from pathlib import Path
-import numpy as np
-import cv2
+from __future__ import annotations
 
-# Add parent directory to path for importing local modules
-parent_dir = Path(__file__).resolve().parent.parent
-sys.path.append(str(parent_dir))
+import cv2
+import numpy as np
 
 from ImagePRO.utils.image import Image
 from ImagePRO.utils.result import Result
-
 from ImagePRO.pre_processing.blur import apply_average_blur
 
 # Constants
@@ -18,81 +13,103 @@ DEFAULT_UNSHARP_COEFFICIENT = 1.0
 
 
 def apply_laplacian_sharpening(
+    image: Image,
     *,
-    image: Image | None = None,
-    coefficient: float = DEFAULT_LAPLACIAN_COEFFICIENT,
-) -> np.ndarray:
-    """
-    Apply Laplacian filter to enhance image sharpness.
+    coefficient: float = DEFAULT_LAPLACIAN_COEFFICIENT
+) -> Result:
+    """Enhance image sharpness using Laplacian filtering.
 
-    Parameters
-    ----------
-    image : Image
-        Image instance (BGR data expected) to convert.
-    coefficient : float, default=3.0
-        Intensity of sharpening effect (>= 0).
+    Applies edge detection and enhances edges to improve sharpness.
+    Useful for bringing out fine details in images.
 
-    Returns
-    -------
-    Result
-        `image` is the sharpen image as a np.ndarray; `data` is None.
-    
-    Raises
-    ------
-    ValueError
-        If coefficient is nan or negative or image is invalid.
+    Args:
+        image: Input image to sharpen.
+        coefficient: Intensity of sharpening effect. Must be >= 0.
+            Default: 3.0
+
+    Returns:
+        Result object with sharpened image and metadata:
+        - image: Sharpened image array
+        - data: None
+        - meta: Operation info and coefficient used
+
+    Raises:
+        TypeError: If image is not an Image instance
+        ValueError: If coefficient is negative
     """
+    if not isinstance(image, Image):
+        raise TypeError("'image' must be an Image instance")
+
     if not isinstance(coefficient, (int, float)) or coefficient < 0:
-        raise ValueError("'coefficient' must be a non-negative number.")
-    
-    if image is None or not isinstance(image, Image):
-        raise ValueError("'image' must be an instance of Image.")
+        raise ValueError("'coefficient' must be a non-negative number")
 
-    annotated_image = image._data.copy()
-    laplacian = cv2.Laplacian(annotated_image, cv2.CV_64F)
+    # Apply Laplacian edge detection
+    laplacian = cv2.Laplacian(image._data.copy(), cv2.CV_64F)
     laplacian = np.uint8(np.absolute(laplacian))
 
-    sharpened = annotated_image + coefficient * laplacian
+    # Enhance edges
+    sharpened = image._data + coefficient * laplacian
     sharpened = np.uint8(np.clip(sharpened, 0, 255))
 
-    return Result(image=sharpened, data=None, meta={"source":image, "operation":"apply_laplacian_sharpening", "coefficient":coefficient})
+    return Result(
+        image=sharpened,
+        meta={
+            "source": image,
+            "operation": "apply_laplacian_sharpening",
+            "coefficient": coefficient
+        }
+    )
 
 
 def apply_unsharp_masking(
+    image: Image,
     *,
-    image: Image | None = None,
-    coefficient: float = DEFAULT_UNSHARP_COEFFICIENT,
-) -> np.ndarray:
-    """
-    Apply Unsharp Masking to enhance image sharpness.
+    coefficient: float = DEFAULT_UNSHARP_COEFFICIENT
+) -> Result:
+    """Enhance image sharpness using unsharp masking.
 
-    Parameters
-    ----------
-    image : Image
-        Image instance (BGR data expected) to convert.
-    coefficient : float, default=3.0
-        Intensity of sharpening effect (>= 0).
+    Creates a blurred version, subtracts from original to get edges,
+    then enhances those edges in the original image.
 
-    Returns
-    -------
-    Result
-        `image` is the sharpen image as a np.ndarray; `data` is None.
-    
-    Raises
-    ------
-    ValueError
-        If coefficient is nan or negative or image is invalid.
+    Args:
+        image: Input image to sharpen.
+        coefficient: Intensity of sharpening effect. Must be >= 0.
+            Default: 1.0
+
+    Returns:
+        Result object with sharpened image and metadata:
+        - image: Sharpened image array
+        - data: None
+        - meta: Operation info and coefficient used
+
+    Raises:
+        TypeError: If image is not an Image instance
+        ValueError: If coefficient is negative
     """
+    if not isinstance(image, Image):
+        raise TypeError("'image' must be an Image instance")
+
     if not isinstance(coefficient, (int, float)) or coefficient < 0:
-        raise ValueError("'coefficient' must be a non-negative number.")
+        raise ValueError("'coefficient' must be a non-negative number")
+
+    # Create the mask from original vs blurred difference
+    blurred = apply_average_blur(image=Image.from_array(image._data.copy()))
+    mask = cv2.subtract(image._data, blurred)
     
-    if image is None or not isinstance(image, Image):
-        raise ValueError("'image' must be an instance of Image.")
+    # Apply unsharp masking
+    sharpened = cv2.addWeighted(
+        image._data, 
+        1 + coefficient, 
+        mask, 
+        -coefficient, 
+        0
+    )
 
-    annotated_image = image._data.copy()
-    blurred = apply_average_blur(image=Image.from_array(annotated_image))
-
-    mask = cv2.subtract(annotated_image, blurred)
-    sharpened = cv2.addWeighted(annotated_image, 1 + coefficient, mask, -coefficient, 0)
-
-    return Result(image=sharpened, data=None, meta={"source":image, "operation":"apply_unsharp_masking", "coefficient":coefficient})
+    return Result(
+        image=sharpened,
+        meta={
+            "source": image,
+            "operation": "apply_unsharp_masking",
+            "coefficient": coefficient
+        }
+    )
