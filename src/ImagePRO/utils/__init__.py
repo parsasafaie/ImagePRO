@@ -1,6 +1,7 @@
 # Utils Module
 # Provides shared utilities for image I/O operations and data handling
 
-from .io_handler import IOHandler
+from .image import Image
+from .result import Result
 
-__all__ = ["IOHandler"]
+__all__ = ["Image", "Result"]

@@ -7,7 +7,7 @@ where = ["src"]
 
 [project]
 name = "ImagePRO-Python"
-version = "1.0.0"
+version = "1.0.1"
 description = "Professional & modular image processing library with OpenCV, MediaPipe, and YOLO integration."
 readme = "README.md"
 requires-python = "==3.10.*"
@@ -33,7 +33,9 @@ dependencies = [
   "ultralytics>=8.2.0,<9.0",
   "mediapipe>=0.10.0,<1.0",
   "insightface>=0.7,<1.0",
+  "onnxruntime>=1.16,<2.0",
 ]
+
 
 [project.urls]
 Homepage = "https://github.com/parsasafaie/ImagePRO"
