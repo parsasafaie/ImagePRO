@@ -135,12 +135,23 @@ class Result:
         try:
             with out_path.open("w", newline="", encoding="utf-8") as f:
                 writer = csv.writer(f)
-                if isinstance(payload, list) and payload and all(isinstance(i, (list, tuple)) for i in payload):
-                    writer.writerows(payload)
-                elif isinstance(payload, (list, tuple)):
-                    writer.writerow(list(payload))
+                if isinstance(payload, (list, tuple)):
+                    writer.writerows(flatten_rows(payload))
                 else:
                     writer.writerow([payload])
         except Exception as exc:
             raise IOError(f"Failed to write CSV to {out_path}: {exc}") from exc
         return self
+
+def flatten_rows(data):
+    """Flatten any nested lists/tuples into rows suitable for CSV writing."""
+    rows = []
+    for item in data:
+        if isinstance(item, (list, tuple)):
+            if item and all(isinstance(x, (list, tuple)) for x in item):
+                rows.extend(flatten_rows(item))
+            else:
+                rows.append(list(item))
+        else:
+            rows.append([item])
+    return rows

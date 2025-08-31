@@ -7,7 +7,7 @@ where = ["src"]
 
 [project]
 name = "ImagePRO-Python"
-version = "1.0.1"
+version = "1.0.2"
 description = "Professional & modular image processing library with OpenCV, MediaPipe, and YOLO integration."
 readme = "README.md"
 requires-python = "==3.10.*"
