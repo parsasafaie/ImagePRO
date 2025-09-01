@@ -26,52 +26,54 @@ from ImagePRO.utils.result import Result
 
 ## Directory Structure
 ```
-src/ImagePRO/
-├── __init__.py                 # Main package initialization
-├── utils/                      # Shared utilities
+[src/ImagePRO/]
+├── __init__.py
+├── utils/                              # Shared utilities
 │   ├── __init__.py
-│   ├── image.py               # Image class for standardized input
-│   ├── result.py              # Result class for standardized output
-│   ├── io_handler.py          # I/O utilities
+│   ├── image.py                        [base]
+│   ├── result.py                       [base]
 │   └── README.md
-├── pre_processing/             # Image manipulation and enhancement
+├── pre_processing/                     # Image pre processing tools
 │   ├── __init__.py
-│   ├── blur.py                # Blur filters (average, Gaussian, median, bilateral)
-│   ├── contrast.py            # Contrast enhancement (CLAHE, GHE, stretching)
-│   ├── crop.py                # Image cropping
-│   ├── dataset_generator.py   # Automated image capture
-│   ├── grayscale.py           # Grayscale conversion
-│   ├── resize.py              # Image resizing
-│   ├── rotate.py              # Image rotation
-│   ├── sharpen.py             # Sharpening filters
-│   └── README.md              # Module documentation
-├── human_analysis/            # Human analysis capabilities
+│   ├── blur.py                         [base]
+│   ├── contrast.py                     [base]
+│   ├── crop.py                         [base]
+│   ├── dataset_generator.py            [base]
+│   ├── grayscale.py                    [base]
+│   ├── resize.py                       [base]
+│   ├── rotate.py                       [base]
+│   ├── sharpen.py                      [base]
+│   └── README.md
+├── human_analysis/                     # Human analysis capabilities
 │   ├── __init__.py
-│   ├── face_analysis/         # Face analysis tools
+│   ├── face_analysis/                  # Face analysis tools
 │   │   ├── __init__.py
-│   │   ├── eye_status_analysis.py
-│   │   ├── face_comparison.py
-│   │   ├── face_detection.py
-│   │   ├── face_mesh_analysis.py
-│   │   ├── head_pose_estimation.py
+│   │   ├── eye_status_analysis.py      [mediapipe]
+│   │   ├── face_comparison.py          [insightface]
+│   │   ├── face_detection.py           [mediapipe]
+│   │   ├── face_mesh_analysis.py       [mediapipe]
+│   │── head_pose_estimation.py         [mediapipe]
 │   │   └── README.md
-│   ├── body_analysis/         # Body analysis tools
+│   ├── body_analysis/                  # Body analysis tools
 │   │   ├── __init__.py
-│   │   ├── body_pose_estimation.py
-│   │   ├── hand_tracking.py
+│   │   ├── body_pose_estimation.py     [mediapipe]
+│   │   ├── hand_tracking.py            [mediapipe]
 │   │   └── README.md
 │   └── README.md
-└── object_analysis/           # Object detection
+└── object_analysis/                    # Object detection
     ├── __init__.py
-    ├── object_detection.py    # YOLO-based detection
+    ├── object_detection.py             [yolo]
     └── README.md
+
 ```
 
 ## Module Dependencies
 
 ### Core Dependencies
+#### Base Dependencies
 - **OpenCV** (cv2): Image processing operations
 - **NumPy**: Array operations and data handling
+#### Optional Dependencies
 - **MediaPipe**: Human analysis (face, body, hands)
 - **Ultralytics**: YOLO object detection
 - **InsightFace**: Advanced face analysis
@@ -79,7 +81,6 @@ src/ImagePRO/
 ### Internal Dependencies
 - **utils.image**: Core Image class used by all modules
 - **utils.result**: Core Result class used by all modules
-- **utils.io_handler**: I/O utilities used by Image class
 - **pre_processing**: Uses utils.image and utils.result
 - **human_analysis**: Uses utils.image, utils.result, and face_mesh_analysis as base
 - **object_analysis**: Uses utils.image and utils.result
@@ -126,7 +127,7 @@ from ultralytics import YOLO
 ### Adding New Modules
 1. Create directory with `__init__.py`
 2. Follow existing naming conventions
-3. Use `utils.io_handler` for I/O operations
+3. Use `Result` and `Image` for I/O operations
 4. Add comprehensive documentation
 5. Include constants for configurable values
 

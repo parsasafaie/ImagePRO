@@ -40,11 +40,30 @@ pip install ImagePRO-Python
 ```bash
 git clone https://github.com/parsasafaie/ImagePRO.git
 cd ImagePRO
+
 python -m venv .venv
+
 source .venv/bin/activate   # macOS/Linux
 .venv\Scripts\activate      # Windows
-pip install -r requirements.txt
+
+# Base dependencies
+pip install -r requirements/base.txt
+
+# Optional dependencies
+# For YOLO object detection
+pip install -r requirements/yolo.txt
+
+# For MediaPipe human analysis
+pip install -r requirements/mediapipe.txt
+
+# For InsightFace advanced face analysis
+pip install -r requirements/insightface.txt
+
+# Or install everything
+pip install -r requirements/full.txt
 ```
+
+See the [Directory Structure](/PROJECT_STRUCTURE.md#directory-structure) section in [PROJECT_STRUCTURE.md](/PROJECT_STRUCTURE.md) for details on which modules need which requirements.
 
 ## 📖 Quick Start
 
