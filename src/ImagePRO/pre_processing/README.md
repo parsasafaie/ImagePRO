@@ -23,6 +23,7 @@ Professional image manipulation, filtering, and enhancement utilities for comput
 - **`resize.py`**: Resize images to specified dimensions
 - **`crop.py`**: Crop images using coordinate-based selection
 - **`rotate.py`**: Rotate images (90°, 180°, 270°, custom angles)
+- **`histogram.py`**:  Display histogram of image channels (BGR, RGB, or grayscale)
 
 ### **Filtering & Enhancement**
 - **`blur.py`**: Multiple blur algorithms (average, Gaussian, median, bilateral)

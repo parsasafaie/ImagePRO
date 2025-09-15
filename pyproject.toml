@@ -7,7 +7,7 @@ where = ["src"]
 
 [project]
 name = "ImagePRO-Python"
-version = "1.0.5"
+version = "1.1.0"
 description = "Professional & modular image processing library with OpenCV, MediaPipe, and YOLO integration."
 readme = "README.md"
 requires-python = "==3.10.*"
@@ -30,6 +30,7 @@ classifiers = [
 dependencies = [
   "numpy>=1.24,<2.0",
   "opencv-python>=4.8,<5.0",
+  "matplotlib>=3.7.0,<3.9.0"
 ]
 
 [project.optional-dependencies]

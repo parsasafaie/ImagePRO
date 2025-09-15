@@ -40,6 +40,7 @@ from ImagePRO.utils.result import Result
 │   ├── crop.py                         [base]
 │   ├── dataset_generator.py            [base]
 │   ├── grayscale.py                    [base]
+|   ├── histogram.py                    [base]
 │   ├── resize.py                       [base]
 │   ├── rotate.py                       [base]
 │   ├── sharpen.py                      [base]
