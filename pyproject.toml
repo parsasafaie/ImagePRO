@@ -7,44 +7,69 @@ where = ["src"]
 
 [project]
 name = "ImagePRO-Python"
-version = "1.1.0"
+version = "1.2.0"
 description = "Professional & modular image processing library with OpenCV, MediaPipe, and YOLO integration."
 readme = "README.md"
-requires-python = "==3.10.*"
-license = {text = "MIT"}
-authors = [{name = "Parsa Safaie", email = "parsasafaie.2568@proton.me"}]
-keywords = ["opencv", "mediapipe", "computer-vision", "face", "pose", "yolo", "image-processing"]
+requires-python = ">=3.9,<3.13"
+license = { text = "MIT" }
+
+authors = [
+    { name = "Parsa Safaie", email = "parsasafaie.2568@proton.me" }
+]
+
+keywords = [
+    "opencv",
+    "mediapipe",
+    "computer-vision",
+    "face",
+    "pose",
+    "yolo",
+    "image-processing"
+]
+
 classifiers = [
-  "Development Status :: 4 - Beta",
-  "Intended Audience :: Developers",
-  "Intended Audience :: Science/Research",
-  "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.10",
-  "License :: OSI Approved :: MIT License",
-  "Operating System :: OS Independent",
-  "Topic :: Scientific/Engineering :: Image Processing",
-  "Topic :: Scientific/Engineering :: Artificial Intelligence",
-  "Topic :: Software Development :: Libraries :: Python Modules",
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Image Processing",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules"
 ]
 
 dependencies = [
-  "numpy>=1.24,<2.0",
-  "opencv-python>=4.8,<5.0",
-  "matplotlib>=3.7.0,<3.9.0"
+    "numpy>=1.24,<3.0",
+    "opencv-python>=4.8,<6.0",
+    "matplotlib>=3.7,<4.0"
 ]
 
 [project.optional-dependencies]
 yolo = [
-    "ultralytics>=8.2.0,<9.0"
-]
-mediapipe = [
-    "mediapipe>=0.10.0,<1.0"
-]
-insightface = [
-    "insightface>=0.7,<1.0",
-    "onnxruntime>=1.16,<2.0"
+    "ultralytics>=8.2,<10.0"
 ]
 
+mediapipe = [
+    "mediapipe>=0.10,<1.0"
+]
+
+insightface = [
+    "insightface>=0.7,<1.0",
+    "onnxruntime>=1.16,<3.0"
+]
+
+full = [
+    "mediapipe>=0.10,<1.0",
+    "ultralytics>=8.2,<10.0",
+    "insightface>=0.7,<1.0",
+    "onnxruntime>=1.16,<3.0"
+]
 
 [project.urls]
 Homepage = "https://github.com/parsasafaie/ImagePRO"
