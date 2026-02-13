@@ -7,7 +7,7 @@ where = ["src"]
 
 [project]
 name = "ImagePRO-Python"
-version = "1.2.0"
+version = "1.2.1"
 description = "Professional & modular image processing library with OpenCV, MediaPipe, and YOLO integration."
 readme = "README.md"
 requires-python = ">=3.9,<3.13"
@@ -36,7 +36,6 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Topic :: Scientific/Engineering :: Image Processing",
@@ -45,30 +44,30 @@ classifiers = [
 ]
 
 dependencies = [
-    "numpy>=1.24,<3.0",
-    "opencv-python>=4.8,<6.0",
+    "numpy>=1.24,<2.1.0",
+    "opencv-python>=4.8,<5.0",
     "matplotlib>=3.7,<4.0"
 ]
 
 [project.optional-dependencies]
 yolo = [
-    "ultralytics>=8.2,<10.0"
+    "ultralytics>=8.2,<9.0"
 ]
 
 mediapipe = [
-    "mediapipe>=0.10,<1.0"
+    "mediapipe>=0.10.0,=<0.10.11"
 ]
 
 insightface = [
-    "insightface>=0.7,<1.0",
-    "onnxruntime>=1.16,<3.0"
+    "insightface>=0.7,<0.8",
+    "onnxruntime>=1.16,<2.0"
 ]
 
 full = [
-    "mediapipe>=0.10,<1.0",
-    "ultralytics>=8.2,<10.0",
-    "insightface>=0.7,<1.0",
-    "onnxruntime>=1.16,<3.0"
+    "mediapipe>=0.10.0,=<0.10.11"
+    "ultralytics>=8.2,<9.0",
+    "insightface>=0.7,<0.8",
+    "onnxruntime>=1.16,<2.0"
 ]
 
 [project.urls]
