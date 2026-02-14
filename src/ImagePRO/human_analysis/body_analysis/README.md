@@ -70,7 +70,15 @@ cv2.destroyAllWindows()
 
 ## 📝 Technical Notes
 
-- **MediaPipe Integration**: Uses state-of-the-art pose and hand models
-- **Coordinate System**: Normalized coordinates for cross-platform compatibility
+- **MediaPipe Integration**: Uses state-of-the-art pose and hand models from Google
+- **Coordinate System**: Normalized coordinates [0, 1] for cross-platform compatibility
 - **Performance**: Optimized for both static images and video streams
 - **Multi-person Support**: Configurable for single or multiple subjects
+- **Model Reuse**: Pre-load models for faster processing in loops (see function docstrings)
+- **Real-time Processing**: Live webcam functions available for both pose and hand tracking
+
+## 🔗 Related Modules
+
+- See [Face Analysis](../face_analysis/README.md) for facial landmark detection
+- See [Utils Module](../../utils/README.md) for `Image` and `Result` class documentation
+- See [Pre-processing Module](../../pre_processing/README.md) for image manipulation

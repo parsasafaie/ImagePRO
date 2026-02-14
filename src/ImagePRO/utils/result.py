@@ -144,7 +144,22 @@ class Result:
         return self
 
 def flatten_rows(data):
-    """Flatten any nested lists/tuples into rows suitable for CSV writing."""
+    """
+    Flatten nested lists/tuples into rows suitable for CSV writing.
+    
+    Recursively processes nested data structures to create a flat list of rows
+    that can be written to a CSV file. Handles mixed nesting levels gracefully.
+    
+    Args:
+        data: Nested list/tuple structure containing data to flatten.
+        
+    Returns:
+        list[list[Any]]: Flattened list of rows, where each row is a list of values.
+        
+    Example:
+        >>> flatten_rows([[1, 2], [3, [4, 5]]])
+        [[1, 2], [3, 4, 5]]
+    """
     rows = []
     for item in data:
         if isinstance(item, (list, tuple)):

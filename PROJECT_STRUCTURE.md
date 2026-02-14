@@ -1,72 +1,68 @@
 # ImagePRO Project Structure
 
 ## Overview
-ImagePRO is organized into logical modules that### Import Patterns
-
-### Standard Import Order
-```python
-from __future__ import annotations  # Always first
-
-# Python standard library
-import os
-import sys
-from pathlib import Path
-from typing import List, Tuple, Optional
-
-# Third-party libraries
-import cv2
-import numpy as np
-import mediapipe as mp
-from ultralytics import YOLO
-
-# Local imports
-from ImagePRO.utils.image import Image
-from ImagePRO.utils.result import Result
-```
+ImagePRO is organized into logical modules that provide professional image processing capabilities. The library follows a modular architecture with clear separation of concerns, consistent API patterns, and comprehensive error handling.
 
 ## Directory Structure
 ```
-[src/ImagePRO/]
-├── __init__.py
-├── utils/                              # Shared utilities
-│   ├── __init__.py
-│   ├── image.py                        [base]
-│   ├── result.py                       [base]
-│   └── README.md
-├── pre_processing/                     # Image pre processing tools
-│   ├── __init__.py
-│   ├── blur.py                         [base]
-│   ├── contrast.py                     [base]
-│   ├── crop.py                         [base]
-│   ├── dataset_generator.py            [base]
-│   ├── grayscale.py                    [base]
-|   ├── histogram.py                    [base]
-│   ├── resize.py                       [base]
-│   ├── rotate.py                       [base]
-│   ├── sharpen.py                      [base]
-│   └── README.md
-├── human_analysis/                     # Human analysis capabilities
-│   ├── __init__.py
-│   ├── face_analysis/                  # Face analysis tools
-│   │   ├── __init__.py
-│   │   ├── eye_status_analysis.py      [mediapipe]
-│   │   ├── face_comparison.py          [insightface]
-│   │   ├── face_detection.py           [mediapipe]
-│   │   ├── face_mesh_analysis.py       [mediapipe]
-│   │── head_pose_estimation.py         [mediapipe]
-│   │   └── README.md
-│   ├── body_analysis/                  # Body analysis tools
-│   │   ├── __init__.py
-│   │   ├── body_pose_estimation.py     [mediapipe]
-│   │   ├── hand_tracking.py            [mediapipe]
-│   │   └── README.md
-│   └── README.md
-└── object_analysis/                    # Object detection
-    ├── __init__.py
-    ├── object_detection.py             [yolo]
-    └── README.md
-
+ImagePRO/
+├── LICENSE                              # MIT License
+├── PROJECT_STRUCTURE.md                 # This file - project structure documentation
+├── pyproject.toml                       # Python package configuration
+├── readme.md                            # Main project README
+├── requirements/                        # Dependency management
+│   ├── base.txt                        # Core dependencies (OpenCV, NumPy)
+│   ├── full.txt                        # All dependencies
+│   ├── insightface.txt                 # InsightFace dependencies
+│   ├── mediapipe.txt                   # MediaPipe dependencies
+│   └── yolo.txt                        # YOLO/Ultralytics dependencies
+└── src/
+    └── ImagePRO/                       # Main package
+        ├── __init__.py                 # Package initialization
+        ├── utils/                      # Shared utilities
+        │   ├── __init__.py
+        │   ├── image.py                [base] - Image wrapper class
+        │   ├── result.py               [base] - Result container class
+        │   └── README.md
+        ├── pre_processing/             # Image preprocessing tools
+        │   ├── __init__.py
+        │   ├── blur.py                 [base] - Blur filters
+        │   ├── contrast.py             [base] - Contrast enhancement
+        │   ├── crop.py                 [base] - Image cropping
+        │   ├── dataset_generator.py    [base+mediapipe] - Dataset generation
+        │   ├── grayscale.py            [base] - Grayscale conversion
+        │   ├── histogram.py            [base] - Histogram visualization
+        │   ├── resize.py               [base] - Image resizing
+        │   ├── rotate.py               [base] - Image rotation
+        │   ├── sharpen.py              [base] - Sharpening filters
+        │   └── README.md
+        ├── human_analysis/             # Human analysis capabilities
+        │   ├── __init__.py
+        │   ├── face_analysis/          # Face analysis tools
+        │   │   ├── __init__.py
+        │   │   ├── eye_status_analysis.py    [mediapipe] - Eye open/closed detection
+        │   │   ├── face_comparison.py        [insightface] - Face identity matching
+        │   │   ├── face_detection.py         [mediapipe] - Face detection & cropping
+        │   │   ├── face_mesh_analysis.py     [mediapipe] - 468-point face mesh
+        │   │   ├── head_pose_estimation.py   [mediapipe] - Head pose (yaw, pitch)
+        │   │   └── README.md
+        │   ├── body_analysis/          # Body analysis tools
+        │   │   ├── __init__.py
+        │   │   ├── body_pose_estimation.py   [mediapipe] - 33-point body pose
+        │   │   ├── hand_tracking.py          [mediapipe] - 21-point hand landmarks
+        │   │   └── README.md
+        │   └── README.md
+        └── object_analysis/            # Object detection
+            ├── __init__.py
+            ├── object_detection.py     [yolo] - YOLO object detection
+            └── README.md
 ```
+
+**Legend:**
+- `[base]` - Requires only base dependencies
+- `[mediapipe]` - Requires MediaPipe dependency
+- `[yolo]` - Requires Ultralytics YOLO dependency
+- `[insightface]` - Requires InsightFace dependency
 
 ## Module Dependencies
 
@@ -74,17 +70,22 @@ from ImagePRO.utils.result import Result
 #### Base Dependencies
 - **OpenCV** (cv2): Image processing operations
 - **NumPy**: Array operations and data handling
+- **Matplotlib**: Data visualization and plotting
+
 #### Optional Dependencies
 - **MediaPipe**: Human analysis (face, body, hands)
 - **Ultralytics**: YOLO object detection
 - **InsightFace**: Advanced face analysis
 
 ### Internal Dependencies
-- **utils.image**: Core Image class used by all modules
-- **utils.result**: Core Result class used by all modules
-- **pre_processing**: Uses utils.image and utils.result
-- **human_analysis**: Uses utils.image, utils.result, and face_mesh_analysis as base
-- **object_analysis**: Uses utils.image and utils.result
+- **utils.image**: Core `Image` class used by all modules for input handling
+- **utils.result**: Core `Result` class used by all modules for output handling
+- **pre_processing**: Uses `utils.image` and `utils.result`; independent module
+- **human_analysis**: 
+  - Uses `utils.image` and `utils.result`
+  - Face analysis modules may depend on `face_mesh_analysis` for base functionality
+  - Body analysis modules are independent
+- **object_analysis**: Uses `utils.image` and `utils.result`; independent module
 
 ## Code Standards
 
@@ -115,12 +116,25 @@ from ImagePRO.utils.result import Result
 
 ## Import Patterns
 
-### External Imports
+### Standard Import Order
 ```python
+from __future__ import annotations  # Always first
+
+# Python standard library
+import os
+import sys
+from pathlib import Path
+from typing import List, Tuple, Optional
+
+# Third-party libraries
 import cv2
 import numpy as np
 import mediapipe as mp
 from ultralytics import YOLO
+
+# Local imports
+from ImagePRO.utils.image import Image
+from ImagePRO.utils.result import Result
 ```
 
 ## Development Guidelines
@@ -146,6 +160,32 @@ from ultralytics import YOLO
 - Test error information in Result.meta
 - Test edge cases and boundary conditions
 
+## Module Details
+
+### Utils Module
+Core utilities that provide the foundation for all other modules:
+- **Image**: Immutable wrapper around numpy arrays with factory constructors
+- **Result**: Unified container for operation outputs (image, data, metadata)
+
+### Pre-processing Module
+Image manipulation and enhancement functions:
+- **Basic Operations**: Resize, crop, rotate, grayscale conversion
+- **Filtering**: Multiple blur algorithms and sharpening techniques
+- **Enhancement**: Contrast adjustment methods (CLAHE, histogram equalization, stretching)
+- **Utilities**: Histogram visualization and dataset generation
+
+### Human Analysis Module
+Advanced human detection and analysis:
+- **Face Analysis**: 468-point mesh, head pose, eye status, face comparison, detection
+- **Body Analysis**: 33-point pose estimation and 21-point hand tracking
+- **Real-time Support**: Live webcam processing for all analysis functions
+
+### Object Analysis Module
+YOLO-based object detection:
+- **Multiple Models**: Nano to extra-large accuracy levels
+- **Flexible**: Pre-trained or custom model support
+- **Efficient**: GPU acceleration when available
+
 ## Future Enhancements
 
 ### Planned Features
@@ -154,6 +194,8 @@ from ultralytics import YOLO
 - Video processing capabilities
 - Web interface for non-programmers
 - Plugin system for extensibility
+- Additional preprocessing filters
+- Advanced face recognition features
 
 ### Code Improvements
 - Replace print statements with proper logging
@@ -161,11 +203,12 @@ from ultralytics import YOLO
 - Implement batch processing utilities
 - Add progress indicators for long operations
 - Consider async support for I/O operations
+- Enhanced error messages with troubleshooting tips
 
 ## Maintenance Notes
 
 ### Regular Tasks
-- Update dependency versions in requirements.txt
+- Update dependency versions in requirements files
 - Verify all __init__.py files are properly configured
 - Check for consistent code formatting
 - Update documentation for new features

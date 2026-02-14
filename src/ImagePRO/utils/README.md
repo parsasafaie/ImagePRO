@@ -65,10 +65,11 @@ result.save_as_csv('landmarks.csv') # Save data to CSV
 ```
 ## 🔧 Conventions
 
-- **Colorspace:** Images are assumed to be `BGR` unless explicitly specified
+- **Colorspace:** Images are assumed to be `BGR` (OpenCV default) unless explicitly specified
 - **Immutable Design:** Methods return new objects instead of mutating originals
 - **Automatic Directory Creation:** Save helpers create parent folders if needed
-- **Return Values:**: Consistent return types across all operations
+- **Return Values:** Consistent return types across all operations
+- **Type Safety:** Full type hints for better IDE support and error detection
 
 ## ⚠️ Error Handling
 
@@ -82,3 +83,11 @@ result.save_as_csv('landmarks.csv') # Save data to CSV
 - **Cross-platform**: Works on Windows, macOS, and Linux
 - **Performance Optimized**: Efficient file operations and data handling
 - **Pipeline Ready:** Ideal for method-chaining or functional API designs
+- **Memory Efficient**: Lightweight wrappers with minimal overhead
+- **Type Hints**: Full type annotations for better developer experience
+
+## 🔗 Related Modules
+
+- See [Pre-processing Module](../pre_processing/README.md) for image manipulation functions
+- See [Human Analysis Module](../human_analysis/README.md) for face/body analysis
+- See [Object Analysis Module](../object_analysis/README.md) for object detection

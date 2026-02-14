@@ -81,7 +81,15 @@ result = detect_objects(
 
 ## 📝 Technical Notes
 
-- **YOLO Integration**: Uses Ultralytics YOLO implementation
-- **Model Caching**: Models are cached after first load
-- **GPU Support**: Automatic CUDA detection and utilization
+- **YOLO Integration**: Uses Ultralytics YOLO implementation (YOLOv11)
+- **Model Caching**: Models are cached after first load for faster subsequent calls
+- **GPU Support**: Automatic CUDA detection and utilization when available
 - **Performance**: Optimized for both CPU and GPU inference
+- **Custom Models**: Support for custom-trained YOLO models
+- **Batch Processing**: Efficient handling of multiple images
+
+## 🔗 Related Modules
+
+- See [Utils Module](../utils/README.md) for `Image` and `Result` class documentation
+- See [Pre-processing Module](../pre_processing/README.md) for image manipulation
+- See [Human Analysis Module](../human_analysis/README.md) for face/body analysis

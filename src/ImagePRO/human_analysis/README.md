@@ -52,7 +52,15 @@ Full body pose estimation and hand tracking:
 
 ## 📝 Technical Notes
 
-- **MediaPipe Integration**: Uses state-of-the-art detection models
-- **Coordinate System**: Normalized coordinates for cross-platform compatibility
+- **MediaPipe Integration**: Uses state-of-the-art detection models from Google
+- **Coordinate System**: Normalized coordinates [0, 1] for cross-platform compatibility
 - **Performance**: Optimized for both static images and video streams
-- **Confidence**: Configurable detection thresholds for accuracy vs. speed
+- **Confidence**: Configurable detection thresholds for accuracy vs. speed trade-offs
+- **Real-time Processing**: Live webcam functions available for all analysis modules
+- **Multi-person Support**: Configurable for single or multiple subjects
+
+## 🔗 Related Modules
+
+- See [Utils Module](../utils/README.md) for `Image` and `Result` class documentation
+- See [Pre-processing Module](../pre_processing/README.md) for image manipulation
+- See [Object Analysis Module](../object_analysis/README.md) for object detection

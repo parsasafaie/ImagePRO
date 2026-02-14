@@ -45,9 +45,12 @@ def capture_bulk_pictures(
 ) -> None:
     """Generate a dataset by capturing faces from webcam.
 
-    Captures frames and saves preprocessed face images.
+    Captures frames from the webcam, detects faces, applies optional preprocessing,
+    and saves cropped face images to disk. This function is useful for creating
+    face recognition datasets with data augmentation.
+
     Processing pipeline (if enabled):
-    median blur → laplacian sharpen → grayscale → resize → random rotate
+    average blur → laplacian sharpen → grayscale → resize → random rotate
 
     Args:
         folder_path: Base directory for dataset.
@@ -80,7 +83,7 @@ def capture_bulk_pictures(
         FileExistsError: If output folder exists
         RuntimeError: If camera access fails
     """
-    # Validate numeric parameters
+    # Validate numeric parameters to ensure safe operation
     if not isinstance(num_images, int) or num_images <= 0:
         raise ValueError("'num_images' must be a positive integer")
 
@@ -93,20 +96,23 @@ def capture_bulk_pictures(
     if not isinstance(delay, (int, float)) or delay < 0:
         raise ValueError("'delay' must be a non-negative number")
 
-    # Setup output directory
+    # Setup output directory structure
     base_dir = Path(folder_path)
     face_folder = base_dir / str(face_id)
 
+    # Create output folder (fail if exists to prevent accidental overwrites)
     try:
         face_folder.mkdir(parents=True, exist_ok=False)
     except FileExistsError as e:
         raise FileExistsError(f"Output folder already exists: {face_folder}") from e
 
-    # Initialize camera and face detector
+    # Initialize camera capture
     cap = cv2.VideoCapture(camera_index)
     if not cap.isOpened():
         raise RuntimeError(f"Cannot access camera (index={camera_index})")
 
+    # Initialize MediaPipe face mesh detector for face detection
+    # Using face_mesh instead of face_detection for better accuracy
     face_mesh = mp.solutions.face_mesh.FaceMesh(
         max_num_faces=1,
         min_detection_confidence=min_confidence,
@@ -123,36 +129,40 @@ def capture_bulk_pictures(
                 print("Failed to capture frame, skipping...")
                 continue
 
-            # Apply preprocessing pipeline
+            # Apply preprocessing pipeline in sequence
+            # Each step transforms the image and passes it to the next step
             processed = frame
 
             if apply_blur:
-                # Reduce noise while keeping facial features
+                # Reduce noise while preserving facial features
                 processed = blur.apply_average_blur(
                     image=Image.from_array(processed),
                     filter_size=3
                 ).image
 
             if apply_sharpen:
-                # Enhance edges with gentle sharpening
+                # Enhance edges with gentle sharpening for better feature detection
                 processed = sharpen.apply_laplacian_sharpening(
                     image=Image.from_array(processed),
                     coefficient=1.0
                 ).image
 
             if apply_grayscale:
+                # Convert to single-channel for reduced storage and faster processing
                 processed = grayscale.convert_to_grayscale(
                     image=Image.from_array(processed)
                 ).image
 
             if apply_resize is not False:
+                # Resize to consistent dimensions (e.g., 224x224 for ML models)
                 processed = resize.resize_image(
                     image=Image.from_array(processed),
                     new_size=apply_resize
                 ).image
 
             if apply_rotate:
-                # Apply random rotation with scaling
+                # Apply random rotation with scaling for data augmentation
+                # Rotation range: -45° to +45° with random scale factors
                 angle = float(random.randint(-45, 45))
                 scale = random.choice([1.0, 1.1, 1.2, 1.3])
                 processed = rotate.rotate_image_custom(
@@ -161,11 +171,12 @@ def capture_bulk_pictures(
                     scale=scale
                 ).image
 
-            # Save processed face image
+            # Detect and crop face from processed frame
             filename = f"{start_index + saved_count:04d}.jpg"
             output_path = face_folder / filename
 
             try:
+                # Detect face and crop to face region only
                 result = detect_faces(
                     image=Image.from_array(processed),
                     max_faces=1,
@@ -173,18 +184,20 @@ def capture_bulk_pictures(
                     face_mesh_obj=face_mesh
                 )
 
+                # Save cropped face image
                 result.save_as_img(str(output_path))
                 saved_count += 1
 
+                # Add delay between captures to allow subject movement
                 if delay > 0:
                     time.sleep(delay)
 
             except ValueError:
-                # Skip frames with no detected faces
+                # Skip frames with no detected faces (silent failure)
                 continue
 
     finally:
-        # Clean up resources
+        # Clean up resources: release camera and close OpenCV windows
         cap.release()
         cv2.destroyAllWindows()
 

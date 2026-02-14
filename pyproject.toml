@@ -9,7 +9,7 @@ where = ["src"]
 name = "ImagePRO-Python"
 version = "1.2.1"
 description = "Professional & modular image processing library with OpenCV, MediaPipe, and YOLO integration."
-readme = "README.md"
+readme = "readme.md"
 requires-python = ">=3.9,<3.13"
 license = { text = "MIT" }
 
@@ -55,7 +55,7 @@ yolo = [
 ]
 
 mediapipe = [
-    "mediapipe>=0.10.0,=<0.10.11"
+    "mediapipe>=0.10.0,<=0.10.11"
 ]
 
 insightface = [
@@ -64,7 +64,7 @@ insightface = [
 ]
 
 full = [
-    "mediapipe>=0.10.0,=<0.10.11"
+    "mediapipe>=0.10.0,<=0.10.11",
     "ultralytics>=8.2,<9.0",
     "insightface>=0.7,<0.8",
     "onnxruntime>=1.16,<2.0"
@@ -77,4 +77,4 @@ Documentation = "https://github.com/parsasafaie/ImagePRO#readme"
 Issues = "https://github.com/parsasafaie/ImagePRO/issues"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/ImagePRO"]
+packages = ["ImagePRO"]

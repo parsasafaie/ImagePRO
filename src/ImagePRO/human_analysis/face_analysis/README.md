@@ -74,7 +74,15 @@ cv2.destroyAllWindows()
 
 ## 📝 Technical Notes
 
-- **MediaPipe Integration**: Uses 468-point facial mesh model
-- **Coordinate System**: Normalized coordinates for cross-platform compatibility
+- **MediaPipe Integration**: Uses 468-point facial mesh model with tessellation
+- **Coordinate System**: Normalized coordinates [0, 1] for cross-platform compatibility
 - **Performance**: Optimized for both static images and video streams
-- **Confidence**: Configurable detection thresholds for accuracy vs. speed
+- **Confidence**: Configurable detection thresholds for accuracy vs. speed trade-offs
+- **Model Reuse**: Pre-load models for faster processing in loops (see function docstrings)
+- **InsightFace**: Advanced face comparison uses InsightFace embeddings for identity matching
+
+## 🔗 Related Modules
+
+- See [Body Analysis](../body_analysis/README.md) for body pose and hand tracking
+- See [Utils Module](../../utils/README.md) for `Image` and `Result` class documentation
+- See [Pre-processing Module](../../pre_processing/README.md) for image manipulation
