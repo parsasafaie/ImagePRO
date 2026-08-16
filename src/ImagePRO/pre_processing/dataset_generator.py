@@ -127,7 +127,7 @@ def capture_bulk_pictures(
 
             if apply_blur:
                 # Reduce noise while preserving facial features
-                processed = blur.apply_average_blur(
+                processed = blur.apply_median_blur(
                     image=Image.from_array(processed),
                     filter_size=3
                 ).image
