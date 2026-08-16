@@ -38,11 +38,6 @@ class TestShowHistogram:
         with pytest.raises(TypeError):
             show_histogram(np.zeros((4, 4, 3)))
 
-    @pytest.mark.xfail(
-        reason="show_histogram returns a ValueError instance instead of "
-        "raising it for unknown colorspaces",
-        strict=False,
-    )
     def test_unknown_colorspace_raises(self, sample_bgr_array):
         # Bypass factory validation to reach the unknown-colorspace branch.
         image = Image(_data=sample_bgr_array, colorspace="YUV")

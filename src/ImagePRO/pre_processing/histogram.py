@@ -47,7 +47,7 @@ def show_histogram(image: Image) -> Result:
         channels = [(0, "black")]
         labels = None
     else:
-        return ValueError("Unknown colorspace")
+        raise ValueError(f"Unknown colorspace: {image.colorspace}")
 
     plt.figure(figsize=(10, 6))
     for channel, color in channels:
