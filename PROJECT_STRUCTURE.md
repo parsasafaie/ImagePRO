@@ -84,11 +84,15 @@ ImagePRO/
 - **Ultralytics**: YOLO object detection
 - **InsightFace**: Advanced face analysis
 
-Importing `ImagePRO` works with the base dependencies only. Subpackage
-`__init__` files import optional-dependency modules guardedly (the module is
-`None` when its dependency is missing), so installing one feature group does
-not require the others. Install the matching extra (`pip install
-"ImagePRO-Python[mediapipe]"`) or requirements file before using those modules.
+Importing `ImagePRO` works with the base dependencies only. The heavy
+optional dependencies (mediapipe, ultralytics, insightface and its
+onnxruntime backend) are imported **lazily**: each is imported inside the
+functions that actually use it, never at module level. As a result no AI
+backend is loaded at import time, startup stays fast, and installing one
+feature group does not require the others. Calling a function whose backend
+is missing raises an `ImportError` that names the extra to install (e.g.
+`pip install "ImagePRO-Python[mediapipe]"`) or the matching requirements
+file.
 
 ### Internal Dependencies
 - **utils.image**: Core `Image` class used by all modules for input handling
@@ -136,6 +140,7 @@ from __future__ import annotations  # Always first
 # Python standard library
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 # Source-tree import support: lets users import ImagePRO from the
 # repository without installing the package. The parents[N] depth
@@ -147,16 +152,61 @@ _src_path = _file_path.parents[2]  # Go up to src directory
 if str(_src_path) not in sys.path:
     sys.path.insert(0, str(_src_path))
 
-# Third-party libraries
-import cv2
-import numpy as np
-import mediapipe as mp
-from ultralytics import YOLO
-
 # Local imports
 from ImagePRO.utils.image import Image
 from ImagePRO.utils.result import Result
+
+# Lightweight third-party libraries (core dependencies only)
+import cv2
+import numpy as np
+
+# Optional heavy backends: never imported at module level. Import them
+# inside the functions that use them; TYPE_CHECKING keeps annotations
+# working for static type checkers without a runtime import.
+if TYPE_CHECKING:
+    import mediapipe as mp
 ```
+
+### Lazy Optional Imports
+Heavy optional dependencies (mediapipe, ultralytics, insightface) are
+imported inside the functions that use them so that `import ImagePRO`
+stays fast and works without any AI extras installed. Cheap input
+validation runs first, so invalid calls fail without loading the
+dependency; import at that point and raise an actionable error when
+missing:
+
+```python
+def analyze_face_mesh(...):
+    # Cheap validation first: fail without importing anything heavy
+    if not isinstance(image, Image):
+        raise TypeError("'image' must be an Image instance")
+
+    try:
+        import mediapipe as mp
+    except ImportError as err:
+        raise ImportError(
+            "The optional 'mediapipe' dependency is required for face mesh "
+            'analysis. Install it with: pip install "ImagePRO-Python[mediapipe]"'
+        ) from err
+
+    mp_face_mesh = mp.solutions.face_mesh
+    ...
+```
+
+Guidelines:
+- Only lightweight core dependencies (numpy, opencv-python, matplotlib)
+  may be imported at module level
+- Validate inputs before the lazy import so invalid calls never trigger
+  the dependency import
+- Constants derived from a backend (e.g. `mp.solutions.face_mesh`) belong
+  inside the function that uses them; ImagePRO's own constants stay at
+  module level
+- Functions that only delegate to another module's function (e.g.
+  `detect_faces` → `analyze_face_mesh`) need no import of their own; the
+  clear error surfaces from the function that actually uses the backend
+- Type annotations referencing a backend are satisfied through the
+  `if TYPE_CHECKING:` block (string annotations from
+  `from __future__ import annotations` are never evaluated at runtime)
 
 ## Development Guidelines
 

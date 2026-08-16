@@ -76,6 +76,7 @@ cv2.destroyAllWindows()
 ## Technical Notes
 
 - **MediaPipe Integration**: Uses 468-point facial mesh model with tessellation
+- **Optional Dependencies**: All functions except `compare_faces` need MediaPipe (`pip install "ImagePRO-Python[mediapipe]"`); `compare_faces` needs InsightFace (`pip install "ImagePRO-Python[insightface]"`). Both are optional extras, imported lazily inside the functions that use them — calling a function without its backend raises an `ImportError` naming the extra to install
 - **Coordinate System**: Normalized coordinates [0, 1] for cross-platform compatibility
 - **Performance**: Optimized for both static images and video streams
 - **Confidence**: Configurable detection thresholds for accuracy vs. speed trade-offs

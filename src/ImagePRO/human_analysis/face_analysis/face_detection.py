@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 # Add src directory to path for absolute imports
 _file_path = Path(__file__).resolve()
@@ -10,12 +11,14 @@ if str(_src_path) not in sys.path:
     sys.path.insert(0, str(_src_path))
 
 import cv2
-import mediapipe as mp
 import numpy as np
 
 from ImagePRO.human_analysis.face_analysis.face_mesh_analysis import analyze_face_mesh
 from ImagePRO.utils.image import Image
 from ImagePRO.utils.result import Result
+
+if TYPE_CHECKING:  # mediapipe is imported lazily inside analyze_face_mesh
+    import mediapipe as mp
 
 
 # Constants

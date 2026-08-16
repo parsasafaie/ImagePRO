@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+import mediapipe as mp  # real package or the conftest stub
+
 import numpy as np
 import pytest
 
-from ImagePRO.human_analysis.face_analysis import face_mesh_analysis
 from ImagePRO.human_analysis.face_analysis.face_mesh_analysis import analyze_face_mesh
 
 from fakes import FakeFaceMesh, make_landmarks
@@ -23,7 +24,7 @@ def patch_facemesh(monkeypatch):
             instance_holder["instance"] = mesh
             return mesh
 
-        monkeypatch.setattr(face_mesh_analysis.mp_face_mesh, "FaceMesh", factory)
+        monkeypatch.setattr(mp.solutions.face_mesh, "FaceMesh", factory)
         return instance_holder
 
     return _patch
@@ -120,7 +121,7 @@ class TestAnalyzeFaceMeshWithDetection:
         patch_facemesh(result=SimpleNamespace(multi_face_landmarks=faces))
         calls = []
         monkeypatch.setattr(
-            face_mesh_analysis.mp_drawing_utils,
+            mp.solutions.drawing_utils,
             "draw_landmarks",
             lambda *args, **kwargs: calls.append(args),
         )
@@ -156,7 +157,7 @@ class TestAnalyzeFaceMeshConfiguration:
         )
         created = []
         monkeypatch.setattr(
-            face_mesh_analysis.mp_face_mesh,
+            mp.solutions.face_mesh,
             "FaceMesh",
             lambda **kwargs: created.append(kwargs),
         )

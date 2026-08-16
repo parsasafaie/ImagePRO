@@ -1,18 +1,17 @@
 # Pre-processing Module
 # Provides image manipulation, filtering, and enhancement capabilities
+#
+# dataset_generator uses the optional mediapipe dependency, imported
+# lazily inside its functions, so it is safe to import here regardless.
 
 from . import blur
 from . import contrast
 from . import crop
+from . import dataset_generator
 from . import grayscale
 from . import resize
 from . import rotate
 from . import sharpen
-
-try:  # dataset_generator needs the optional mediapipe dependency
-    from . import dataset_generator
-except ImportError:
-    dataset_generator = None
 
 __all__ = [
     "blur",

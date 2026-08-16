@@ -12,7 +12,6 @@ if str(_src_path) not in sys.path:
     sys.path.insert(0, str(_src_path))
 
 import cv2
-import mediapipe as mp
 
 from ImagePRO.human_analysis.face_analysis.face_detection import detect_faces
 from ImagePRO.pre_processing import blur, grayscale, resize, rotate, sharpen
@@ -94,6 +93,14 @@ def capture_bulk_pictures(
 
     if not isinstance(delay, (int, float)) or delay < 0:
         raise ValueError("'delay' must be a non-negative number")
+
+    try:
+        import mediapipe as mp
+    except ImportError as err:
+        raise ImportError(
+            "The optional 'mediapipe' dependency is required for dataset "
+            'generation. Install it with: pip install "ImagePRO-Python[mediapipe]"'
+        ) from err
 
     # Setup output directory structure
     base_dir = Path(folder_path)

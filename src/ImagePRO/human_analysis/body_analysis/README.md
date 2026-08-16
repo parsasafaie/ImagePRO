@@ -71,6 +71,7 @@ cv2.destroyAllWindows()
 ## Technical Notes
 
 - **MediaPipe Integration**: Uses state-of-the-art pose and hand models from Google
+- **Optional Dependency**: MediaPipe is an optional extra (`pip install "ImagePRO-Python[mediapipe]"`), imported lazily inside the detection functions — this package imports fine without it, and calling a detection function without it raises an `ImportError` naming the extra to install
 - **Coordinate System**: Normalized coordinates [0, 1] for cross-platform compatibility
 - **Performance**: Optimized for both static images and video streams
 - **Subjects**: Body pose tracks a single subject; hand tracking supports up to `max_hands`

@@ -41,6 +41,8 @@ pip install "ImagePRO-Python[full]"         # Everything
 pip install "ImagePRO-Python[dev]"          # Test tooling (pytest)
 ```
 
+> **Note**: The base install is lightweight — AI backends (MediaPipe, Ultralytics, InsightFace) are optional and imported lazily, only when you call a function that actually needs them. `import ImagePRO` never loads these dependencies. If a backend is missing, the function you call raises an `ImportError` telling you exactly which extra to install.
+
 ### From Source
 ```bash
 git clone https://github.com/parsasafaie/ImagePRO.git
@@ -127,6 +129,7 @@ ImagePRO is built with a modular architecture designed for extensibility and mai
 - **Clean Separation of Concerns**: Each module handles a specific domain
 - **Consistent API Patterns**: All functions follow the same input/output conventions
 - **Shared Utilities**: Common `Image` and `Result` classes for unified I/O
+- **Lazy Optional Imports**: Heavy AI dependencies (MediaPipe, Ultralytics, InsightFace) are only imported inside the functions that use them, keeping `import ImagePRO` fast and independent of installed extras
 - **Professional Error Handling**: Comprehensive validation with clear error messages
 - **Type Safety**: Full type hints throughout the codebase
 - **Documentation**: Google-style docstrings for all functions

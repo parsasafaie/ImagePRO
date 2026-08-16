@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 # Add src directory to path for absolute imports
 _file_path = Path(__file__).resolve()
@@ -13,12 +14,11 @@ from ImagePRO.utils.image import Image
 from ImagePRO.utils.result import Result
 
 import cv2
-import mediapipe as mp
+
+if TYPE_CHECKING:  # mediapipe is imported lazily inside the functions
+    import mediapipe as mp
 
 # Constants
-mp_face_mesh = mp.solutions.face_mesh
-mp_drawing_utils = mp.solutions.drawing_utils
-mp_drawing_styles = mp.solutions.drawing_styles
 DEFAULT_MAX_FACES = 1
 DEFAULT_MIN_CONFIDENCE = 0.7
 TOTAL_FACE_LANDMARKS = 468
@@ -71,7 +71,6 @@ def analyze_face_mesh(
         - Coordinates are normalized [0,1]. Multiply by width/height for pixels
         - Full mesh (468 points) shows tessellation, specific points show dots
     """
-
     # Validate inputs
     if not isinstance(image, Image):
         raise TypeError("'image' must be an Image instance")
@@ -87,6 +86,18 @@ def analyze_face_mesh(
         or not all(isinstance(i, int) for i in landmarks_idx)
     ):
         raise TypeError("'landmarks_idx' must be a list of integers")
+
+    try:
+        import mediapipe as mp
+    except ImportError as err:
+        raise ImportError(
+            "The optional 'mediapipe' dependency is required for face mesh "
+            'analysis. Install it with: pip install "ImagePRO-Python[mediapipe]"'
+        ) from err
+
+    mp_face_mesh = mp.solutions.face_mesh
+    mp_drawing_utils = mp.solutions.drawing_utils
+    mp_drawing_styles = mp.solutions.drawing_styles
 
     # Initialize detector if needed
     if face_mesh_obj is None:
@@ -195,13 +206,21 @@ def analyze_face_mesh_live(
     if not isinstance(min_confidence, (int, float)) or not (0 <= min_confidence <= 1):
         raise ValueError("'min_confidence' must be between 0 and 1")
 
+    try:
+        import mediapipe as mp
+    except ImportError as err:
+        raise ImportError(
+            "The optional 'mediapipe' dependency is required for face mesh "
+            'analysis. Install it with: pip install "ImagePRO-Python[mediapipe]"'
+        ) from err
+
     # Initialize camera
     cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
     if not cap.isOpened():
         raise RuntimeError("Cannot access webcam")
 
     # Initialize detector in tracking mode for better performance
-    face_mesh = mp_face_mesh.FaceMesh(
+    face_mesh = mp.solutions.face_mesh.FaceMesh(
         max_num_faces=max_faces,
         min_detection_confidence=min_confidence,
         refine_landmarks=True,

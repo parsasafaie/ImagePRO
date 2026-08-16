@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 # Add src directory to path for absolute imports
 _file_path = Path(__file__).resolve()
@@ -13,10 +14,11 @@ from ImagePRO.utils.image import Image
 from ImagePRO.utils.result import Result
 
 import cv2
-import mediapipe as mp
+
+if TYPE_CHECKING:  # mediapipe is imported lazily inside the functions
+    import mediapipe as mp
 
 # Constants
-mp_hands = mp.solutions.hands
 DEFAULT_MAX_HANDS = 2
 DEFAULT_MIN_CONFIDENCE = 0.7
 TOTAL_HAND_LANDMARKS = 21
@@ -78,6 +80,16 @@ def detect_hands(
         or not all(isinstance(i, int) for i in landmarks_idx)
     ):
         raise TypeError("'landmarks_idx' must be a list of integers")
+
+    try:
+        import mediapipe as mp
+    except ImportError as err:
+        raise ImportError(
+            "The optional 'mediapipe' dependency is required for hand "
+            'tracking. Install it with: pip install "ImagePRO-Python[mediapipe]"'
+        ) from err
+
+    mp_hands = mp.solutions.hands
 
     # Initialize detector if needed
     if hands_obj is None:
@@ -168,13 +180,21 @@ def detect_hands_live(
     if not isinstance(min_confidence, (int, float)) or not (0.0 <= min_confidence <= 1.0):
         raise ValueError("'min_confidence' must be between 0.0 and 1.0")
 
+    try:
+        import mediapipe as mp
+    except ImportError as err:
+        raise ImportError(
+            "The optional 'mediapipe' dependency is required for hand "
+            'tracking. Install it with: pip install "ImagePRO-Python[mediapipe]"'
+        ) from err
+
     # Initialize camera
     cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
     if not cap.isOpened():
         raise RuntimeError("Cannot access webcam")
 
     # Initialize hand detector in tracking mode
-    hands_obj = mp_hands.Hands(
+    hands_obj = mp.solutions.hands.Hands(
         min_detection_confidence=min_confidence,
         max_num_hands=max_hands,
         static_image_mode=False

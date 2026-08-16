@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 # Add src directory to path for absolute imports
 _file_path = Path(__file__).resolve()
@@ -14,10 +15,11 @@ from ImagePRO.utils.image import Image
 from ImagePRO.utils.result import Result
 
 import cv2
-import mediapipe as mp
+
+if TYPE_CHECKING:  # mediapipe is imported lazily inside the functions
+    import mediapipe as mp
 
 # Constants
-mp_face_mesh = mp.solutions.face_mesh
 DEFAULT_MAX_FACES = 1
 DEFAULT_MIN_CONFIDENCE = 0.7
 HEAD_POSE_INDICES = [1, 152, 33, 263, 168]  # nose_tip, chin, left_eye, right_eye, nasion
@@ -169,13 +171,21 @@ def estimate_head_pose_live(
     if not 0 <= min_confidence <= 1:
         raise ValueError("'min_confidence' must be between 0 and 1")
 
+    try:
+        import mediapipe as mp
+    except ImportError as err:
+        raise ImportError(
+            "The optional 'mediapipe' dependency is required for head pose "
+            'estimation. Install it with: pip install "ImagePRO-Python[mediapipe]"'
+        ) from err
+
     # Initialize webcam
     cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
     if not cap.isOpened():
         raise RuntimeError("Failed to access webcam")
 
     # Initialize face mesh detector for video
-    face_mesh = mp_face_mesh.FaceMesh(
+    face_mesh = mp.solutions.face_mesh.FaceMesh(
         max_num_faces=max_faces,
         min_detection_confidence=min_confidence,
         refine_landmarks=True,

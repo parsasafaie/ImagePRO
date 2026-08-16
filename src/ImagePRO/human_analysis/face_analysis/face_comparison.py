@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 # Add src directory to path for absolute imports
 _file_path = Path(__file__).resolve()
@@ -13,10 +14,12 @@ import os
 
 import cv2
 import numpy as np
-from insightface.app import FaceAnalysis
 
 from ImagePRO.utils.image import Image
 from ImagePRO.utils.result import Result
+
+if TYPE_CHECKING:  # insightface is imported lazily inside the function
+    from insightface.app import FaceAnalysis
 
 # Constants
 DEFAULT_SIMILARITY_THRESHOLD = 0.5
@@ -61,6 +64,15 @@ def compare_faces(
         raise TypeError("'image_1' must be an Image instance")
     if not isinstance(image_2, Image):
         raise TypeError("'image_2' must be an Image instance")
+
+    try:
+        from insightface.app import FaceAnalysis
+    except ImportError as err:
+        raise ImportError(
+            "The optional 'insightface' dependency is required for face "
+            'comparison. Install it with: pip install '
+            '"ImagePRO-Python[insightface]"'
+        ) from err
 
     # Initialize model if needed
     if app is None:

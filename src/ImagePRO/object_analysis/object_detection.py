@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 # Add src directory to path for absolute imports
 _file_path = Path(__file__).resolve()
@@ -9,10 +10,11 @@ _src_path = _file_path.parents[2]  # Go up to src directory
 if str(_src_path) not in sys.path:
     sys.path.insert(0, str(_src_path))
 
-from ultralytics import YOLO
-
 from ImagePRO.utils.image import Image
 from ImagePRO.utils.result import Result
+
+if TYPE_CHECKING:  # ultralytics is imported lazily inside the function
+    from ultralytics import YOLO
 
 # Constants
 DEFAULT_ACCURACY_LEVEL = 1
@@ -65,15 +67,24 @@ def detect_objects(
     if not isinstance(image, Image):
         raise TypeError("'image' must be an Image instance")
 
+    # accuracy_level only applies when no model is given
+    if model is None and accuracy_level not in MODEL_MAPPING:
+        raise ValueError(
+            f"'accuracy_level' must be in {list(MODEL_MAPPING.keys())}, "
+            f"got {accuracy_level}"
+        )
+
+    try:
+        from ultralytics import YOLO
+    except ImportError as err:
+        raise ImportError(
+            "The optional 'ultralytics' dependency is required for object "
+            'detection. Install it with: pip install "ImagePRO-Python[yolo]"'
+        ) from err
+
     # Initialize model
     model_name = None
     if model is None:
-        if accuracy_level not in MODEL_MAPPING:
-            raise ValueError(
-                f"'accuracy_level' must be in {list(MODEL_MAPPING.keys())}, "
-                f"got {accuracy_level}"
-            )
-
         model_name = MODEL_MAPPING[accuracy_level]
         model = YOLO(model=model_name)
 

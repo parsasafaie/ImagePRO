@@ -6,12 +6,12 @@ Keeps the suite hermetic:
   open windows.
 * Makes the ``src`` layout importable without requiring an installed
   package.
-* Installs lightweight import-time stubs for the heavy optional
-  dependencies (mediapipe, insightface, ultralytics) when they are not
-  available, so test collection works in base-only environments. The
-  real packages are left untouched when present. Every test that needs
-  a detector injects a fake via monkeypatching, so the stubs only have
-  to satisfy module import statements.
+* Installs lightweight stubs for the heavy optional dependencies
+  (mediapipe, insightface, ultralytics) when they are not available,
+  so tests run in base-only environments. The real packages are left
+  untouched when present. Every test that needs a detector injects a
+  fake via monkeypatching, so the stubs only have to satisfy the lazy
+  imports inside ImagePRO's functions.
 """
 
 from __future__ import annotations

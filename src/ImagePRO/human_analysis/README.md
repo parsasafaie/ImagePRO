@@ -52,6 +52,7 @@ Full body pose estimation and hand tracking:
 ## Technical Notes
 
 - **MediaPipe Integration**: Uses state-of-the-art detection models from Google
+- **Optional Dependencies**: MediaPipe (`pip install "ImagePRO-Python[mediapipe]"`) powers the face/body/hand analysis; face comparison additionally needs InsightFace (`pip install "ImagePRO-Python[insightface]"`). Both are imported lazily inside the functions that use them, so this package imports fine without them and only the called function pays the import cost
 - **Coordinate System**: Normalized coordinates [0, 1] for cross-platform compatibility
 - **Performance**: Optimized for both static images and video streams
 - **Confidence**: Configurable detection thresholds for accuracy vs. speed trade-offs

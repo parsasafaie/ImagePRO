@@ -40,7 +40,7 @@ Professional image manipulation, filtering, and enhancement utilities for comput
   - `apply_contrast_stretching`: Linear contrast adjustment
 
 ### **Advanced Features**
-- **`dataset_generator.py`**: Automated image capture with preprocessing pipeline
+- **`dataset_generator.py`**: Automated image capture with preprocessing pipeline (needs the optional MediaPipe extra: `pip install "ImagePRO-Python[mediapipe]"`; it is imported lazily, so the rest of pre_processing works without it)
   - Webcam-based face dataset generation
   - Configurable preprocessing steps (blur, sharpen, grayscale, resize, rotate)
   - Automatic face detection and cropping

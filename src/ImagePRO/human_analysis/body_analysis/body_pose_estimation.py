@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 # Add src directory to path for absolute imports
 _file_path = Path(__file__).resolve()
@@ -13,10 +14,11 @@ from ImagePRO.utils.image import Image
 from ImagePRO.utils.result import Result
 
 import cv2
-import mediapipe as mp
+
+if TYPE_CHECKING:  # mediapipe is imported lazily inside the functions
+    import mediapipe as mp
 
 # Constants
-mp_pose = mp.solutions.pose
 TOTAL_LANDMARKS = 33
 DEFAULT_CONFIDENCE = 0.7
 LANDMARK_RADIUS = 3
@@ -68,6 +70,16 @@ def detect_body_pose(
         or not all(isinstance(i, int) for i in landmarks_idx)
     ):
         raise TypeError("'landmarks_idx' must be a list of integers")
+
+    try:
+        import mediapipe as mp
+    except ImportError as err:
+        raise ImportError(
+            "The optional 'mediapipe' dependency is required for body pose "
+            'detection. Install it with: pip install "ImagePRO-Python[mediapipe]"'
+        ) from err
+
+    mp_pose = mp.solutions.pose
 
     # Initialize detector if needed
     if pose_obj is None:
@@ -133,13 +145,21 @@ def detect_body_pose_live() -> None:
     Raises:
         RuntimeError: If camera cannot be accessed
     """
+    try:
+        import mediapipe as mp
+    except ImportError as err:
+        raise ImportError(
+            "The optional 'mediapipe' dependency is required for body pose "
+            'detection. Install it with: pip install "ImagePRO-Python[mediapipe]"'
+        ) from err
+
     # Initialize camera
     cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
     if not cap.isOpened():
         raise RuntimeError("Cannot access webcam")
 
     # Initialize pose detector in tracking mode
-    pose_obj = mp_pose.Pose(
+    pose_obj = mp.solutions.pose.Pose(
         min_detection_confidence=DEFAULT_CONFIDENCE,
         static_image_mode=False
     )

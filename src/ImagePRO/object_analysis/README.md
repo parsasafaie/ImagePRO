@@ -79,6 +79,7 @@ result = detect_objects(
 ## Technical Notes
 
 - **YOLO Integration**: Uses Ultralytics YOLO implementation (YOLO11)
+- **Optional Dependency**: Ultralytics is an optional extra (`pip install "ImagePRO-Python[yolo]"`), imported lazily inside `detect_objects` — this package imports fine without it, and calling `detect_objects` without it raises an `ImportError` naming the extra to install
 - **Model Loading**: A new model instance is created per call unless one is passed via `model=`; reuse a pre-loaded model in loops for speed
 - **GPU Support**: Ultralytics uses CUDA automatically when available
 - **Custom Models**: Support for custom-trained YOLO models

@@ -84,9 +84,7 @@ class TestDetectObjectsModelSelection:
             def __call__(self, image):
                 return [self._result]
 
-        monkeypatch.setattr(
-            "ImagePRO.object_analysis.object_detection.YOLO", RecordingYOLO
-        )
+        monkeypatch.setattr("ultralytics.YOLO", RecordingYOLO)
         result = detect_objects(image=sample_bgr_image, accuracy_level=level)
         assert created["model"] == expected_model
         assert result.meta["model"] == expected_model
