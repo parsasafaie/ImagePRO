@@ -15,7 +15,7 @@ Features:
 - Real-time processing capabilities
 """
 
-__version__ = "1.0.0"
+__version__ = "1.2.2"
 __author__ = "Parsa Safaie"
 __email__ = "parsasafaie.2568@proton.me"
 
