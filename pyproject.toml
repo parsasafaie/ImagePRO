@@ -70,6 +70,18 @@ full = [
     "onnxruntime>=1.16,<2.0"
 ]
 
+dev = [
+    "pytest>=8.0,<9.0"
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-ra"
+markers = [
+    "perf: performance smoke tests (run with --run-performance)"
+]
+
 [project.urls]
 Homepage = "https://github.com/parsasafaie/ImagePRO"
 Repository = "https://github.com/parsasafaie/ImagePRO.git"
