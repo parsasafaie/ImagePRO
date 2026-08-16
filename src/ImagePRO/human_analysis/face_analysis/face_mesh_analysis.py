@@ -99,11 +99,8 @@ def analyze_face_mesh(
     else:
         face_mesh = face_mesh_obj
 
-    # Prepare image
-    img_copy = image._data.copy()
-    img_rgb = cv2.cvtColor(img_copy, cv2.COLOR_BGR2RGB)
-    
-    # Detect facial landmarks
+    # Detect facial landmarks (cvtColor allocates a new RGB array)
+    img_rgb = cv2.cvtColor(image._data, cv2.COLOR_BGR2RGB)
     results = face_mesh.process(img_rgb)
 
     # Handle no detections
@@ -120,6 +117,9 @@ def analyze_face_mesh(
                 "error": "No face landmarks detected"
             }
         )
+
+    # Allocate the annotation canvas only when a face was found
+    img_copy = image._data.copy()
 
     # Use all landmarks if none specified
     landmarks_idx = landmarks_idx or list(range(TOTAL_FACE_LANDMARKS))

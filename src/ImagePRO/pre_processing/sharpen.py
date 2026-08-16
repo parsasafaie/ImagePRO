@@ -14,7 +14,7 @@ import numpy as np
 
 from ImagePRO.utils.image import Image
 from ImagePRO.utils.result import Result
-from ImagePRO.pre_processing.blur import apply_average_blur
+from ImagePRO.pre_processing.blur import DEFAULT_KERNEL_SIZE
 
 # Constants
 DEFAULT_LAPLACIAN_COEFFICIENT = 3.0
@@ -52,13 +52,16 @@ def apply_laplacian_sharpening(
     if not isinstance(coefficient, (int, float)) or coefficient < 0:
         raise ValueError("'coefficient' must be a non-negative number")
 
-    # Apply Laplacian edge detection
-    laplacian = cv2.Laplacian(image._data.copy(), cv2.CV_64F)
-    laplacian = np.uint8(np.absolute(laplacian))
+    # Apply Laplacian edge detection, then enhance edges while keeping
+    # float arithmetic identical to: image + coefficient * |laplacian|
+    laplacian = cv2.Laplacian(image._data, cv2.CV_64F)
+    np.absolute(laplacian, out=laplacian)
+    laplacian = laplacian.astype(np.uint8)
 
-    # Enhance edges
-    sharpened = image._data + coefficient * laplacian
-    sharpened = np.uint8(np.clip(sharpened, 0, 255))
+    sharpened = laplacian * coefficient
+    sharpened += image._data
+    np.clip(sharpened, 0, 255, out=sharpened)
+    sharpened = sharpened.astype(np.uint8)
 
     return Result(
         image=sharpened,
@@ -102,7 +105,7 @@ def apply_unsharp_masking(
         raise ValueError("'coefficient' must be a non-negative number")
 
     # Create the mask from original vs blurred difference
-    blurred = apply_average_blur(image=Image.from_array(image._data.copy()))
+    blurred = cv2.blur(image._data, DEFAULT_KERNEL_SIZE)
     mask = cv2.subtract(image._data, blurred)
     
     # Apply unsharp masking

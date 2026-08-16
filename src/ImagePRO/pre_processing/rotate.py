@@ -39,7 +39,7 @@ def rotate_image_90(image: Image) -> Result:
     if not isinstance(image, Image):
         raise TypeError("'image' must be an Image instance")
 
-    rotated = cv2.rotate(image._data.copy(), cv2.ROTATE_90_CLOCKWISE)
+    rotated = cv2.rotate(image._data, cv2.ROTATE_90_CLOCKWISE)
     return Result(
         image=rotated,
         meta={
@@ -68,7 +68,7 @@ def rotate_image_180(image: Image) -> Result:
     if not isinstance(image, Image):
         raise TypeError("'image' must be an Image instance")
 
-    rotated = cv2.rotate(image._data.copy(), cv2.ROTATE_180)
+    rotated = cv2.rotate(image._data, cv2.ROTATE_180)
     return Result(
         image=rotated,
         meta={
@@ -97,7 +97,7 @@ def rotate_image_270(image: Image) -> Result:
     if not isinstance(image, Image):
         raise TypeError("'image' must be an Image instance")
 
-    rotated = cv2.rotate(image._data.copy(), cv2.ROTATE_90_COUNTERCLOCKWISE)
+    rotated = cv2.rotate(image._data, cv2.ROTATE_90_COUNTERCLOCKWISE)
     return Result(
         image=rotated,
         meta={
@@ -144,7 +144,7 @@ def rotate_image_custom(
 
     h, w = image.shape[:2]
     matrix = cv2.getRotationMatrix2D((w/2, h/2), angle, scale)
-    rotated = cv2.warpAffine(image._data.copy(), matrix, (w, h))
+    rotated = cv2.warpAffine(image._data, matrix, (w, h))
 
     return Result(
         image=rotated,

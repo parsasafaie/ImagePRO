@@ -77,8 +77,8 @@ def detect_objects(
         model_name = MODEL_MAPPING[accuracy_level]
         model = YOLO(model=model_name)
 
-    # Run inference
-    result = model(image._data.copy())[0]
+    # Run inference (ultralytics does not mutate the input array)
+    result = model(image._data)[0]
     boxes = result.boxes
 
     # Process detections

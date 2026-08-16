@@ -60,8 +60,8 @@ def apply_average_blur(
     ):
         raise ValueError("'kernel_size' must be a tuple of two positive integers.")
 
-    # Apply box filter blur
-    blurred = cv2.blur(image._data.copy(), kernel_size)
+    # Apply box filter blur (cv2.blur never mutates its input)
+    blurred = cv2.blur(image._data, kernel_size)
     
     return Result(
         image=blurred,
@@ -112,7 +112,7 @@ def apply_gaussian_blur(
         raise ValueError("'kernel_size' must be a tuple of two odd positive integers.")
 
     # Apply Gaussian blur with automatic sigma calculation
-    blurred = cv2.GaussianBlur(image._data.copy(), kernel_size, 0)
+    blurred = cv2.GaussianBlur(image._data, kernel_size, 0)
     
     return Result(
         image=blurred,
@@ -160,7 +160,7 @@ def apply_median_blur(
         raise ValueError("'filter_size' must be an odd integer greater than 1.")
 
     # Apply median filtering
-    blurred = cv2.medianBlur(image._data.copy(), filter_size)
+    blurred = cv2.medianBlur(image._data, filter_size)
     
     return Result(
         image=blurred,
@@ -221,7 +221,7 @@ def apply_bilateral_blur(
 
     # Apply bilateral filter
     blurred = cv2.bilateralFilter(
-        image._data.copy(),
+        image._data,
         filter_size,
         sigma_color,
         sigma_space

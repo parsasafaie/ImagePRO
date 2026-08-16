@@ -13,7 +13,6 @@ import cv2
 
 from ImagePRO.utils.image import Image
 from ImagePRO.utils.result import Result
-from ImagePRO.pre_processing.grayscale import convert_to_grayscale
 
 
 # Constants for contrast enhancement
@@ -65,8 +64,8 @@ def apply_clahe_contrast(
     ):
         raise TypeError("'tile_grid_size' must be a tuple of two positive integers")
 
-    # Convert and apply CLAHE
-    grayscale = convert_to_grayscale(image=Image.from_array(image._data.copy()))
+    # Convert and apply CLAHE (cvtColor returns a new array; input untouched)
+    grayscale = cv2.cvtColor(image._data, cv2.COLOR_BGR2GRAY)
     clahe = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=tile_grid_size)
     enhanced = clahe.apply(grayscale)
 
@@ -105,7 +104,7 @@ def apply_histogram_equalization(
         raise TypeError("'image' must be an Image instance")
 
     # Convert and apply global histogram equalization
-    grayscale = convert_to_grayscale(image=Image.from_array(image._data.copy()))
+    grayscale = cv2.cvtColor(image._data, cv2.COLOR_BGR2GRAY)
     enhanced = cv2.equalizeHist(grayscale)
 
     return Result(
@@ -156,7 +155,7 @@ def apply_contrast_stretching(
         raise ValueError("'beta' must be an integer between 0 and 255")
 
     # Convert and apply linear stretching
-    grayscale = convert_to_grayscale(image=Image.from_array(image._data.copy()))
+    grayscale = cv2.cvtColor(image._data, cv2.COLOR_BGR2GRAY)
     enhanced = cv2.convertScaleAbs(grayscale, alpha=alpha, beta=beta)
 
     return Result(
