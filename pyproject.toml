@@ -7,7 +7,7 @@ where = ["src"]
 
 [project]
 name = "ImagePRO-Python"
-version = "1.2.2"
+version = "1.3.0"
 description = "Professional & modular image processing library with OpenCV, MediaPipe, and YOLO integration."
 readme = "readme.md"
 requires-python = ">=3.9,<3.13"
@@ -92,6 +92,3 @@ Homepage = "https://github.com/parsasafaie/ImagePRO"
 Repository = "https://github.com/parsasafaie/ImagePRO.git"
 Documentation = "https://github.com/parsasafaie/ImagePRO#readme"
 Issues = "https://github.com/parsasafaie/ImagePRO/issues"
-
-[tool.hatch.build.targets.wheel]
-packages = ["ImagePRO"]

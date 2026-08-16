@@ -10,7 +10,6 @@ if str(_src_path) not in sys.path:
     sys.path.insert(0, str(_src_path))
 
 import cv2
-import numpy as np
 
 from ImagePRO.utils.image import Image
 from ImagePRO.utils.result import Result

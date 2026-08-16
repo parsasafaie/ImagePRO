@@ -16,7 +16,6 @@ from ImagePRO.utils.result import Result
 
 # Constants
 DEFAULT_ACCURACY_LEVEL = 1
-DEFAULT_CONFIDENCE = 0.5
 MODEL_MAPPING = {
     1: "yolo11n.pt",
     2: "yolo11s.pt",

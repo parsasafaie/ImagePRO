@@ -71,7 +71,9 @@ class TestDetectObjectsModelSelection:
             (5, "yolo11x.pt"),
         ],
     )
-    def test_accuracy_level_maps_to_model(self, monkeypatch, sample_bgr_image, level, expected_model):
+    def test_accuracy_level_maps_to_model(
+        self, monkeypatch, sample_bgr_image, level, expected_model
+    ):
         created = {}
 
         class RecordingYOLO:

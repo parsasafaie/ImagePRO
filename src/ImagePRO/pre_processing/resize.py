@@ -22,7 +22,7 @@ def resize_image(
 ) -> Result:
     """Resize an image to specified dimensions.
 
-    Changes image size while maintaining aspect ratio.
+    Changes image size to the exact (width, height) given.
     Uses bilinear interpolation for smooth resizing.
 
     Args:

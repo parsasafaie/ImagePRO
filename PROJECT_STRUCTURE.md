@@ -134,10 +134,18 @@ not require the others. Install the matching extra (`pip install
 from __future__ import annotations  # Always first
 
 # Python standard library
-import os
 import sys
 from pathlib import Path
-from typing import List, Tuple, Optional
+
+# Source-tree import support: lets users import ImagePRO from the
+# repository without installing the package. The parents[N] depth
+# depends on the module's depth below src/ (2 for pre_processing and
+# object_analysis modules, 3 for human_analysis subpackage modules).
+# Installed-package usage is unaffected.
+_file_path = Path(__file__).resolve()
+_src_path = _file_path.parents[2]  # Go up to src directory
+if str(_src_path) not in sys.path:
+    sys.path.insert(0, str(_src_path))
 
 # Third-party libraries
 import cv2
@@ -189,7 +197,7 @@ Guidelines for new tests:
 
 ### Utils Module
 Core utilities that provide the foundation for all other modules:
-- **Image**: Immutable wrapper around numpy arrays with factory constructors
+- **Image**: Lightweight wrapper around numpy arrays with factory constructors
 - **Result**: Unified container for operation outputs (image, data, metadata)
 
 ### Pre-processing Module

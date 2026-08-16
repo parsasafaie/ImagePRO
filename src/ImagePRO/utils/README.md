@@ -1,11 +1,11 @@
 # Utils Module
 
 Shared data structures for ImagePRO library.
-Provides lightweight, immutable image wrappers and a unified result container with built-in save helpers.
+Provides lightweight image wrappers and a unified result container with built-in save helpers.
 
 ## Features
 
-- **Immutable Image Wrapper**: Lightweight `Image` class with factory constructors
+- **Lightweight Image Wrapper**: `Image` class with factory constructors
 - **Unified Result Object**: `Result` class to store images, data, and metadata
 - **Built-in Saving**: Simple methods to save images and CSV files directly
 - **Consistent API**: Designed for fluent pipelines and functional programming style
@@ -13,7 +13,7 @@ Provides lightweight, immutable image wrappers and a unified result container wi
 ## Available Classes
 
 ### **Image**
-Lightweight wrapper around `numpy.ndarray` with fluent, immutable transforms.
+Lightweight wrapper around `numpy.ndarray` with factory constructors.
 Always use factory constructors to create instances.
 
 #### **Factory Methods**
@@ -66,7 +66,7 @@ result.save_as_csv('landmarks.csv') # Save data to CSV
 ## Conventions
 
 - **Colorspace:** Images are assumed to be `BGR` (OpenCV default) unless explicitly specified
-- **Immutable Design:** Methods return new objects instead of mutating originals
+- **Non-Destructive Operations:** Operations never write into the input image; they return results in new `Result` objects (note: `crop_image` returns a view into the source array)
 - **Automatic Directory Creation:** Save helpers create parent folders if needed
 - **Return Values:** Consistent return types across all operations
 - **Type Safety:** Full type hints for better IDE support and error detection

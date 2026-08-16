@@ -49,7 +49,7 @@ def capture_bulk_pictures(
     face recognition datasets with data augmentation.
 
     Processing pipeline (if enabled):
-    average blur → laplacian sharpen → grayscale → resize → random rotate
+    median blur → laplacian sharpen → grayscale → resize → random rotate
 
     Args:
         folder_path: Base directory for dataset.
