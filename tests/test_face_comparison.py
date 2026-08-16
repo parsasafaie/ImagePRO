@@ -1,10 +1,4 @@
-"""Unit tests for face comparison (InsightFace faked).
-
-Note: compare_faces currently crashes before reaching the model because
-save_temp_image is called with a raw ndarray instead of the Image
-wrapper. The behavior tests below are marked xfail until that bug is
-fixed; they document the intended contract.
-"""
+"""Unit tests for face comparison (InsightFace faked)."""
 
 from __future__ import annotations
 
@@ -33,11 +27,6 @@ class TestCompareFacesValidation:
 
 
 class TestCompareFacesBehavior:
-    @pytest.mark.xfail(
-        reason="compare_faces passes image._data (ndarray) to save_temp_image, "
-        "which expects an Image instance and raises AttributeError",
-        strict=False,
-    )
     def test_same_embedding_reports_match(self, isolated_cwd, sample_bgr_array):
         embedding = [1.0, 0.0, 0.0]
         app = FakeFaceAnalysisApp(faces_per_image=[[embedding], [embedding]])
@@ -48,11 +37,6 @@ class TestCompareFacesBehavior:
         assert result.data is True
         assert result.meta["similarity"] == pytest.approx(1.0, abs=1e-5)
 
-    @pytest.mark.xfail(
-        reason="compare_faces passes image._data (ndarray) to save_temp_image, "
-        "which expects an Image instance and raises AttributeError",
-        strict=False,
-    )
     def test_orthogonal_embeddings_report_no_match(self, isolated_cwd, sample_bgr_array):
         app = FakeFaceAnalysisApp(
             faces_per_image=[[[1.0, 0.0]], [[0.0, 1.0]]]
@@ -64,11 +48,6 @@ class TestCompareFacesBehavior:
         assert result.data is False
         assert result.meta["similarity"] == pytest.approx(0.0, abs=1e-5)
 
-    @pytest.mark.xfail(
-        reason="compare_faces passes image._data (ndarray) to save_temp_image, "
-        "which expects an Image instance and raises AttributeError",
-        strict=False,
-    )
     def test_missing_face_returns_none_with_error(self, isolated_cwd, sample_bgr_array):
         app = FakeFaceAnalysisApp(faces_per_image=[[], [[1.0, 1.0]]])
         image_1 = Image.from_array(sample_bgr_array.copy())
@@ -78,11 +57,6 @@ class TestCompareFacesBehavior:
         assert result.data is None
         assert "error" in result.meta
 
-    @pytest.mark.xfail(
-        reason="compare_faces passes image._data (ndarray) to save_temp_image, "
-        "which expects an Image instance and raises AttributeError",
-        strict=False,
-    )
     def test_temp_files_cleaned_up(self, isolated_cwd, sample_bgr_array):
         app = FakeFaceAnalysisApp(faces_per_image=[[[1.0]], [[1.0]]])
         image_1 = Image.from_array(sample_bgr_array.copy())

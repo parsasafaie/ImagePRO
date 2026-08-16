@@ -76,8 +76,8 @@ def compare_faces(
 
     try:
         # Save images to disk if needed
-        path_1 = save_temp_image(image_1._data, 'tmp1.jpg')
-        path_2 = save_temp_image(image_2._data, 'tmp2.jpg')
+        path_1 = save_temp_image(image_1, 'tmp1.jpg')
+        path_2 = save_temp_image(image_2, 'tmp2.jpg')
 
         # Load and preprocess images
         img1 = load_rgb_image(path_1)
