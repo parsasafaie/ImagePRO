@@ -1,23 +1,15 @@
 from __future__ import annotations
 
-import sys
-from pathlib import Path
-
-# Add src directory to path for absolute imports
-_file_path = Path(__file__).resolve()
-_src_path = _file_path.parents[2]  # Go up to src directory
-if str(_src_path) not in sys.path:
-    sys.path.insert(0, str(_src_path))
-
-from ImagePRO.human_analysis.face_analysis.face_detection import detect_faces
-from ImagePRO.pre_processing import blur, grayscale, rotate, sharpen, resize
-from ImagePRO.utils.image import Image
-
 import random
 import time
+from pathlib import Path
 
 import cv2
 import mediapipe as mp
+
+from ImagePRO.human_analysis.face_analysis.face_detection import detect_faces
+from ImagePRO.pre_processing import blur, grayscale, resize, rotate, sharpen
+from ImagePRO.utils.image import Image
 
 # Constants
 DEFAULT_NUM_IMAGES = 200
@@ -40,7 +32,7 @@ def capture_bulk_pictures(
     apply_grayscale: bool = False,
     apply_sharpen: bool = False,
     apply_rotate: bool = False,
-    apply_resize: tuple = False,
+    apply_resize: tuple[int, int] | bool = False,
     delay: float = DEFAULT_DELAY
 ) -> None:
     """Generate a dataset by capturing faces from webcam.

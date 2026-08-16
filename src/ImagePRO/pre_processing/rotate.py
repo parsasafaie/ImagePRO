@@ -1,14 +1,5 @@
 from __future__ import annotations
 
-import sys
-from pathlib import Path
-
-# Add src directory to path for absolute imports
-_file_path = Path(__file__).resolve()
-_src_path = _file_path.parents[2]  # Go up to src directory
-if str(_src_path) not in sys.path:
-    sys.path.insert(0, str(_src_path))
-
 import cv2
 import numpy as np
 
@@ -18,7 +9,6 @@ from ImagePRO.utils.result import Result
 
 # Constants for rotation operations
 DEFAULT_SCALE = 1.0
-DEFAULT_ANGLE = 45.0
 
 
 def rotate_image_90(image: Image) -> Result:

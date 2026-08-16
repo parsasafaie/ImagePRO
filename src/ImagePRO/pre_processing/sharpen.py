@@ -1,14 +1,5 @@
 from __future__ import annotations
 
-import sys
-from pathlib import Path
-
-# Add src directory to path for absolute imports
-_file_path = Path(__file__).resolve()
-_src_path = _file_path.parents[2]  # Go up to src directory
-if str(_src_path) not in sys.path:
-    sys.path.insert(0, str(_src_path))
-
 import cv2
 import numpy as np
 
@@ -107,13 +98,13 @@ def apply_unsharp_masking(
     # Create the mask from original vs blurred difference
     blurred = cv2.blur(image._data, DEFAULT_KERNEL_SIZE)
     mask = cv2.subtract(image._data, blurred)
-    
+
     # Apply unsharp masking
     sharpened = cv2.addWeighted(
-        image._data, 
-        1 + coefficient, 
-        mask, 
-        -coefficient, 
+        image._data,
+        1 + coefficient,
+        mask,
+        -coefficient,
         0
     )
 

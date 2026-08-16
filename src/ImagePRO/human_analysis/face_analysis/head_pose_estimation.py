@@ -1,14 +1,5 @@
 from __future__ import annotations
 
-import sys
-from pathlib import Path
-
-# Add src directory to path for absolute imports
-_file_path = Path(__file__).resolve()
-_src_path = _file_path.parents[3]  # Go up to src directory
-if str(_src_path) not in sys.path:
-    sys.path.insert(0, str(_src_path))
-
 from ImagePRO.human_analysis.face_analysis.face_mesh_analysis import analyze_face_mesh
 from ImagePRO.utils.image import Image
 from ImagePRO.utils.result import Result
@@ -97,7 +88,7 @@ def estimate_head_pose(
     for face in landmarks:
         # Map landmarks by index
         points = {lm[1]: lm for lm in face}
-        
+
         try:
             # Extract key points
             nose_x, nose_y = points[1][2:4]      # Nose tip

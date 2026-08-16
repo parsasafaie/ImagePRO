@@ -35,7 +35,7 @@ class Image:
         >>> # Load from file (default BGR)
         >>> img = Image.from_path('input.jpg', colorspace="BGR")
         >>> print(img.shape)  # (H, W, 3)
-        >>> 
+        >>>
         >>> # Or wrap a NumPy array
         >>> img = Image.from_array(np_array, colorspace="RGB")
     """
@@ -47,7 +47,7 @@ class Image:
 
     @classmethod
     def from_path(
-        cls, 
+        cls,
         path: str | Path,
         colorspace: Colorspace = "BGR"
     ) -> Image:
@@ -58,7 +58,8 @@ class Image:
             path (str | Path):
                 Path to the image file.
             colorspace (Colorspace, optional):
-                Colorspace of the image array in that path ("BGR", "RGB", or "GRAY"). Defaults to "BGR".
+                Colorspace of the image array in that path
+                ("BGR", "RGB", or "GRAY"). Defaults to "BGR".
 
         Returns:
             Image: New Image instance loaded from disk.
@@ -124,4 +125,3 @@ class Image:
             np.dtype: Data type of the image array.
         """
         return self._data.dtype
-        

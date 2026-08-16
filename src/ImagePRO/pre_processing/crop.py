@@ -1,20 +1,7 @@
 from __future__ import annotations
 
-import sys
-from pathlib import Path
-
-# Add src directory to path for absolute imports
-_file_path = Path(__file__).resolve()
-_src_path = _file_path.parents[2]  # Go up to src directory
-if str(_src_path) not in sys.path:
-    sys.path.insert(0, str(_src_path))
-
 from ImagePRO.utils.image import Image
 from ImagePRO.utils.result import Result
-
-# Constants
-DEFAULT_START_POINT = (0, 0)
-DEFAULT_END_POINT = (100, 100)
 
 
 def crop_image(
@@ -59,7 +46,10 @@ def crop_image(
     x2, y2 = end_point
 
     if x1 < 0 or y1 < 0 or x2 <= x1 or y2 <= y1:
-        raise ValueError("Invalid crop coordinates: ensure (x1, y1) is top-left and (x2, y2) is bottom-right")
+        raise ValueError(
+            "Invalid crop coordinates: ensure (x1, y1) is top-left "
+            "and (x2, y2) is bottom-right"
+        )
 
     height, width = image.shape[:2]
 

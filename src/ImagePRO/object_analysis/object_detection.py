@@ -1,14 +1,5 @@
 from __future__ import annotations
 
-import sys
-from pathlib import Path
-
-# Add src directory to path for absolute imports
-_file_path = Path(__file__).resolve()
-_src_path = _file_path.parents[2]  # Go up to src directory
-if str(_src_path) not in sys.path:
-    sys.path.insert(0, str(_src_path))
-
 from ultralytics import YOLO
 
 from ImagePRO.utils.image import Image
@@ -19,7 +10,7 @@ DEFAULT_ACCURACY_LEVEL = 1
 DEFAULT_CONFIDENCE = 0.5
 MODEL_MAPPING = {
     1: "yolo11n.pt",
-    2: "yolo11s.pt", 
+    2: "yolo11s.pt",
     3: "yolo11m.pt",
     4: "yolo11l.pt",
     5: "yolo11x.pt"
@@ -73,7 +64,7 @@ def detect_objects(
                 f"'accuracy_level' must be in {list(MODEL_MAPPING.keys())}, "
                 f"got {accuracy_level}"
             )
-        
+
         model_name = MODEL_MAPPING[accuracy_level]
         model = YOLO(model=model_name)
 
@@ -92,7 +83,7 @@ def detect_objects(
     # Show visualization if requested
     if show_result:
         result.show()
-    
+
     return Result(
         image=result.plot(),
         data=detections,

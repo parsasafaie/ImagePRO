@@ -1,14 +1,5 @@
 from __future__ import annotations
 
-import sys
-from pathlib import Path
-
-# Add src directory to path for absolute imports
-_file_path = Path(__file__).resolve()
-_src_path = _file_path.parents[3]  # Go up to src directory
-if str(_src_path) not in sys.path:
-    sys.path.insert(0, str(_src_path))
-
 from ImagePRO.utils.image import Image
 from ImagePRO.utils.result import Result
 
@@ -64,7 +55,7 @@ def detect_body_pose(
         raise ValueError("'min_confidence' must be between 0.0 and 1.0")
 
     if landmarks_idx is not None and (
-        not isinstance(landmarks_idx, list) 
+        not isinstance(landmarks_idx, list)
         or not all(isinstance(i, int) for i in landmarks_idx)
     ):
         raise TypeError("'landmarks_idx' must be a list of integers")
@@ -97,7 +88,8 @@ def detect_body_pose(
                 img_copy,
                 result.pose_landmarks,
                 mp_pose.POSE_CONNECTIONS,
-                landmark_drawing_spec=mp.solutions.drawing_styles.get_default_pose_landmarks_style()
+                landmark_drawing_spec=mp.solutions.drawing_styles
+                .get_default_pose_landmarks_style()
             )
         else:
             # Draw only selected points

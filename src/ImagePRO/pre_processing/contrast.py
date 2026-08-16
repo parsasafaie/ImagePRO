@@ -1,14 +1,5 @@
 from __future__ import annotations
 
-import sys
-from pathlib import Path
-
-# Add src directory to path for absolute imports
-_file_path = Path(__file__).resolve()
-_src_path = _file_path.parents[2]  # Go up to src directory
-if str(_src_path) not in sys.path:
-    sys.path.insert(0, str(_src_path))
-
 import cv2
 
 from ImagePRO.utils.image import Image
@@ -18,8 +9,6 @@ from ImagePRO.utils.result import Result
 # Constants for contrast enhancement
 DEFAULT_CLIP_LIMIT = 2.0      # For CLAHE
 DEFAULT_TILE_GRID_SIZE = (8, 8)  # For CLAHE
-DEFAULT_ALPHA = 1.5           # For linear stretching
-DEFAULT_BETA = 10            # For linear stretching
 
 
 def apply_clahe_contrast(

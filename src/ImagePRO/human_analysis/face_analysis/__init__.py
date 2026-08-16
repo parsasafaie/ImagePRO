@@ -10,7 +10,7 @@ from . import head_pose_estimation
 __all__ = [
     "eye_status_analysis",
     "face_comparison",
-    "face_detection", 
+    "face_detection",
     "face_mesh_analysis",
     "head_pose_estimation"
 ]

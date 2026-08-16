@@ -1,14 +1,5 @@
 from __future__ import annotations
 
-import sys
-from pathlib import Path
-
-# Add src directory to path for absolute imports
-_file_path = Path(__file__).resolve()
-_src_path = _file_path.parents[3]  # Go up to src directory
-if str(_src_path) not in sys.path:
-    sys.path.insert(0, str(_src_path))
-
 import cv2
 import mediapipe as mp
 import numpy as np
@@ -29,7 +20,7 @@ FACE_OUTLINE_INDICES = [
 
 
 def detect_faces(
-    image: Image, 
+    image: Image,
     *,
     max_faces: int = DEFAULT_MAX_FACES,
     min_confidence: float = DEFAULT_MIN_CONFIDENCE,

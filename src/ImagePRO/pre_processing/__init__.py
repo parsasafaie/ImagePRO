@@ -12,7 +12,7 @@ from . import sharpen
 
 __all__ = [
     "blur",
-    "contrast", 
+    "contrast",
     "crop",
     "dataset_generator",
     "grayscale",

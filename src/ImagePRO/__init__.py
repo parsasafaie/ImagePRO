@@ -27,7 +27,7 @@ from . import object_analysis
 
 __all__ = [
     "utils",
-    "pre_processing", 
+    "pre_processing",
     "human_analysis",
     "object_analysis"
 ]

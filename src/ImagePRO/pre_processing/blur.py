@@ -1,14 +1,5 @@
 from __future__ import annotations
 
-import sys
-from pathlib import Path
-
-# Add src directory to path for absolute imports
-_file_path = Path(__file__).resolve()
-_src_path = _file_path.parents[2]  # Go up to src directory
-if str(_src_path) not in sys.path:
-    sys.path.insert(0, str(_src_path))
-
 import cv2
 
 from ImagePRO.utils.image import Image
@@ -62,7 +53,7 @@ def apply_average_blur(
 
     # Apply box filter blur (cv2.blur never mutates its input)
     blurred = cv2.blur(image._data, kernel_size)
-    
+
     return Result(
         image=blurred,
         meta={
@@ -113,7 +104,7 @@ def apply_gaussian_blur(
 
     # Apply Gaussian blur with automatic sigma calculation
     blurred = cv2.GaussianBlur(image._data, kernel_size, 0)
-    
+
     return Result(
         image=blurred,
         meta={
@@ -161,7 +152,7 @@ def apply_median_blur(
 
     # Apply median filtering
     blurred = cv2.medianBlur(image._data, filter_size)
-    
+
     return Result(
         image=blurred,
         meta={
@@ -226,7 +217,7 @@ def apply_bilateral_blur(
         sigma_color,
         sigma_space
     )
-    
+
     return Result(
         image=blurred,
         meta={

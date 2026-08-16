@@ -1,14 +1,5 @@
 from __future__ import annotations
 
-import sys
-from pathlib import Path
-
-# Add src directory to path for absolute imports
-_file_path = Path(__file__).resolve()
-_src_path = _file_path.parents[3]  # Go up to src directory
-if str(_src_path) not in sys.path:
-    sys.path.insert(0, str(_src_path))
-
 from ImagePRO.utils.image import Image
 from ImagePRO.utils.result import Result
 
@@ -83,7 +74,7 @@ def analyze_face_mesh(
         raise ValueError("'min_confidence' must be between 0 and 1")
 
     if landmarks_idx is not None and (
-        not isinstance(landmarks_idx, list) 
+        not isinstance(landmarks_idx, list)
         or not all(isinstance(i, int) for i in landmarks_idx)
     ):
         raise TypeError("'landmarks_idx' must be a list of integers")
@@ -125,7 +116,7 @@ def analyze_face_mesh(
     landmarks_idx = landmarks_idx or list(range(TOTAL_FACE_LANDMARKS))
     # Process each detected face
     landmarks = []
-    
+
     for face_id, face_landmarks in enumerate(results.multi_face_landmarks):
         # Draw landmarks
         if len(landmarks_idx) == TOTAL_FACE_LANDMARKS:
@@ -146,11 +137,10 @@ def analyze_face_mesh(
                 cv2.circle(img_copy, (cx, cy), 3, (0, 0, 255), -1)
 
         # Extract coordinates
-        face_data = [
-            [face_id, idx, lm.x, lm.y, lm.z]
-            for idx in landmarks_idx
-            for lm in [face_landmarks.landmark[idx]]
-        ]
+        face_data = []
+        for idx in landmarks_idx:
+            lm = face_landmarks.landmark[idx]
+            face_data.append([face_id, idx, lm.x, lm.y, lm.z])
         landmarks.append(face_data)
 
     return Result(

@@ -143,22 +143,25 @@ class Result:
             raise IOError(f"Failed to write CSV to {out_path}: {exc}") from exc
         return self
 
-def flatten_rows(data):
+
+def flatten_rows(data: Any) -> list[list[Any]]:
     """
     Flatten nested lists/tuples into rows suitable for CSV writing.
-    
+
     Recursively processes nested data structures to create a flat list of rows
     that can be written to a CSV file. Handles mixed nesting levels gracefully.
-    
+
     Args:
         data: Nested list/tuple structure containing data to flatten.
-        
+
     Returns:
         list[list[Any]]: Flattened list of rows, where each row is a list of values.
-        
+
     Example:
-        >>> flatten_rows([[1, 2], [3, [4, 5]]])
-        [[1, 2], [3, 4, 5]]
+        >>> flatten_rows([[1, 2], [3, 4]])
+        [[1, 2], [3, 4]]
+        >>> flatten_rows([[[1, 2], [3, 4]], [5]])
+        [[1, 2], [3, 4], [5]]
     """
     rows = []
     for item in data:
