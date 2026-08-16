@@ -54,20 +54,25 @@ yolo = [
     "ultralytics>=8.2,<9.0"
 ]
 
+# mediapipe<=0.10.11 and insightface 0.7.x ship binaries built against
+# the NumPy 1.x ABI, so groups that include them cap numpy below 2.0.
 mediapipe = [
-    "mediapipe>=0.10.0,<=0.10.11"
+    "mediapipe>=0.10.0,<=0.10.11",
+    "numpy>=1.24,<2.0"
 ]
 
 insightface = [
     "insightface>=0.7,<0.8",
-    "onnxruntime>=1.16,<2.0"
+    "onnxruntime>=1.16,<2.0",
+    "numpy>=1.24,<2.0"
 ]
 
 full = [
     "mediapipe>=0.10.0,<=0.10.11",
     "ultralytics>=8.2,<9.0",
     "insightface>=0.7,<0.8",
-    "onnxruntime>=1.16,<2.0"
+    "onnxruntime>=1.16,<2.0",
+    "numpy>=1.24,<2.0"
 ]
 
 dev = [

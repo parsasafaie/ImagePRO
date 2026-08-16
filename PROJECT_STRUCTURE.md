@@ -84,6 +84,12 @@ ImagePRO/
 - **Ultralytics**: YOLO object detection
 - **InsightFace**: Advanced face analysis
 
+Importing `ImagePRO` works with the base dependencies only. Subpackage
+`__init__` files import optional-dependency modules guardedly (the module is
+`None` when its dependency is missing), so installing one feature group does
+not require the others. Install the matching extra (`pip install
+"ImagePRO-Python[mediapipe]"`) or requirements file before using those modules.
+
 ### Internal Dependencies
 - **utils.image**: Core `Image` class used by all modules for input handling
 - **utils.result**: Core `Result` class used by all modules for output handling
