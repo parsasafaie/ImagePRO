@@ -194,7 +194,7 @@ def apply_bilateral_blur(
         Result: Result object with smoothed image.
             - image (np.ndarray): Edge-preserving smoothed output
             - data (None): No additional data
-            - meta (dict): Contains filter *,parameters and operation info
+            - meta (dict): Contains filter parameters and operation info
 
     Raises:
         TypeError: If image is not an Image instance

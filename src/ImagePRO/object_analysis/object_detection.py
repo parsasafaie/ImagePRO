@@ -47,6 +47,7 @@ def detect_objects(
         Result object with detections and metadata:
         - image: Original with bounding boxes drawn
         - data: List of [class_id, [x1,y1,x2,y2], confidence]
+          with box coordinates normalized to [0, 1]
         - meta: Operation info and model used
 
     Raises:

@@ -2,7 +2,7 @@
 
 Advanced body pose estimation and hand tracking using MediaPipe technology.
 
-## ✨ Features
+## Features
 
 - **Body Pose Estimation**: 33-point body landmark detection
 - **Hand Tracking**: 21-point hand landmark analysis
@@ -10,19 +10,19 @@ Advanced body pose estimation and hand tracking using MediaPipe technology.
 - **Flexible Output**: Optional image annotation and CSV export
 - **Performance Optimized**: Efficient processing for both images and video
 
-## 🔧 I/O Conventions
+## I/O Conventions
 
 - **Input**: A `Image` instance created by path or array
 - **Output**: A `Result` instance contains image(np.ndarray), data(any other data like landmarks list) and meta(some additional info about process)
 - **Live Mode**: Webcam functions with ESC key to exit
 
-## 📚 Available Functions
+## Available Functions
 
 ### **Body Analysis**
 - **`body_pose_estimation.py`**: Full body pose detection (33 landmarks)
 - **`hand_tracking.py`**: Hand landmark detection and tracking (21 points)
 
-## 🚀 Quick Start
+## Quick Start
 
 ```python
 from ImagePRO.human_analysis.body_analysis.body_pose_estimation import detect_body_pose
@@ -49,7 +49,7 @@ cv2.waitKey(0)
 cv2.destroyAllWindows()
 ```
 
-## 📊 Data Formats
+## Data Formats
 
 ### **Body Landmarks CSV**
 - **Format**: `[landmark_index, x, y, z]`
@@ -61,23 +61,23 @@ cv2.destroyAllWindows()
 - **Coordinates**: Normalized values [0, 1] from MediaPipe
 - **Total Points**: 21 hand landmarks per hand
 
-## ⚠️ Error Handling
+## Error Handling
 
 - **`ValueError`**: Invalid parameters or no landmarks detected
 - **`TypeError`**: Incorrect input types
 - **`RuntimeError`**: Webcam access failures
 - **`FileNotFoundError`**: Image file not found
 
-## 📝 Technical Notes
+## Technical Notes
 
 - **MediaPipe Integration**: Uses state-of-the-art pose and hand models from Google
 - **Coordinate System**: Normalized coordinates [0, 1] for cross-platform compatibility
 - **Performance**: Optimized for both static images and video streams
-- **Multi-person Support**: Configurable for single or multiple subjects
+- **Subjects**: Body pose tracks a single subject; hand tracking supports up to `max_hands`
 - **Model Reuse**: Pre-load models for faster processing in loops (see function docstrings)
 - **Real-time Processing**: Live webcam functions available for both pose and hand tracking
 
-## 🔗 Related Modules
+## Related Modules
 
 - See [Face Analysis](../face_analysis/README.md) for facial landmark detection
 - See [Utils Module](../../utils/README.md) for `Image` and `Result` class documentation

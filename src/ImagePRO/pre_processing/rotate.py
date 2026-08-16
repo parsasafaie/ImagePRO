@@ -107,7 +107,8 @@ def rotate_image_custom(
     """Rotate image by custom angle with optional scaling.
 
     Rotates around image center. Positive angles are counter-clockwise.
-    Image is resized to contain full rotated content.
+    The output canvas keeps the original image dimensions, so corners of
+    the rotated image may be clipped.
 
     Args:
         image: Input image to rotate.

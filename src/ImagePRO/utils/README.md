@@ -3,26 +3,26 @@
 Shared data structures for ImagePRO library.
 Provides lightweight, immutable image wrappers and a unified result container with built-in save helpers.
 
-## ✨ Features
+## Features
 
 - **Immutable Image Wrapper**: Lightweight `Image` class with factory constructors
 - **Unified Result Object**: `Result` class to store images, data, and metadata
 - **Built-in Saving**: Simple methods to save images and CSV files directly
 - **Consistent API**: Designed for fluent pipelines and functional programming style
 
-## 📚 Available Classes
+## Available Classes
 
 ### **Image**
-Lightweight wrapper around `numpy.ndarray` with fluent, immutable transforms.  
+Lightweight wrapper around `numpy.ndarray` with fluent, immutable transforms.
 Always use factory constructors to create instances.
 
 #### **Factory Methods**
-- **`Image.from_path(path)`** – Load an image from disk (BGR format by default).  
+- **`Image.from_path(path)`** – Load an image from disk (BGR format by default).
 - **`Image.from_array(array, colorspace="BGR")`** – Wrap an existing `numpy.ndarray` as an image.
 
 #### **Introspection**
-- **`shape`** → Returns image shape (`H×W×C` or `H×W`)  
-- **`dtype`** → Returns numpy dtype of underlying image  
+- **`shape`** → Returns image shape (`H×W×C` or `H×W`)
+- **`dtype`** → Returns numpy dtype of underlying image
 
 ### **Result**
 Unified container for outputs of ImagePRO operations.
@@ -37,7 +37,7 @@ Holds optional image(s), structured data, and arbitrary metadata.
 - **`save_as_img(path)`** – Save image(s) to disk (single file or auto-suffixed list).
 - **`save_as_csv(path, rows=None)`** – Save structured data to a CSV file. Uses data by default.
 
-## 🚀 Quick Start
+## Quick Start
 ```python
 from ImagePRO.utils.image import Image
 from ImagePRO.utils.result import Result
@@ -63,7 +63,7 @@ print(result.meta)   # Some additional info about process
 result.save_as_img('output.jpg') # Save image to path
 result.save_as_csv('landmarks.csv') # Save data to CSV
 ```
-## 🔧 Conventions
+## Conventions
 
 - **Colorspace:** Images are assumed to be `BGR` (OpenCV default) unless explicitly specified
 - **Immutable Design:** Methods return new objects instead of mutating originals
@@ -71,13 +71,13 @@ result.save_as_csv('landmarks.csv') # Save data to CSV
 - **Return Values:** Consistent return types across all operations
 - **Type Safety:** Full type hints for better IDE support and error detection
 
-## ⚠️ Error Handling
+## Error Handling
 
 - **`ValueError`**: Invalid parameters or conflicting inputs
 - **`TypeError`**: Incorrect input types
 - **`IOError`**: File read/write failures
 
-## 📝 Technical Notes
+## Technical Notes
 
 - **OpenCV Compatible**: Fully compatible with OpenCV I/O (`cv2.imread`, `cv2.imwrite`)
 - **Cross-platform**: Works on Windows, macOS, and Linux
@@ -86,7 +86,7 @@ result.save_as_csv('landmarks.csv') # Save data to CSV
 - **Memory Efficient**: Lightweight wrappers with minimal overhead
 - **Type Hints**: Full type annotations for better developer experience
 
-## 🔗 Related Modules
+## Related Modules
 
 - See [Pre-processing Module](../pre_processing/README.md) for image manipulation functions
 - See [Human Analysis Module](../human_analysis/README.md) for face/body analysis

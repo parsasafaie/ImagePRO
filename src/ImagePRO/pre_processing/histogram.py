@@ -9,25 +9,28 @@ from ImagePRO.utils.result import Result
 
 def show_histogram(image: Image) -> Result:
     """
-    Displays the histogram of an image with customizable options.
+    Builds a matplotlib histogram figure for an image.
 
-    This function visualizes the intensity distribution of an image. It handles both grayscale
-    and color images, with automatic detection of image type. For color images, it displays
-    histograms for each color channel (BGR or RGB) with appropriate colors.
+    This function creates the histogram plot of the intensity distribution of
+    an image. It handles both grayscale and color images, with automatic
+    detection of image type. For color images, it plots a histogram for each
+    color channel (BGR or RGB) with appropriate colors. The pyplot module is
+    returned in ``data``; call ``matplotlib.pyplot.show()`` to display the
+    figure.
 
     Args:
         image (Image):
-            Input image to convert. Must be BGR, RGB or Grayscale format.
+            Input image to analyze. Must be BGR, RGB or Grayscale format.
 
     Returns:
         Result: Result object with histogram plot.
-            - image (np.ndarray): None
-            - data (None): matplotlib.pyplot object
+            - image: None
+            - data: The matplotlib.pyplot module (figure is created, not shown)
             - meta (dict): Contains source object and operation info
 
     Raises:
         TypeError: If image is not an Image instance
-        ValueError: If image colorspace is not defined.
+        ValueError: If image colorspace is not supported.
     """
     if not isinstance(image, Image):
         raise TypeError("'image' must be an Image instance.")

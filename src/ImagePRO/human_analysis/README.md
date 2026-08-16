@@ -2,7 +2,7 @@
 
 Advanced human analysis capabilities including facial landmark detection, body pose estimation, and hand tracking using MediaPipe technology.
 
-## ✨ Features
+## Features
 
 - **Comprehensive Face Analysis**: 468-point mesh, pose estimation, eye status
 - **Full Body Tracking**: 33-point pose landmarks and gesture recognition
@@ -10,7 +10,7 @@ Advanced human analysis capabilities including facial landmark detection, body p
 - **Real-time Processing**: Live webcam analysis for all modules
 - **Flexible Output**: Optional image annotation and CSV export
 
-## 📚 Submodules
+## Submodules
 
 ### **Face Analysis**
 Advanced facial analysis with multiple detection capabilities:
@@ -22,17 +22,16 @@ Advanced facial analysis with multiple detection capabilities:
 
 ### **Body Analysis**
 Full body pose estimation and hand tracking:
-- **Body Pose**: 33-point body landmark detection
-- **Hand Tracking**: 21-point hand landmark analysis
-- **Multi-person Support**: Configurable for single or multiple subjects
+- **Body Pose**: 33-point body landmark detection (single subject)
+- **Hand Tracking**: 21-point hand landmark analysis (max_hands configurable)
 
-## 🔧 I/O Conventions
+## I/O Conventions
 
 - **Input**: A `Image` instance created by path or array
 - **Output**: A `Result` instance contains image(np.ndarray), data(any other data like landmarks list) and meta(some additional info about process)
 - **Live Mode**: Webcam functions with ESC key to exit
 
-## 📊 Data Formats
+## Data Formats
 
 ### **Landmark Data**
 - **Format**: `[id, landmark_index, x, y, z]`
@@ -43,14 +42,14 @@ Full body pose estimation and hand tracking:
 - **Format**: `[id, yaw, pitch]` for head pose
 - **Units**: Proportional values for orientation
 
-## ⚠️ Error Handling
+## Error Handling
 
 - **`ValueError`**: Invalid parameters(like invalid image) or no landmarks detected
 - **`TypeError`**: Incorrect input types
 - **`RuntimeError`**: Webcam access failures
 - **`FileNotFoundError`**: Image file not found
 
-## 📝 Technical Notes
+## Technical Notes
 
 - **MediaPipe Integration**: Uses state-of-the-art detection models from Google
 - **Coordinate System**: Normalized coordinates [0, 1] for cross-platform compatibility
@@ -59,7 +58,7 @@ Full body pose estimation and hand tracking:
 - **Real-time Processing**: Live webcam functions available for all analysis modules
 - **Multi-person Support**: Configurable for single or multiple subjects
 
-## 🔗 Related Modules
+## Related Modules
 
 - See [Utils Module](../utils/README.md) for `Image` and `Result` class documentation
 - See [Pre-processing Module](../pre_processing/README.md) for image manipulation

@@ -16,6 +16,13 @@ ImagePRO/
 │   ├── insightface.txt                 # InsightFace dependencies
 │   ├── mediapipe.txt                   # MediaPipe dependencies
 │   └── yolo.txt                        # YOLO/Ultralytics dependencies
+├── tests/                               # Pytest test suite
+│   ├── conftest.py                     # Fixtures, matplotlib Agg backend, optional-dependency stubs
+│   ├── fakes.py                        # Fake MediaPipe/InsightFace/Ultralytics objects
+│   ├── test_*.py                       # Unit tests per module
+│   ├── test_integration.py             # Cross-module pipelines
+│   └── performance/
+│       └── test_perf_smoke.py          # Timing smoke guards (--run-performance)
 └── src/
     └── ImagePRO/                       # Main package
         ├── __init__.py                 # Package initialization
@@ -81,7 +88,7 @@ ImagePRO/
 - **utils.image**: Core `Image` class used by all modules for input handling
 - **utils.result**: Core `Result` class used by all modules for output handling
 - **pre_processing**: Uses `utils.image` and `utils.result`; independent module
-- **human_analysis**: 
+- **human_analysis**:
   - Uses `utils.image` and `utils.result`
   - Face analysis modules may depend on `face_mesh_analysis` for base functionality
   - Body analysis modules are independent
@@ -154,11 +161,23 @@ from ImagePRO.utils.result import Result
 5. Follow consistent error handling patterns with Result.meta
 
 ### Testing
+The test suite lives in `tests/` and runs with pytest:
+
+```bash
+pip install -e ".[dev]"   # editable install with pytest
+pytest                    # full suite (heavy optional dependencies are mocked)
+pytest --run-performance  # include performance smoke guards
+```
+
+Guidelines for new tests:
 - Test with both Image.from_path and Image.from_array
 - Test Result object contents and metadata
 - Verify type and value error handling
 - Test error information in Result.meta
 - Test edge cases and boundary conditions
+- Mock MediaPipe/InsightFace/Ultralytics detectors (see `tests/fakes.py`) so
+  tests stay hermetic and need no models, cameras, or optional packages
+- Pin known bugs with `@pytest.mark.xfail` until they are fixed
 
 ## Module Details
 

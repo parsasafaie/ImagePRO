@@ -2,27 +2,25 @@
 
 YOLO-based object detection with multiple accuracy levels and flexible model support.
 
-## ✨ Features
+## Features
 
 - **Multiple YOLO Models**: Nano to extra-large accuracy levels
 - **Flexible Model Loading**: Pre-trained or custom model support
-- **Batch Processing**: Efficient handling of multiple images
 - **Rich Output**: Annotated images and detailed detection data
 - **Performance Optimized**: GPU acceleration when available
 
-## 🔧 I/O Conventions
+## I/O Conventions
 
 - **Input**: A `Image` instance created by path or array
 - **Output**: A `Result` instance contains image(np.ndarray), data(any other data like detections) and meta(some additional info about process)
 - **Model Management**: Automatic model loading or custom model injection
-- **Live Mode**: Available for real-time detection
 
-## 📚 Available Functions
+## Available Functions
 
 ### **Core Detection**
 - **`object_detection.py`**: YOLO-based object detection with multiple accuracy levels
 
-## 🚀 Quick Start
+## Quick Start
 
 ```python
 from ImagePRO.object_analysis.object_detection import detect_objects
@@ -35,8 +33,7 @@ image = Image.from_path("image.jpg")  # Or -> image = Image.from_array(np_image)
 # Detect objects with nano model (fastest)
 result = detect_objects(
     image=image,
-    accuracy_level=1,  # 1=nano, 2=small, 3=medium, 4=large, 5=extra-large
-    confidence=0.5
+    accuracy_level=1  # 1=nano, 2=small, 3=medium, 4=large, 5=extra-large
 )
 
 print(type(result))  # Should print: <class 'ImagePRO.utils.result.Result'>
@@ -58,12 +55,12 @@ result = detect_objects(
 )
 ```
 
-## 📊 Output Formats
+## Output Formats
 
 ### **Detection Results**
-- **Return Value**: YOLO Results object with detection data
-- **CSV Format**: `[image_id, class_id, class_name, confidence, x1, y1, x2, y2]`
-- **Coordinates**: Bounding box coordinates in pixels
+- **Return Value**: `Result` with annotated image and detection list
+- **Data Format**: `[class_id, [x1, y1, x2, y2], confidence]` per detection
+- **Coordinates**: Bounding box coordinates normalized to [0, 1] (multiply by image width/height for pixels)
 
 ### **Accuracy Levels**
 - **Level 1**: `yolo11n.pt` - Fastest, lowest accuracy
@@ -72,23 +69,21 @@ result = detect_objects(
 - **Level 4**: `yolo11l.pt` - Large, high accuracy
 - **Level 5**: `yolo11x.pt` - Extra-large, highest accuracy
 
-## ⚠️ Error Handling
+## Error Handling
 
 - **`ValueError`**: Invalid accuracy level or parameters
 - **`TypeError`**: Incorrect input types
 - **`FileNotFoundError`**: Image file not found
 - **`RuntimeError`**: Model loading failures
 
-## 📝 Technical Notes
+## Technical Notes
 
-- **YOLO Integration**: Uses Ultralytics YOLO implementation (YOLOv11)
-- **Model Caching**: Models are cached after first load for faster subsequent calls
-- **GPU Support**: Automatic CUDA detection and utilization when available
-- **Performance**: Optimized for both CPU and GPU inference
+- **YOLO Integration**: Uses Ultralytics YOLO implementation (YOLO11)
+- **Model Loading**: A new model instance is created per call unless one is passed via `model=`; reuse a pre-loaded model in loops for speed
+- **GPU Support**: Ultralytics uses CUDA automatically when available
 - **Custom Models**: Support for custom-trained YOLO models
-- **Batch Processing**: Efficient handling of multiple images
 
-## 🔗 Related Modules
+## Related Modules
 
 - See [Utils Module](../utils/README.md) for `Image` and `Result` class documentation
 - See [Pre-processing Module](../pre_processing/README.md) for image manipulation

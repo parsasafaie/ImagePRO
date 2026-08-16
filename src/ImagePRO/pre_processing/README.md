@@ -2,7 +2,7 @@
 
 Professional image manipulation, filtering, and enhancement utilities for computer vision pipelines.
 
-## ✨ Features
+## Features
 
 - **Consistent I/O**: Support for both `from_path` and `from_array` (numpy arrays)
 - **Drop-in Functions**: Simple, stateless operations with no class instantiation required
@@ -10,18 +10,18 @@ Professional image manipulation, filtering, and enhancement utilities for comput
 - **OpenCV Compatible**: Designed to work seamlessly with OpenCV BGR images
 - **Batch Support**: Functions can be easily chained for complex processing pipelines
 
-## 🔧 I/O Conventions
+## I/O Conventions
 
 - **Input**: A `Image` instance created by path or array
 - **Output**: A `Result` instance contains image(np.ndarray), data(any other data like landmarks list) and meta(some additional info about process)
 - **Return**: All functions return `Result` instance
 
-## 📚 Available Functions
+## Available Functions
 
 ### **Basic Operations**
 - **`grayscale.py`**: Convert images to single-channel grayscale
-- **`resize.py`**: Resize images to specified dimensions (maintains aspect ratio or custom)
-- **`crop.py`**: Crop images using coordinate-based selection (x, y, width, height)
+- **`resize.py`**: Resize images to exact (width, height) dimensions
+- **`crop.py`**: Crop images using top-left and bottom-right coordinates (start_point, end_point)
 - **`rotate.py`**: Rotate images (90°, 180°, 270°, or custom angles with optional scaling)
 - **`histogram.py`**: Display histogram of image channels (BGR, RGB, or grayscale)
 
@@ -45,7 +45,7 @@ Professional image manipulation, filtering, and enhancement utilities for comput
   - Configurable preprocessing steps (blur, sharpen, grayscale, resize, rotate)
   - Automatic face detection and cropping
 
-## 🚀 Quick Start
+## Quick Start
 
 ```python
 from ImagePRO.pre_processing.blur import apply_gaussian_blur
@@ -67,7 +67,7 @@ cv2.waitKey(0)
 cv2.destroyAllWindows()
 ```
 
-## ⚠️ Error Handling
+## Error Handling
 
 All functions follow consistent error handling patterns:
 
@@ -76,9 +76,9 @@ All functions follow consistent error handling patterns:
 - **`IOError`**: File saving/loading failures
 - **`RuntimeError`**: Webcam opening failure (for dataset_generator)
 
-Error information is also stored in the `Result.meta` dictionary for programmatic access. 
+Error information is also stored in the `Result.meta` dictionary for programmatic access.
 
-## 📝 Notes
+## Notes
 
 - Functions are **pure and stateless** - safe to reuse in loops and parallel processing
 - **Processing order** matters in pipelines - consider dependencies (e.g., resize before crop)
@@ -86,7 +86,7 @@ Error information is also stored in the `Result.meta` dictionary for programmati
 - **OpenCV Compatible** - All functions work with BGR color space (OpenCV default)
 - **Batch Processing** - Functions can be easily chained for complex pipelines
 
-## 🔗 Related Modules
+## Related Modules
 
 - See [Utils Module](../utils/README.md) for `Image` and `Result` class documentation
 - See [Human Analysis Module](../human_analysis/README.md) for face/body analysis

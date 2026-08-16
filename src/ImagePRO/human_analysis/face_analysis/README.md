@@ -2,7 +2,7 @@
 
 Advanced facial landmark detection, pose estimation, and analysis using MediaPipe technology.
 
-## ✨ Features
+## Features
 
 - **468-point Face Mesh**: Complete facial landmark detection with tessellation
 - **Head Pose Estimation**: Yaw and pitch calculation from facial geometry
@@ -11,13 +11,13 @@ Advanced facial landmark detection, pose estimation, and analysis using MediaPip
 - **Face Cropping**: Automated face region extraction and cropping
 - **Real-time Processing**: Live webcam analysis for all functions
 
-## 🔧 I/O Conventions
+## I/O Conventions
 
 - **Input**: A `Image` instance created by path or array
 - **Output**: A `Result` instance contains image(np.ndarray), data(any other data like landmarks list) and meta(some additional info about process)
 - **Live Mode**: Webcam functions with ESC key to exit
 
-## 📚 Available Functions
+## Available Functions
 
 ### **Core Analysis**
 - **`face_mesh_analysis.py`**: 468-point facial landmark detection
@@ -26,7 +26,7 @@ Advanced facial landmark detection, pose estimation, and analysis using MediaPip
 - **`face_detection.py`**: Face region detection and cropping
 - **`face_comparison.py`**: Face identity matching and comparison
 
-## 🚀 Quick Start
+## Quick Start
 
 ```python
 from ImagePRO.human_analysis.face_analysis.face_mesh_analysis import analyze_face_mesh
@@ -53,7 +53,7 @@ cv2.waitKey(0)
 cv2.destroyAllWindows()
 ```
 
-## 📊 Data Formats
+## Data Formats
 
 ### **Landmarks CSV**
 - **Format**: `[face_id, landmark_index, x, y, z]`
@@ -65,14 +65,15 @@ cv2.destroyAllWindows()
 - **Units**: Proportional values (not degrees)
 - **Range**: Yaw: left/right, Pitch: up/down
 
-## ⚠️ Error Handling
+## Error Handling
 
-- **`ValueError`**: Invalid inputs or no faces detected
+- **`ValueError`**: Invalid input parameters
 - **`TypeError`**: Incorrect parameter types
+- **No detections**: Returned as `Result` with `data=None` and an `error` message in `meta`
 - **`RuntimeError`**: Webcam access failures
 - **`FileNotFoundError`**: Image file not found
 
-## 📝 Technical Notes
+## Technical Notes
 
 - **MediaPipe Integration**: Uses 468-point facial mesh model with tessellation
 - **Coordinate System**: Normalized coordinates [0, 1] for cross-platform compatibility
@@ -81,7 +82,7 @@ cv2.destroyAllWindows()
 - **Model Reuse**: Pre-load models for faster processing in loops (see function docstrings)
 - **InsightFace**: Advanced face comparison uses InsightFace embeddings for identity matching
 
-## 🔗 Related Modules
+## Related Modules
 
 - See [Body Analysis](../body_analysis/README.md) for body pose and hand tracking
 - See [Utils Module](../../utils/README.md) for `Image` and `Result` class documentation

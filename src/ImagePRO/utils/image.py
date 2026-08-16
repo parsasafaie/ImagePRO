@@ -18,8 +18,9 @@ class Image:
     """
     Lightweight, immutable image wrapper for ImagePRO.
 
-    Use factory constructors to create instances. All methods return new Image objects.
-    Images are handled in BGR format by default to match OpenCV conventions.
+    Use factory constructors to create instances; instances are lightweight
+    wrappers and are not modified by ImagePRO operations. Images are handled
+    in BGR format by default to match OpenCV conventions.
 
     Attributes:
         _data (np.ndarray):
