@@ -27,6 +27,11 @@ Whether you're working on computer vision pipelines, preprocessing images for AI
 - **YOLO Integration**: Multiple accuracy levels (nano to extra-large)
 - **Flexible Models**: Pre-trained or custom model support
 
+### **Pipelines**
+- **Reusable Operation Chains**: Define a sequence of functions once, then run it on any input (Image, NumPy array, or file path)
+- **Flexible Steps**: Any ImagePRO function or custom callable; per-step keyword arguments via `Step`
+- **Pipeline Metadata**: Every result lists the executed steps and each step's parameters
+
 ## Installation
 
 ### From PyPI
@@ -105,6 +110,22 @@ object_detection_result = detect_objects(
 )
 print(f"Detected {len(object_detection_result.data)} objects")
 object_detection_result.save_as_img("detections.jpg")
+
+# Chain operations into a reusable pipeline
+from ImagePRO.pipeline import Pipeline, Step
+from ImagePRO.pre_processing.grayscale import convert_to_grayscale
+from ImagePRO.pre_processing.resize import resize_image
+
+pipeline = Pipeline([
+    Step(apply_gaussian_blur, kernel_size=(7, 7)),
+    convert_to_grayscale,
+    Step(resize_image, new_size=(800, 600)),
+])
+
+# Run it on any input: an Image, a NumPy array, or a file path
+pipeline_result = pipeline.run("person_and_objects.jpg")
+pipeline_result.save_as_img("processed_output.jpg")
+print(pipeline_result.meta["steps"])  # Executed step names
 ```
 
 > **Note**: These are basic examples. Each module contains many more functions with extensive customization options. Explore the module-specific README files for detailed documentation.
@@ -118,6 +139,7 @@ Each module includes comprehensive documentation with detailed examples:
   - [Face Analysis](src/ImagePRO/human_analysis/face_analysis/README.md): Face mesh, pose estimation, eye status, comparison
   - [Body Analysis](src/ImagePRO/human_analysis/body_analysis/README.md): Body pose and hand tracking
 - **[Object Analysis](src/ImagePRO/object_analysis/README.md)**: YOLO-based object detection
+- **[Pipeline](src/ImagePRO/pipeline/README.md)**: Reusable chains of image processing operations
 - **[Utils](src/ImagePRO/utils/README.md)**: Shared utilities and I/O handling
 
 For detailed project structure and development guidelines, see [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md).
@@ -129,6 +151,7 @@ ImagePRO is built with a modular architecture designed for extensibility and mai
 - **Clean Separation of Concerns**: Each module handles a specific domain
 - **Consistent API Patterns**: All functions follow the same input/output conventions
 - **Shared Utilities**: Common `Image` and `Result` classes for unified I/O
+- **Reusable Pipelines**: Chain any operations into a `Pipeline` and run it on any input
 - **Lazy Optional Imports**: Heavy AI dependencies (MediaPipe, Ultralytics, InsightFace) are only imported inside the functions that use them, keeping `import ImagePRO` fast and independent of installed extras
 - **Professional Error Handling**: Comprehensive validation with clear error messages
 - **Type Safety**: Full type hints throughout the codebase

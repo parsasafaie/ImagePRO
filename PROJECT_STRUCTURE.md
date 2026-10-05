@@ -65,6 +65,14 @@ ImagePRO/
             └── README.md
 ```
 
+Note: `src/ImagePRO/pipeline/` provides reusable operation chains:
+```
+pipeline/
+├── __init__.py
+├── pipeline.py                  [base] - Pipeline and Step classes
+└── README.md
+```
+
 **Legend:**
 - `[base]` - Requires only base dependencies
 - `[mediapipe]` - Requires MediaPipe dependency
@@ -103,6 +111,8 @@ file.
   - Face analysis modules may depend on `face_mesh_analysis` for base functionality
   - Body analysis modules are independent
 - **object_analysis**: Uses `utils.image` and `utils.result`; independent module
+- **pipeline**: Uses `utils.image` and `utils.result`; wraps operations from
+  any module as reusable chains (base dependencies only)
 
 ## Code Standards
 
@@ -269,6 +279,14 @@ YOLO-based object detection:
 - **Flexible**: Pre-trained or custom model support
 - **Efficient**: GPU acceleration when available
 
+### Pipeline Module
+Reusable chains of image processing operations:
+- **Define Once, Run Anywhere**: `Pipeline` built from functions or `Step` objects, reusable across inputs
+- **Flexible Inputs**: `run()` accepts an `Image`, a NumPy array, or a file path
+- **Step Arguments**: Per-operation keyword arguments via `Step`; fluent building via `apply()`
+- **Pipeline Metadata**: Results list executed steps and per-step metadata
+- **Custom Operations**: Any callable following the Image → Result convention; plain ndarray returns are accepted
+
 ## Future Enhancements
 
 ### Planned Features
@@ -283,7 +301,7 @@ YOLO-based object detection:
 ### Code Improvements
 - Replace print statements with proper logging
 - Add configuration file support
-- Implement batch processing utilities
+- Add a directory-level batch runner on top of `Pipeline`
 - Add progress indicators for long operations
 - Consider async support for I/O operations
 - Enhanced error messages with troubleshooting tips

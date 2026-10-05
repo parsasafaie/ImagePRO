@@ -12,10 +12,11 @@ Features:
 - Pre-processing: resize, crop, rotate, blur, sharpen, contrast enhancement
 - Human analysis: face mesh, pose estimation, hand tracking
 - Object detection with YOLO models
+- Reusable pipelines for chaining operations
 - Real-time processing capabilities
 """
 
-__version__ = "1.3.1"
+__version__ = "1.4.0"
 __author__ = "Parsa Safaie"
 __email__ = "parsasafaie.2568@proton.me"
 
@@ -24,10 +25,12 @@ from . import utils
 from . import pre_processing
 from . import human_analysis
 from . import object_analysis
+from . import pipeline
 
 __all__ = [
     "utils",
     "pre_processing",
     "human_analysis",
-    "object_analysis"
+    "object_analysis",
+    "pipeline"
 ]
