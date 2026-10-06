@@ -7,7 +7,7 @@ YOLO-based object detection with multiple accuracy levels and flexible model sup
 - **Multiple YOLO Models**: Nano to extra-large accuracy levels
 - **Flexible Model Loading**: Pre-trained or custom model support
 - **Rich Output**: Annotated images and detailed detection data
-- **Performance Optimized**: GPU acceleration when available
+- **Performance Optimized**: Optional GPU acceleration via the `device` argument (CPU default)
 
 ## I/O Conventions
 
@@ -81,7 +81,7 @@ result = detect_objects(
 - **YOLO Integration**: Uses Ultralytics YOLO implementation (YOLO11)
 - **Optional Dependency**: Ultralytics is an optional extra (`pip install "ImagePRO-Python[yolo]"`), imported lazily inside `detect_objects` — this package imports fine without it, and calling `detect_objects` without it raises an `ImportError` naming the extra to install
 - **Model Loading**: A new model instance is created per call unless one is passed via `model=`; reuse a pre-loaded model in loops for speed
-- **GPU Support**: Ultralytics uses CUDA automatically when available
+- **Device Selection**: Inference runs on `device="cpu"` by default — CUDA builds no longer support older GPUs (compute capability below 5.0, e.g. GeForce 940MX) and crash with `cudaErrorNoKernelImageForDevice`. Pass `device="cuda"` (or a GPU id) explicitly to opt in to GPU inference on capable hardware
 - **Custom Models**: Support for custom-trained YOLO models
 
 ## Related Modules
