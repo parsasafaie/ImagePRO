@@ -77,26 +77,28 @@ class Result:
 
         # Save single image
         if isinstance(self.image, np.ndarray):
+            if not out_path.suffix:
+                # OpenCV picks its writer from the file extension, so an
+                # extensionless path would fail in imwrite; default to .png.
+                out_path = out_path.with_name(f"{out_path.name}.png")
             ok = cv2.imwrite(str(out_path), self.image)
             if not ok:
                 raise IOError(f"Failed to save image: {out_path}")
             return self
 
         # Save list of images with auto-suffixes
-        base = str(out_path)
+        base = Path(out_path)
+        stem, suffix = base.stem, base.suffix
+        if not suffix:
+            # cv2.imwrite needs an extension to choose a writer.
+            suffix = ".png"
+            base = base.with_name(f"{stem}.png")
         for idx, img in enumerate(self.image):
             if idx == 0:
-                path_i = base
+                path_i = str(base)
             else:
-                # Suffix logic: .jpg → _{idx}.jpg, else _{idx} before extension
-                if base.endswith(".jpg"):
-                    path_i = base.replace(".jpg", f"_{idx}.jpg")
-                else:
-                    p = Path(base)
-                    if p.suffix:
-                        path_i = str(p.with_name(f"{p.stem}_{idx}{p.suffix}"))
-                    else:
-                        path_i = f"{base}_{idx}"
+                # Suffix logic: out.jpg -> out_1.jpg, out_2.jpg, ...
+                path_i = str(base.with_name(f"{stem}_{idx}{suffix}"))
             ok = cv2.imwrite(path_i, img)
             if not ok:
                 raise IOError(f"Failed to save image: {path_i}")
@@ -115,7 +117,9 @@ class Result:
             path (str | Path):
                 Output CSV file path.
             rows (Optional[list[list[Any]]], optional):
-                Data to write as rows. If None, uses self.data. Defaults to None.
+                Data to write as rows. If None, uses self.data.
+                A 2D numpy.ndarray is also accepted (one CSV row per array
+                row). Defaults to None.
 
         Returns:
             Result: Self, for method chaining.
@@ -135,7 +139,10 @@ class Result:
         try:
             with out_path.open("w", newline="", encoding="utf-8") as f:
                 writer = csv.writer(f)
-                if isinstance(payload, (list, tuple)):
+                if isinstance(payload, np.ndarray):
+                    # Write one CSV row per array row
+                    writer.writerows(payload.tolist())
+                elif isinstance(payload, (list, tuple)):
                     writer.writerows(flatten_rows(payload))
                 else:
                     writer.writerow([payload])

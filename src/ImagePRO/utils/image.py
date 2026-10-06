@@ -13,7 +13,7 @@ Colorspace = Literal["BGR", "RGB", "GRAY"]
 SourceType = Literal["path", "array"]
 
 
-@dataclass
+@dataclass(frozen=True)
 class Image:
     """
     Lightweight, immutable image wrapper for ImagePRO.
@@ -72,11 +72,18 @@ class Image:
         """
         if not isinstance(path, (str, Path)):
             raise TypeError("'path' must be a string or pathlib.Path.")
-        np_image = cv2.imread(str(path))
-        if np_image is None:
-            raise ValueError(f"Failed to load image from {path}")
         if colorspace not in ("BGR", "RGB", "GRAY"):
             raise ValueError("'colorspace' must be one of 'BGR', 'RGB', 'GRAY'.")
+
+        # cv2.imread always returns BGR; grayscale output requires the
+        # IMREAD_GRAYSCALE flag up front (post-hoc conversion of the BGR
+        # result would work numerically but this loads 1 channel directly).
+        imread_flag = cv2.IMREAD_GRAYSCALE if colorspace == "GRAY" else cv2.IMREAD_COLOR
+        np_image = cv2.imread(str(path), imread_flag)
+        if np_image is None:
+            raise ValueError(f"Failed to load image from {path}")
+        if colorspace == "RGB":
+            np_image = cv2.cvtColor(np_image, cv2.COLOR_BGR2RGB)
         return cls(_data=np_image, path=Path(path), colorspace=colorspace, source_type="path")
 
     @classmethod
