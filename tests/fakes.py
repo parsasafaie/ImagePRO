@@ -18,12 +18,18 @@ def make_landmarks(points_per_face, num_faces=1, total_points=478):
     points_per_face: list of (idx, x, y, z) tuples per face. Only the
     referenced indices need to exist, but a full-size landmark list is
     created so arbitrary indices resolve.
+
+    Landmarks carry a ``HasField`` method so they also satisfy mediapipe's
+    drawing_utils, which calls ``landmark.HasField('visibility')`` when
+    rendering a full skeleton.
     """
     faces = []
     for face_points in points_per_face:
         landmark = [SimpleNamespace(x=0.0, y=0.0, z=0.0)] * total_points
         for idx, x, y, z in face_points:
             landmark[idx] = SimpleNamespace(x=x, y=y, z=z)
+        for lm in landmark:
+            lm.HasField = lambda name: False
         faces.append(SimpleNamespace(landmark=landmark))
     return faces
 
@@ -135,6 +141,6 @@ class FakeYOLO:
         self._results = results if results is not None else []
         self.calls = []
 
-    def __call__(self, image):
-        self.calls.append(image)
+    def __call__(self, image, **kwargs):
+        self.calls.append((image, kwargs))
         return list(self._results)

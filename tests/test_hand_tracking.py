@@ -27,7 +27,13 @@ class TestDetectHandsNoDetection:
 
 class TestDetectHandsWithDetection:
     def test_all_landmarks_for_single_hand(self, sample_bgr_image):
-        faces = make_landmarks([[(0, 0.1, 0.2, 0.3), (20, 0.6, 0.7, 0.8)]])
+        # A hand has 21 landmarks; mediapipe's drawing_utils indexes the
+        # per-hand drawing spec list by landmark index, so a fake built with
+        # the face-mesh default of 478 points would raise KeyError there.
+        faces = make_landmarks(
+            [[(0, 0.1, 0.2, 0.3), (20, 0.6, 0.7, 0.8)]],
+            total_points=21,
+        )
         hands = FakeHands(detection_result=SimpleNamespace(multi_hand_landmarks=faces))
         result = detect_hands(image=sample_bgr_image, hands_obj=hands)
         assert len(result.data) == 21

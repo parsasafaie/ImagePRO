@@ -80,3 +80,16 @@ class TestCropImage:
     def test_non_tuple_or_non_int_coordinates_raise(self, sample_bgr_image, start, end):
         with pytest.raises(TypeError):
             crop_image(image=sample_bgr_image, start_point=start, end_point=end)
+
+
+class TestNonDestructiveCrop:
+    def test_crop_returns_independent_copy(self, sample_bgr_image):
+        # Regression: crop used to return a view into the source array, so
+        # in-place edits of the crop modified the source image.
+        import numpy as np
+
+        result = crop_image(
+            image=sample_bgr_image, start_point=(2, 2), end_point=(8, 6)
+        )
+        result.image[:] = 0
+        assert sample_bgr_image._data[2:6, 2:8].max() > 0

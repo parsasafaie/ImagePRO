@@ -66,6 +66,23 @@ class TestFromPath:
         with pytest.raises(ValueError):
             Image.from_path(image_file, colorspace="YUV")
 
+    def test_gray_load_produces_2d_array(self, image_file, sample_bgr_array):
+        # Regression: from_path ignored the colorspace flag and always
+        # returned BGR data, so a "GRAY"-tagged image carried 3 channels and
+        # broke every grayscale-path function downstream.
+        import cv2
+
+        image = Image.from_path(image_file, colorspace="GRAY")
+        assert image._data.ndim == 2
+        assert image.colorspace == "GRAY"
+        expected = cv2.imread(str(image_file), cv2.IMREAD_GRAYSCALE)
+        assert np.array_equal(image._data, expected)
+
+    def test_rgb_load_converts_channels(self, image_file, sample_bgr_array):
+        image = Image.from_path(image_file, colorspace="RGB")
+        assert image._data.shape == sample_bgr_array.shape
+        assert np.array_equal(image._data, sample_bgr_array[..., ::-1])
+
 
 class TestProperties:
     def test_shape_color(self, sample_bgr_image):
@@ -76,3 +93,18 @@ class TestProperties:
 
     def test_dtype(self, sample_bgr_image):
         assert sample_bgr_image.dtype == np.uint8
+
+
+class TestImmutability:
+    def test_attribute_assignment_raises(self, sample_bgr_image):
+        from dataclasses import FrozenInstanceError
+
+        # Regression: the dataclass was not frozen, so callers could change
+        # the colorspace tag without touching the data.
+        with pytest.raises(FrozenInstanceError):
+            sample_bgr_image.colorspace = "RGB"
+        with pytest.raises(FrozenInstanceError):
+            sample_bgr_image.source_type = "path"
+
+    def test_dataclass_declared_frozen(self):
+        assert Image.__dataclass_params__.frozen is True

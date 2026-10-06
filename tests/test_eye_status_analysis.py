@@ -30,7 +30,8 @@ def eye_rows(x_left, x_right, y_top, y_bottom):
 class TestAnalyzeEyeStatus:
     def test_open_eye_returns_true(self, sample_bgr_image, monkeypatch):
         # vertical 0.1, horizontal 0.2 -> EAR = 0.5 > 0.2 threshold.
-        patch_mesh(monkeypatch, eye_rows(x_left=0.2, x_right=0.4, y_top=0.3, y_bottom=0.4))
+        # analyze_face_mesh returns one row-list per face, so wrap the rows.
+        patch_mesh(monkeypatch, [eye_rows(x_left=0.2, x_right=0.4, y_top=0.3, y_bottom=0.4)])
         result = analyze_eye_status(
             image=sample_bgr_image, face_mesh_obj=object()
         )
@@ -38,22 +39,26 @@ class TestAnalyzeEyeStatus:
 
     def test_closed_eye_returns_false(self, sample_bgr_image, monkeypatch):
         # vertical 0.0 -> EAR = 0.
-        patch_mesh(monkeypatch, eye_rows(x_left=0.2, x_right=0.4, y_top=0.3, y_bottom=0.3))
+        patch_mesh(monkeypatch, [eye_rows(x_left=0.2, x_right=0.4, y_top=0.3, y_bottom=0.3)])
         result = analyze_eye_status(image=sample_bgr_image, face_mesh_obj=object())
         assert result.data is False
 
     def test_custom_threshold(self, sample_bgr_image, monkeypatch):
-        # EAR = 0.25: open with default 0.2, closed with 0.4.
-        patch_mesh(monkeypatch, eye_rows(x_left=0.2, x_right=0.6, y_top=0.3, y_bottom=0.4))
-        default = analyze_eye_status(image=sample_bgr_image, face_mesh_obj=object())
-        strict = analyze_eye_status(
-            image=sample_bgr_image, threshold=0.4, face_mesh_obj=object()
+        # Sample image is 24 rows x 32 cols, so distances scale by axis:
+        # vertical = 0.1*24 = 2.4, horizontal = 0.4*32 = 12.8 -> EAR = 0.1875.
+        # Open with a lenient 0.15 threshold, closed with the default 0.2.
+        patch_mesh(monkeypatch, [eye_rows(x_left=0.2, x_right=0.6, y_top=0.3, y_bottom=0.4)])
+        lenient = analyze_eye_status(
+            image=sample_bgr_image, threshold=0.15, face_mesh_obj=object()
         )
-        assert default.data is True
+        strict = analyze_eye_status(
+            image=sample_bgr_image, threshold=0.2, face_mesh_obj=object()
+        )
+        assert lenient.data is True
         assert strict.data is False
 
     def test_zero_horizontal_distance_reports_closed(self, sample_bgr_image, monkeypatch):
-        patch_mesh(monkeypatch, eye_rows(x_left=0.3, x_right=0.3, y_top=0.3, y_bottom=0.4))
+        patch_mesh(monkeypatch, [eye_rows(x_left=0.3, x_right=0.3, y_top=0.3, y_bottom=0.4)])
         result = analyze_eye_status(image=sample_bgr_image, face_mesh_obj=object())
         assert result.data is False
 
@@ -64,7 +69,7 @@ class TestAnalyzeEyeStatus:
 
         # Non-square image: 40 wide, 20 tall. Distances scale by axis.
         image = Image.from_array(np.zeros((20, 40, 3), np.uint8), colorspace="BGR")
-        patch_mesh(monkeypatch, eye_rows(x_left=0.0, x_right=0.5, y_top=0.0, y_bottom=0.5))
+        patch_mesh(monkeypatch, [eye_rows(x_left=0.0, x_right=0.5, y_top=0.0, y_bottom=0.5)])
         # vertical = 0.5 * 20 = 10, horizontal = 0.5 * 40 = 20 -> EAR 0.5.
         result = analyze_eye_status(image=image, face_mesh_obj=object())
         assert result.data is True
@@ -76,13 +81,13 @@ class TestAnalyzeEyeStatus:
         assert result.meta["error"] == "No face landmarks detected"
 
     def test_missing_landmark_returns_none_with_error(self, sample_bgr_image, monkeypatch):
-        patch_mesh(monkeypatch, [[0, 999, 0.1, 0.1, 0.0]])
+        patch_mesh(monkeypatch, [[[0, 999, 0.1, 0.1, 0.0]]])
         result = analyze_eye_status(image=sample_bgr_image, face_mesh_obj=object())
         assert result.data is None
         assert "Missing landmark" in result.meta["error"]
 
     def test_meta_contents(self, sample_bgr_image, monkeypatch):
-        patch_mesh(monkeypatch, eye_rows(0.2, 0.4, 0.3, 0.4))
+        patch_mesh(monkeypatch, [eye_rows(0.2, 0.4, 0.3, 0.4)])
         result = analyze_eye_status(
             image=sample_bgr_image,
             min_confidence=0.5,
@@ -99,9 +104,11 @@ class TestAnalyzeEyeStatusValidation:
         with pytest.raises(TypeError):
             analyze_eye_status(image="img")
 
-    @pytest.mark.parametrize("min_confidence", [-0.1, 1.1, "0.5"])
+    @pytest.mark.parametrize("min_confidence", [-0.1, 1.1, "0.5", True])
     def test_invalid_confidence_raises(self, sample_bgr_image, min_confidence):
-        with pytest.raises(ValueError):
+        # Bools and strings are TypeError (bool is an int subclass that must
+        # not pass); out-of-range numbers are ValueError.
+        with pytest.raises((ValueError, TypeError)):
             analyze_eye_status(image=sample_bgr_image, min_confidence=min_confidence)
 
     def test_non_numeric_confidence_raises(self, sample_bgr_image):

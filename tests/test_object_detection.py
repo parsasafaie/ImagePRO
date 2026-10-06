@@ -45,7 +45,9 @@ class TestDetectObjects:
     def test_model_receives_image_array(self, sample_bgr_array, sample_bgr_image, fake_yolo):
         detect_objects(image=sample_bgr_image, model=fake_yolo)
         assert len(fake_yolo.calls) == 1
-        assert np.array_equal(fake_yolo.calls[0], sample_bgr_array)
+        image_arg, kwargs = fake_yolo.calls[0]
+        assert np.array_equal(image_arg, sample_bgr_array)
+        assert kwargs.get("device") == "cpu"  # safe default
 
     def test_show_result_invoked(self, sample_bgr_image):
         yolo_result = FakeYOLOResult(boxes=[])
@@ -81,7 +83,7 @@ class TestDetectObjectsModelSelection:
                 created["model"] = model
                 self._result = FakeYOLOResult(boxes=[])
 
-            def __call__(self, image):
+            def __call__(self, image, **kwargs):
                 return [self._result]
 
         monkeypatch.setattr("ultralytics.YOLO", RecordingYOLO)

@@ -29,14 +29,20 @@ class TestDetectBodyPoseNoDetection:
 
 class TestDetectBodyPoseWithDetection:
     def test_all_landmarks_reported(self, sample_bgr_image):
-        faces = make_landmarks([[(0, 0.1, 0.2, 0.3), (32, 0.4, 0.5, 0.6)]])
+        # Pose has 33 landmarks; mediapipe's drawing_utils indexes the
+        # per-landmark style list by landmark index, so the fake must cover
+        # the full 0..32 range with the pose default of 33 points.
+        faces = make_landmarks(
+            [[(idx, 0.1 * idx, 0.2, 0.3) for idx in range(33)]],
+            total_points=33,
+        )
         pose = FakePose(detection_result=SimpleNamespace(
             pose_landmarks=faces[0]
         ))
         result = detect_body_pose(image=sample_bgr_image, pose_obj=pose)
         assert len(result.data) == 33
-        assert result.data[0] == [0, 0.1, 0.2, 0.3]
-        assert result.data[32] == [32, 0.4, 0.5, 0.6]
+        assert result.data[0] == [0, 0.0, 0.2, 0.3]
+        assert result.data[32] == [32, 3.2, 0.2, 0.3]
 
     def test_selected_landmarks_only(self, sample_bgr_image):
         faces = make_landmarks([[(5, 0.5, 0.5, 0.5), (17, 0.1, 0.2, 0.3)]])

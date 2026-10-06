@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import os
-
 import numpy as np
 import pytest
 
@@ -57,11 +55,28 @@ class TestCompareFacesBehavior:
         assert result.data is None
         assert "error" in result.meta
 
-    def test_temp_files_cleaned_up(self, isolated_cwd, sample_bgr_array):
+    def test_no_temp_files_are_written(self, isolated_cwd, sample_bgr_array):
         app = FakeFaceAnalysisApp(faces_per_image=[[[1.0]], [[1.0]]])
         image_1 = Image.from_array(sample_bgr_array.copy())
         image_2 = Image.from_array(sample_bgr_array.copy())
 
         compare_faces(image_1, image_2, app=app)
-        assert not os.path.exists("tmp1.jpg")
-        assert not os.path.exists("tmp2.jpg")
+        assert list(isolated_cwd.glob("tmp*.jpg")) == []
+
+    def test_model_receives_rgb_arrays(self, isolated_cwd, sample_bgr_array):
+        received = []
+
+        class RecordingApp(FakeFaceAnalysisApp):
+            def get(self, image):
+                received.append(image)
+                return super().get(image)
+
+        app = RecordingApp(faces_per_image=[[[1.0]], [[1.0]]])
+        image_1 = Image.from_array(sample_bgr_array.copy())
+        image_2 = Image.from_array(sample_bgr_array.copy())
+
+        compare_faces(image_1, image_2, app=app)
+        assert len(received) == 2
+        # BGR input must be converted to RGB before hitting the model
+        for rgb in received:
+            assert np.array_equal(rgb, sample_bgr_array[..., ::-1])

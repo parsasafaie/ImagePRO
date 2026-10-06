@@ -114,3 +114,35 @@ class TestContrastStretching:
     def test_out_of_range_beta_raises(self, sample_bgr_image, beta):
         with pytest.raises(ValueError):
             apply_contrast_stretching(image=sample_bgr_image, beta=beta)
+
+
+class TestGrayInputSupport:
+    """Regression: the three contrast functions used to call BGR2GRAY on
+    every input, crashing on GRAY images and misreading RGB ones."""
+
+    def test_clahe_accepts_gray_input(self, sample_gray_image):
+        result = apply_clahe_contrast(image=sample_gray_image)
+        assert result.image.ndim == 2
+        assert result.image.shape == sample_gray_image.shape
+
+    def test_equalization_accepts_gray_input(self, sample_gray_image):
+        result = apply_histogram_equalization(image=sample_gray_image)
+        assert result.image.ndim == 2
+        assert result.image.shape == sample_gray_image.shape
+
+    def test_stretching_accepts_gray_input(self, sample_gray_image):
+        result = apply_contrast_stretching(image=sample_gray_image, alpha=1.5, beta=10)
+        assert result.image.ndim == 2
+        assert result.image.shape == sample_gray_image.shape
+
+    def test_equalization_treats_rgb_as_bgr_for_luma(self, sample_rgb_image):
+        # Both orderings produce identical luma, so RGB must work and give
+        # the same output as the same data tagged BGR.
+        import numpy as np
+
+        from ImagePRO.utils.image import Image
+
+        as_bgr = Image.from_array(sample_rgb_image._data.copy(), colorspace="BGR")
+        rgb_result = apply_histogram_equalization(image=sample_rgb_image)
+        bgr_result = apply_histogram_equalization(image=as_bgr)
+        assert np.array_equal(rgb_result.image, bgr_result.image)

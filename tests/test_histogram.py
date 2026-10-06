@@ -43,3 +43,37 @@ class TestShowHistogram:
         image = Image(_data=sample_bgr_array, colorspace="YUV")
         with pytest.raises(ValueError):
             show_histogram(image)
+
+
+class TestNoFigureLeak:
+    def test_figure_is_closed_after_return(self, sample_bgr_image):
+        # Regression: every call created a figure that was never closed, so
+        # batch use accumulated figures in memory.
+        plt.close("all")
+        show_histogram(sample_bgr_image)
+        assert len(plt.get_fignums()) == 0
+
+    def test_gray_image_gets_labels(self, sample_gray_image, monkeypatch):
+        # Regression: grayscale histograms had no title/labels at all.
+        # show_histogram closes its figure before returning, so the labels
+        # are captured the moment the function closes the figure.
+        import matplotlib.pyplot as pyplot
+
+        captured = {}
+        orig_close = pyplot.close
+
+        def spy_close(fig=None):
+            if fig is None and pyplot.get_fignums():
+                target = pyplot.gcf()
+                if target.axes and "title" not in captured:
+                    captured["title"] = target.axes[0].get_title()
+                    captured["xlabel"] = target.axes[0].get_xlabel()
+            return orig_close(fig)
+
+        monkeypatch.setattr(pyplot, "close", spy_close)
+        pyplot.close("all")
+        show_histogram(sample_gray_image)
+        assert len(pyplot.get_fignums()) == 0  # closed, not leaked
+        assert captured["title"] == "Histogram of GRAY Channels"
+        assert captured["xlabel"] == "Pixel Intensity"
+        pyplot.close("all")

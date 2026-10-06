@@ -200,3 +200,32 @@ class TestAnalyzeFaceMeshValidation:
     def test_invalid_landmarks_idx_raises(self, sample_bgr_image, landmarks_idx):
         with pytest.raises(TypeError):
             analyze_face_mesh(image=sample_bgr_image, landmarks_idx=landmarks_idx)
+
+
+class TestGrayInputSupport:
+    def test_gray_image_is_expanded_to_rgb_for_model(self, patch_facemesh):
+        # Regression: GRAY input went through BGR2RGB and crashed inside
+        # OpenCV with a generic error.
+        from types import SimpleNamespace
+
+        import numpy as np
+
+        from ImagePRO.utils.image import Image
+
+        faces = make_landmarks([[(0, 0.1, 0.1, 0.1)]])
+        holder = patch_facemesh(result=SimpleNamespace(multi_face_landmarks=faces))
+        gray = Image.from_array(np.full((10, 12), 128, np.uint8), colorspace="GRAY")
+        analyze_face_mesh(image=gray, landmarks_idx=[0])
+        processed = holder["instance"].processed_images[0]
+        # A uniform gray frame must arrive as a uniform 3-channel RGB frame
+        assert processed.shape == (10, 12, 3)
+        assert (processed == 128).all()
+
+    def test_rgb_image_is_passed_through_unchanged(self, sample_rgb_image, patch_facemesh):
+        from types import SimpleNamespace
+
+        faces = make_landmarks([[(0, 0.1, 0.1, 0.1)]])
+        holder = patch_facemesh(result=SimpleNamespace(multi_face_landmarks=faces))
+        analyze_face_mesh(image=sample_rgb_image, landmarks_idx=[0])
+        processed = holder["instance"].processed_images[0]
+        assert processed is sample_rgb_image._data

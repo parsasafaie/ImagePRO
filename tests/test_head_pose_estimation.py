@@ -59,7 +59,9 @@ class TestEstimateHeadPose:
         assert result.meta["error"] == "No face landmarks detected"
 
     def test_missing_landmark_returns_none_with_error(self, sample_bgr_image, monkeypatch):
-        patch_mesh(monkeypatch, [[0, 1, 0.5, 0.5, 0.0]])  # others missing
+        # One face whose data contains only the nose row; the other required
+        # indices (152, 33, 263, 168) are missing.
+        patch_mesh(monkeypatch, [[[0, 1, 0.5, 0.5, 0.0]]])
         result = estimate_head_pose(image=sample_bgr_image, face_mesh_obj=object())
         assert result.data is None
         assert result.meta["error"] == "Missing required landmarks"

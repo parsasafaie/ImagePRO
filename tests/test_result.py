@@ -167,3 +167,35 @@ class TestResultDefaults:
         first, second = Result(), Result()
         first.meta["key"] = "value"
         assert "key" not in second.meta
+
+
+class TestSaveAsCsvNdarray:
+    def test_ndarray_payload_writes_rows(self, tmp_path):
+        # Regression: a numpy array payload used to be stringified into a
+        # single CSV cell.
+        payload = np.array([[1, 2], [3, 4]], dtype=np.uint8)
+        out = tmp_path / "data.csv"
+        Result(data=payload).save_as_csv(out)
+        with out.open(newline="", encoding="utf-8") as f:
+            rows = list(csv.reader(f))
+        assert rows == [["1", "2"], ["3", "4"]]
+
+
+class TestSaveAsImgSuffixing:
+    def test_no_suffix_path_defaults_to_png(self, tmp_path):
+        # Regression: extensionless paths used to skip suffixing entirely and
+        # then fail inside cv2.imwrite, which has no writer without an
+        # extension. They now fall back to ".png".
+        import cv2
+
+        images = [np.zeros((4, 4, 3), np.uint8), np.zeros((4, 4, 3), np.uint8)]
+        Result(image=images).save_as_img(tmp_path / "faces")
+        assert (tmp_path / "faces.png").exists()
+        assert (tmp_path / "faces_1.png").exists()
+        assert cv2.imread(str(tmp_path / "faces.png")) is not None
+
+    def test_jpeg_uppercase_suffix(self, tmp_path):
+        images = [np.zeros((4, 4, 3), np.uint8), np.zeros((4, 4, 3), np.uint8)]
+        Result(image=images).save_as_img(tmp_path / "out.JPG")
+        assert (tmp_path / "out.JPG").exists()
+        assert (tmp_path / "out_1.JPG").exists()
