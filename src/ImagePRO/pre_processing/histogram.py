@@ -23,9 +23,13 @@ def show_histogram(image: Image) -> Result:
     This function creates the histogram plot of the intensity distribution of
     an image. It handles both grayscale and color images, with automatic
     detection of image type. For color images, it plots a histogram for each
-    color channel (BGR or RGB) with appropriate colors. The pyplot module is
-    returned in ``data``; call ``matplotlib.pyplot.show()`` to display the
-    figure.
+    color channel (BGR or RGB) with appropriate colors.
+
+    The figure is closed before returning, so batch calls do not accumulate
+    figures in memory. To display the plot interactively, call this function
+    with ``matplotlib.interactive(True)`` or re-create the figure with
+    ``plt.figure(1)`` right before ``plt.show()``: pyplot re-opens the most
+    recently closed figure number with its contents intact.
 
     Args:
         image (Image):
@@ -54,7 +58,7 @@ def show_histogram(image: Image) -> Result:
         channels = list(enumerate(colors))
     elif image.colorspace == "GRAY":
         channels = [(0, "black")]
-        labels = None
+        labels = ("Intensity",)
     else:
         raise ValueError(f"Unknown colorspace: {image.colorspace}")
 
@@ -63,15 +67,13 @@ def show_histogram(image: Image) -> Result:
         hist = cv2.calcHist([image._data], [channel], None, [256], [0, 256])
         plt.plot(hist, color=color)
 
-    if labels is not None:
-        plt.title(f"Histogram of {image.colorspace} Channels")
-        plt.legend(labels)
-        plt.xlabel("Pixel Intensity")
-        plt.ylabel("Frequency")
-
+    plt.title(f"Histogram of {image.colorspace} Channels")
+    plt.legend(labels)
+    plt.xlabel("Pixel Intensity")
+    plt.ylabel("Frequency")
     plt.xlim([0, 256])
 
-    return Result(
+    result = Result(
         image=None,
         data=plt,
         meta={
@@ -79,3 +81,6 @@ def show_histogram(image: Image) -> Result:
             "operation": "show_histogram"
         }
     )
+    # Close the figure so repeated calls in batch jobs do not leak figures.
+    plt.close()
+    return result

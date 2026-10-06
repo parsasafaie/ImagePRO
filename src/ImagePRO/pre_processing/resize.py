@@ -46,7 +46,10 @@ def resize_image(
     if (
         not isinstance(new_size, tuple)
         or len(new_size) != 2
-        or not all(isinstance(dim, int) and dim > 0 for dim in new_size)
+        or not all(
+            isinstance(dim, int) and not isinstance(dim, bool) and dim > 0
+            for dim in new_size
+        )
     ):
         raise ValueError("'new_size' must be a tuple of two positive integers")
 

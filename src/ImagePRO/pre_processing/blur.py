@@ -56,7 +56,10 @@ def apply_average_blur(
     if (
         not isinstance(kernel_size, tuple)
         or len(kernel_size) != 2
-        or not all(isinstance(k, int) and k > 0 for k in kernel_size)
+        or not all(
+            isinstance(k, int) and not isinstance(k, bool) and k > 0
+            for k in kernel_size
+        )
     ):
         raise ValueError("'kernel_size' must be a tuple of two positive integers.")
 
@@ -107,7 +110,10 @@ def apply_gaussian_blur(
     if (
         not isinstance(kernel_size, tuple)
         or len(kernel_size) != 2
-        or not all(isinstance(k, int) and k > 0 and k % 2 == 1 for k in kernel_size)
+        or not all(
+            isinstance(k, int) and not isinstance(k, bool) and k > 0 and k % 2 == 1
+            for k in kernel_size
+        )
     ):
         raise ValueError("'kernel_size' must be a tuple of two odd positive integers.")
 
@@ -156,7 +162,8 @@ def apply_median_blur(
     if not isinstance(image, Image):
         raise TypeError("'image' must be an Image instance.")
 
-    if not isinstance(filter_size, int) or filter_size <= 1 or filter_size % 2 == 0:
+    if not isinstance(filter_size, int) or isinstance(filter_size, bool) \
+            or filter_size <= 1 or filter_size % 2 == 0:
         raise ValueError("'filter_size' must be an odd integer greater than 1.")
 
     # Apply median filtering
@@ -212,11 +219,11 @@ def apply_bilateral_blur(
     if not isinstance(image, Image):
         raise TypeError("'image' must be an Image instance.")
 
-    if not isinstance(filter_size, int) or filter_size <= 0:
+    if not isinstance(filter_size, int) or isinstance(filter_size, bool) or filter_size <= 0:
         raise ValueError("'filter_size' must be a positive integer.")
-    if not isinstance(sigma_color, (int, float)) or sigma_color <= 0:
+    if isinstance(sigma_color, bool) or not isinstance(sigma_color, (int, float)) or sigma_color <= 0:
         raise ValueError("'sigma_color' must be a positive number.")
-    if not isinstance(sigma_space, (int, float)) or sigma_space <= 0:
+    if isinstance(sigma_space, bool) or not isinstance(sigma_space, (int, float)) or sigma_space <= 0:
         raise ValueError("'sigma_space' must be a positive number.")
 
     # Apply bilateral filter

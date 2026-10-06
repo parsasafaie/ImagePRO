@@ -136,9 +136,9 @@ def rotate_image_custom(
     """
     if not isinstance(image, Image):
         raise TypeError("'image' must be an Image instance")
-    if not isinstance(angle, (int, float)):
+    if isinstance(angle, bool) or not isinstance(angle, (int, float)):
         raise TypeError("'angle' must be a number")
-    if not isinstance(scale, (int, float)) or scale <= 0:
+    if isinstance(scale, bool) or not isinstance(scale, (int, float)) or scale <= 0:
         raise ValueError("'scale' must be a positive number")
 
     h, w = image.shape[:2]

@@ -136,7 +136,9 @@ class Pipeline:
 
         Operations can be passed as separate arguments or as a single
         list/tuple. Passing another Pipeline as an operation nests it: the
-        inner pipeline runs as a single step.
+        inner pipeline runs as a single step. An empty pipeline is accepted
+        at construction time but `run()` raises ValueError until at least
+        one operation is added with `apply()`.
 
         Args:
             *operations (Callable | Step | list | tuple):
