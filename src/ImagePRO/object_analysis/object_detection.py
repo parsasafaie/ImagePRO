@@ -18,6 +18,7 @@ if TYPE_CHECKING:  # ultralytics is imported lazily inside the function
 
 # Constants
 DEFAULT_ACCURACY_LEVEL = 1
+DEFAULT_DEVICE = "cpu"  # CUDA builds fail on older GPUs (sm_50 and lower)
 MODEL_MAPPING = {
     1: "yolo11n.pt",
     2: "yolo11s.pt",
@@ -32,7 +33,8 @@ def detect_objects(
     *,
     model: YOLO | None = None,
     accuracy_level: int = DEFAULT_ACCURACY_LEVEL,
-    show_result: bool = False
+    show_result: bool = False,
+    device: str = DEFAULT_DEVICE
 ) -> Result:
     """Detect objects in an image using YOLO models.
 
@@ -52,6 +54,12 @@ def detect_objects(
             Default: 1
         show_result: Show detection visualization window.
             Default: False
+        device: Torch device for inference ("cpu", "cuda", "0", ...).
+            Defaults to "cpu" because CUDA wheels no longer support older
+            GPUs (compute capability below 5.0 is unsupported by cu12/cu13
+            builds) and fail with cudaErrorNoKernelImageForDevice; pass
+            "cuda" explicitly to use the GPU.
+            Default: "cpu"
 
     Returns:
         Result object with detections and metadata:
@@ -89,7 +97,7 @@ def detect_objects(
         model = YOLO(model=model_name)
 
     # Run inference (ultralytics does not mutate the input array)
-    result = model(image._data)[0]
+    result = model(image._data, device=device)[0]
     boxes = result.boxes
 
     # Process detections
@@ -110,6 +118,7 @@ def detect_objects(
         meta={
             "source": image,
             "operation": "detect_objects",
-            "model": model_name or "custom"
+            "model": model_name or "custom",
+            "device": device
         }
     )
