@@ -27,7 +27,7 @@ Full body pose estimation and hand tracking:
 
 ## I/O Conventions
 
-- **Input**: A `Image` instance created by path or array
+- **Input**: A `Image` instance created by path or array (BGR by default; MediaPipe functions also accept RGB and grayscale images)
 - **Output**: A `Result` instance contains image(np.ndarray), data(any other data like landmarks list) and meta(some additional info about process)
 - **Live Mode**: Webcam functions with ESC key to exit
 
@@ -40,7 +40,7 @@ Full body pose estimation and hand tracking:
 
 ### **Pose Data**
 - **Format**: `[id, yaw, pitch]` for head pose
-- **Units**: Proportional values for orientation
+- **Units**: Proportional scores (not degrees); mirror-image feeds flip the yaw sign
 
 ## Error Handling
 

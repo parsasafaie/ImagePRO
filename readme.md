@@ -158,7 +158,7 @@ ImagePRO is built with a modular architecture designed for extensibility and mai
 - **Documentation**: Google-style docstrings for all functions
 
 ### Key Design Principles
-- **Non-Destructive Operations**: Operations never write into the input image; they return results in new `Result` objects (note: `crop_image` returns a view into the source array)
+- **Non-Destructive Operations**: Operations never write into the input image; they return results in new `Result` objects
 - **Functional Style**: Stateless functions that can be easily composed
 - **Result Objects**: Unified return type containing image, data, and metadata
 - **Keyword Arguments**: All optional parameters use keyword-only syntax

@@ -17,7 +17,7 @@ Lightweight wrapper around `numpy.ndarray` with factory constructors.
 Always use factory constructors to create instances.
 
 #### **Factory Methods**
-- **`Image.from_path(path)`** – Load an image from disk (BGR format by default).
+- **`Image.from_path(path, colorspace="BGR")`** – Load an image from disk. The `colorspace` flag is honored at load time: `"GRAY"` returns a 2-D single-channel array (via `IMREAD_GRAYSCALE`), `"RGB"` swaps channels, `"BGR"` keeps OpenCV's native order.
 - **`Image.from_array(array, colorspace="BGR")`** – Wrap an existing `numpy.ndarray` as an image.
 
 #### **Introspection**
@@ -34,8 +34,8 @@ Holds optional image(s), structured data, and arbitrary metadata.
 - **`meta`** → Dictionary of metadata (e.g., processing parameters)
 
 #### **Methods**
-- **`save_as_img(path)`** – Save image(s) to disk (single file or auto-suffixed list).
-- **`save_as_csv(path, rows=None)`** – Save structured data to a CSV file. Uses data by default.
+- **`save_as_img(path)`** – Save image(s) to disk (single file or auto-suffixed list). An extensionless path falls back to `.png`, because OpenCV chooses its file writer from the extension.
+- **`save_as_csv(path, rows=None)`** – Save structured data to a CSV file. Uses data by default; a 2-D numpy array is written one row per array row.
 
 ## Quick Start
 ```python
@@ -66,7 +66,8 @@ result.save_as_csv('landmarks.csv') # Save data to CSV
 ## Conventions
 
 - **Colorspace:** Images are assumed to be `BGR` (OpenCV default) unless explicitly specified
-- **Non-Destructive Operations:** Operations never write into the input image; they return results in new `Result` objects (note: `crop_image` returns a view into the source array)
+- **Non-Destructive Operations:** Operations never write into the input image; they return results in new `Result` objects, and `crop_image` returns an independent copy of the cropped region
+- **Immutable Image Wrapper:** `Image` instances are frozen — colorspace and source metadata cannot be changed after creation
 - **Automatic Directory Creation:** Save helpers create parent folders if needed
 - **Return Values:** Consistent return types across all operations
 - **Type Safety:** Full type hints for better IDE support and error detection

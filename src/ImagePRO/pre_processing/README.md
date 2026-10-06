@@ -7,7 +7,7 @@ Professional image manipulation, filtering, and enhancement utilities for comput
 - **Consistent I/O**: Support for both `from_path` and `from_array` (numpy arrays)
 - **Drop-in Functions**: Simple, stateless operations with no class instantiation required
 - **Safe Validation**: Comprehensive argument validation with clear error messages
-- **OpenCV Compatible**: Designed to work seamlessly with OpenCV BGR images
+- **OpenCV Compatible**: Designed to work seamlessly with OpenCV BGR images; color operations also accept RGB and grayscale input where documented
 - **Batch Support**: Functions can be easily chained for complex processing pipelines
 
 ## I/O Conventions
@@ -42,8 +42,9 @@ Professional image manipulation, filtering, and enhancement utilities for comput
 ### **Advanced Features**
 - **`dataset_generator.py`**: Automated image capture with preprocessing pipeline (needs the optional MediaPipe extra: `pip install "ImagePRO-Python[mediapipe]"`; it is imported lazily, so the rest of pre_processing works without it)
   - Webcam-based face dataset generation
-  - Configurable preprocessing steps (blur, sharpen, grayscale, resize, rotate)
-  - Automatic face detection and cropping
+  - Configurable preprocessing steps for saved crops (blur, sharpen, grayscale, resize, rotate)
+  - Automatic face detection and cropping (detection always runs on the raw camera frame, so any combination of preprocessing flags is safe)
+  - The capture loop gives up after 250 consecutive frames without a face instead of blocking forever
 
 ## Quick Start
 
@@ -83,7 +84,7 @@ Error information is also stored in the `Result.meta` dictionary for programmati
 - Functions are **pure and stateless** - safe to reuse in loops and parallel processing
 - **Processing order** matters in pipelines - consider dependencies (e.g., resize before crop)
 - **Memory efficient** - operations performed efficiently with NumPy
-- **OpenCV Compatible** - All functions work with BGR color space (OpenCV default)
+- **OpenCV Compatible** - All functions work with BGR color space (OpenCV default); contrast functions also accept RGB (converted via luma) and GRAY images, and always return single-channel output
 - **Batch Processing** - Functions can be easily chained for complex pipelines
 
 ## Related Modules

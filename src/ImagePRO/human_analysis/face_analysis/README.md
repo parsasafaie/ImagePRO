@@ -7,13 +7,13 @@ Advanced facial landmark detection, pose estimation, and analysis using MediaPip
 - **468-point Face Mesh**: Complete facial landmark detection with tessellation
 - **Head Pose Estimation**: Yaw and pitch calculation from facial geometry
 - **Eye Status Analysis**: Open/closed detection using Eye Aspect Ratio (EAR)
-- **Face Comparison**: Identity matching with InsightFace embeddings
+- **Face Comparison**: Identity matching with InsightFace embeddings (arrays are passed in memory; no temporary files are written)
 - **Face Cropping**: Automated face region extraction and cropping
 - **Real-time Processing**: Live webcam analysis for all functions
 
 ## I/O Conventions
 
-- **Input**: A `Image` instance created by path or array
+- **Input**: A `Image` instance created by path or array (BGR by default; MediaPipe functions also accept RGB and grayscale images)
 - **Output**: A `Result` instance contains image(np.ndarray), data(any other data like landmarks list) and meta(some additional info about process)
 - **Live Mode**: Webcam functions with ESC key to exit
 
@@ -62,8 +62,8 @@ cv2.destroyAllWindows()
 
 ### **Pose Data**
 - **Format**: `[face_id, yaw, pitch]`
-- **Units**: Proportional values (not degrees)
-- **Range**: Yaw: left/right, Pitch: up/down
+- **Units**: Proportional scores, not degrees (normalized landmark asymmetry × 100) — useful for thresholds and trends, not absolute angles
+- **Range**: Yaw: left/right, Pitch: up/down; mirror-image webcam feeds flip the yaw sign
 
 ## Error Handling
 
