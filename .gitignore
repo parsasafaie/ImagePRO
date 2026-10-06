@@ -6,3 +6,5 @@ r.csv
 result.csv
 __pycache__
 *.egg-info/
+# Virtual environments
+.venv/
