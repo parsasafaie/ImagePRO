@@ -23,6 +23,7 @@ def crop_image(
 
     Extracts a rectangular region from the image using the specified coordinates.
     The cropped area must be within image bounds and have valid dimensions.
+    The crop is an independent copy; editing it never affects the source image.
 
     Args:
         image: Input image to crop.
@@ -47,7 +48,8 @@ def crop_image(
         not isinstance(start_point, tuple) or
         not isinstance(end_point, tuple) or
         len(start_point) != 2 or len(end_point) != 2 or
-        not all(isinstance(c, int) for c in start_point + end_point)
+        not all(isinstance(c, int) and not isinstance(c, bool)
+                for c in start_point + end_point)
     ):
         raise TypeError("'start_point' and 'end_point' must be (x, y) tuples of integers")
 
@@ -65,8 +67,9 @@ def crop_image(
     if x2 > width or y2 > height:
         raise ValueError(f"Crop area exceeds image bounds ({width}x{height})")
 
-    # Extract the region
-    cropped = image._data[y1:y2, x1:x2]
+    # Extract the region as a copy so later in-place edits of the crop can
+    # never touch the source image (non-destructive contract)
+    cropped = image._data[y1:y2, x1:x2].copy()
 
     return Result(
         image=cropped,

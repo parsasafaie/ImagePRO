@@ -38,7 +38,7 @@ def apply_laplacian_sharpening(
 
     Returns:
         Result object with sharpened image and metadata:
-        - image: Sharpened image array
+        - image: Sharpened image array (same dtype as the input)
         - data: None
         - meta: Operation info and coefficient used
 
@@ -49,19 +49,19 @@ def apply_laplacian_sharpening(
     if not isinstance(image, Image):
         raise TypeError("'image' must be an Image instance")
 
-    if not isinstance(coefficient, (int, float)) or coefficient < 0:
+    if isinstance(coefficient, bool) or not isinstance(coefficient, (int, float)) \
+            or coefficient < 0:
         raise ValueError("'coefficient' must be a non-negative number")
 
-    # Apply Laplacian edge detection, then enhance edges while keeping
-    # float arithmetic identical to: image + coefficient * |laplacian|
+    # Sharpen in float space: image + coefficient * |laplacian|, clipped
+    # once at the end. Casting the Laplacian to uint8 before combining
+    # would truncate edge responses above 255 and corrupt the output.
     laplacian = cv2.Laplacian(image._data, cv2.CV_64F)
     np.absolute(laplacian, out=laplacian)
-    laplacian = laplacian.astype(np.uint8)
 
-    sharpened = laplacian * coefficient
-    sharpened += image._data
+    sharpened = image._data.astype(np.float64) + coefficient * laplacian
     np.clip(sharpened, 0, 255, out=sharpened)
-    sharpened = sharpened.astype(np.uint8)
+    sharpened = sharpened.astype(image._data.dtype)
 
     return Result(
         image=sharpened,
@@ -90,7 +90,7 @@ def apply_unsharp_masking(
 
     Returns:
         Result object with sharpened image and metadata:
-        - image: Sharpened image array
+        - image: Sharpened image array (same dtype as the input)
         - data: None
         - meta: Operation info and coefficient used
 
@@ -101,21 +101,20 @@ def apply_unsharp_masking(
     if not isinstance(image, Image):
         raise TypeError("'image' must be an Image instance")
 
-    if not isinstance(coefficient, (int, float)) or coefficient < 0:
+    if isinstance(coefficient, bool) or not isinstance(coefficient, (int, float)) \
+            or coefficient < 0:
         raise ValueError("'coefficient' must be a non-negative number")
 
-    # Create the mask from original vs blurred difference
+    # Unsharp masking: original + coefficient * (original - blurred),
+    # computed in float space and clipped once at the end. cv2.subtract
+    # saturates negative mask values and addWeighted on the saturated mask
+    # brightens flat regions instead of sharpening, so both are avoided.
     blurred = cv2.blur(image._data, DEFAULT_KERNEL_SIZE)
-    mask = cv2.subtract(image._data, blurred)
+    mask = image._data.astype(np.float64) - blurred.astype(np.float64)
 
-    # Apply unsharp masking
-    sharpened = cv2.addWeighted(
-        image._data,
-        1 + coefficient,
-        mask,
-        -coefficient,
-        0
-    )
+    sharpened = image._data.astype(np.float64) + coefficient * mask
+    np.clip(sharpened, 0, 255, out=sharpened)
+    sharpened = sharpened.astype(image._data.dtype)
 
     return Result(
         image=sharpened,

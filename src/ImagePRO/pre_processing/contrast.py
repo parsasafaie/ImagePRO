@@ -29,7 +29,8 @@ def apply_clahe_contrast(
     """Enhance image contrast using CLAHE (adaptive histogram equalization).
 
     CLAHE applies histogram equalization on small regions for better local contrast.
-    Works well for images with varying lighting conditions.
+    Works well for images with varying lighting conditions. Color images are
+    converted to grayscale first; the output is always single-channel.
 
     Args:
         image: Input image to enhance.
@@ -52,18 +53,23 @@ def apply_clahe_contrast(
     if not isinstance(image, Image):
         raise TypeError("'image' must be an Image instance")
 
-    if not isinstance(clip_limit, (int, float)) or clip_limit <= 0:
+    if isinstance(clip_limit, bool) or not isinstance(clip_limit, (int, float)) \
+            or clip_limit <= 0:
         raise ValueError("'clip_limit' must be a positive number")
 
     if (
         not isinstance(tile_grid_size, tuple)
         or len(tile_grid_size) != 2
-        or not all(isinstance(i, int) and i > 0 for i in tile_grid_size)
+        or not all(isinstance(i, int) and not isinstance(i, bool) and i > 0 for i in tile_grid_size)
     ):
         raise TypeError("'tile_grid_size' must be a tuple of two positive integers")
 
-    # Convert and apply CLAHE (cvtColor returns a new array; input untouched)
-    grayscale = cv2.cvtColor(image._data, cv2.COLOR_BGR2GRAY)
+    # CLAHE works on a single channel: grayscale BGR/RGB inputs, luma of
+    # color ones (channel weights are identical for BGR and RGB).
+    if image.colorspace == "GRAY":
+        grayscale = image._data
+    else:
+        grayscale = cv2.cvtColor(image._data, cv2.COLOR_BGR2GRAY)
     clahe = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=tile_grid_size)
     enhanced = clahe.apply(grayscale)
 
@@ -84,7 +90,8 @@ def apply_histogram_equalization(
     """Global histogram equalization for contrast enhancement.
 
     Normalizes image intensity for better overall contrast.
-    Simple but may overamplify noise in some cases.
+    Simple but may overamplify noise in some cases. Color images are
+    converted to grayscale first; the output is always single-channel.
 
     Args:
         image: Input image to enhance.
@@ -101,8 +108,13 @@ def apply_histogram_equalization(
     if not isinstance(image, Image):
         raise TypeError("'image' must be an Image instance")
 
-    # Convert and apply global histogram equalization
-    grayscale = cv2.cvtColor(image._data, cv2.COLOR_BGR2GRAY)
+    # Global equalization works on a single channel: grayscale inputs pass
+    # through, color ones are converted first (luma weights are identical
+    # for BGR and RGB).
+    if image.colorspace == "GRAY":
+        grayscale = image._data
+    else:
+        grayscale = cv2.cvtColor(image._data, cv2.COLOR_BGR2GRAY)
     enhanced = cv2.equalizeHist(grayscale)
 
     return Result(
@@ -123,7 +135,8 @@ def apply_contrast_stretching(
     """Linear contrast stretching using alpha and beta.
 
     Applies the formula: new_pixel = alpha × pixel + beta
-    Simple but effective for basic contrast adjustment.
+    Simple but effective for basic contrast adjustment. Color images are
+    converted to grayscale first; the output is always single-channel.
 
     Args:
         image: Input image to enhance.
@@ -146,14 +159,19 @@ def apply_contrast_stretching(
     if not isinstance(image, Image):
         raise TypeError("'image' must be an Image instance")
 
-    if not isinstance(alpha, (int, float)) or alpha < 0:
+    if isinstance(alpha, bool) or not isinstance(alpha, (int, float)) or alpha < 0:
         raise ValueError("'alpha' must be a non-negative number")
 
-    if not isinstance(beta, int) or not (0 <= beta <= 255):
+    if not isinstance(beta, int) or isinstance(beta, bool) or not (0 <= beta <= 255):
         raise ValueError("'beta' must be an integer between 0 and 255")
 
-    # Convert and apply linear stretching
-    grayscale = cv2.cvtColor(image._data, cv2.COLOR_BGR2GRAY)
+    # Linear stretching on a single channel: grayscale inputs pass through,
+    # color ones are converted first (luma weights are identical for BGR
+    # and RGB).
+    if image.colorspace == "GRAY":
+        grayscale = image._data
+    else:
+        grayscale = cv2.cvtColor(image._data, cv2.COLOR_BGR2GRAY)
     enhanced = cv2.convertScaleAbs(grayscale, alpha=alpha, beta=beta)
 
     return Result(

@@ -24,6 +24,45 @@ DEFAULT_MIN_CONFIDENCE = 0.7
 DEFAULT_CAMERA_INDEX = 0
 DEFAULT_DELAY = 0.1
 DEFAULT_FACE_ID = "unknown"
+MAX_EMPTY_FRAMES = 250  # Abandon capture after this many frames without a face
+
+
+def _validate_parameters(
+    *,
+    num_images: int,
+    start_index: int,
+    min_confidence: float,
+    camera_index: int,
+    apply_resize: tuple[int, int] | bool,
+    delay: float
+) -> None:
+    """Validate all user-supplied parameters up front, before touching the camera."""
+    if not isinstance(num_images, int) or isinstance(num_images, bool) or num_images <= 0:
+        raise ValueError("'num_images' must be a positive integer")
+
+    if not isinstance(start_index, int) or isinstance(start_index, bool) or start_index < 0:
+        raise ValueError("'start_index' must be a non-negative integer")
+
+    if isinstance(min_confidence, bool) or not isinstance(min_confidence, (int, float)) \
+            or not (0 <= min_confidence <= 1):
+        raise ValueError("'min_confidence' must be between 0 and 1")
+
+    if not isinstance(camera_index, int) or isinstance(camera_index, bool) or camera_index < 0:
+        raise ValueError("'camera_index' must be a non-negative integer")
+
+    if apply_resize is not False and (
+        not isinstance(apply_resize, tuple)
+        or len(apply_resize) != 2
+        or not all(
+            isinstance(dim, int) and not isinstance(dim, bool) and dim > 0
+            for dim in apply_resize
+        )
+    ):
+        raise ValueError("'apply_resize' must be False or a (width, height) tuple "
+                         "of two positive integers")
+
+    if isinstance(delay, bool) or not isinstance(delay, (int, float)) or delay < 0:
+        raise ValueError("'delay' must be a non-negative number")
 
 
 def capture_bulk_pictures(
@@ -43,12 +82,17 @@ def capture_bulk_pictures(
 ) -> None:
     """Generate a dataset by capturing faces from webcam.
 
-    Captures frames from the webcam, detects faces, applies optional preprocessing,
-    and saves cropped face images to disk. This function is useful for creating
-    face recognition datasets with data augmentation.
+    Captures frames from the webcam, detects faces, applies optional
+    preprocessing, and saves cropped face images to disk. This function is
+    useful for creating face recognition datasets with data augmentation.
 
-    Processing pipeline (if enabled):
-    median blur → laplacian sharpen → grayscale → resize → random rotate
+    Saved crops go through this pipeline (each step optional):
+    median blur → laplacian sharpen → resize → grayscale → random rotate
+
+    Face detection always runs on the raw camera frame, so the capture loop
+    keeps working no matter which preprocessing flags are enabled. The loop
+    gives up after MAX_EMPTY_FRAMES consecutive frames without a usable
+    capture, instead of blocking forever when no face is in view.
 
     Args:
         folder_path: Base directory for dataset.
@@ -64,7 +108,7 @@ def capture_bulk_pictures(
             Default: 0
         apply_blur: Apply median blur (size=3).
             Default: False
-        apply_grayscale: Convert to single-channel.
+        apply_grayscale: Convert crops to single-channel.
             Default: False
         apply_sharpen: Apply Laplacian (coef=1.0).
             Default: False
@@ -81,18 +125,19 @@ def capture_bulk_pictures(
         FileExistsError: If output folder exists
         RuntimeError: If camera access fails
     """
-    # Validate numeric parameters to ensure safe operation
-    if not isinstance(num_images, int) or num_images <= 0:
-        raise ValueError("'num_images' must be a positive integer")
+    # Validate everything up front, before creating folders or opening the
+    # camera, so an invalid argument never leaves partial state behind.
+    _validate_parameters(
+        num_images=num_images,
+        start_index=start_index,
+        min_confidence=min_confidence,
+        camera_index=camera_index,
+        apply_resize=apply_resize,
+        delay=delay
+    )
 
-    if not isinstance(start_index, int) or start_index < 0:
-        raise ValueError("'start_index' must be a non-negative integer")
-
-    if not isinstance(min_confidence, (int, float)) or not (0 <= min_confidence <= 1):
-        raise ValueError("'min_confidence' must be between 0 and 1")
-
-    if not isinstance(delay, (int, float)) or delay < 0:
-        raise ValueError("'delay' must be a non-negative number")
+    if apply_rotate is not None and not isinstance(apply_rotate, bool):
+        raise TypeError("'apply_rotate' must be a boolean")
 
     try:
         import mediapipe as mp
@@ -127,12 +172,20 @@ def capture_bulk_pictures(
     )
 
     saved_count = 0
+    frames_without_face = 0
     try:
         while saved_count < num_images:
             # Capture frame
             success, frame = cap.read()
             if not success:
                 print("Failed to capture frame, skipping...")
+                frames_without_face += 1
+                if frames_without_face >= MAX_EMPTY_FRAMES:
+                    raise RuntimeError(
+                        f"Camera stopped delivering frames after "
+                        f"{frames_without_face} consecutive failures; "
+                        f"saved {saved_count}/{num_images} images so far."
+                    )
                 continue
 
             # Apply preprocessing pipeline in sequence
@@ -153,17 +206,19 @@ def capture_bulk_pictures(
                     coefficient=1.0
                 ).image
 
-            if apply_grayscale:
-                # Convert to single-channel for reduced storage and faster processing
-                processed = grayscale.convert_to_grayscale(
-                    image=Image.from_array(processed)
-                ).image
-
             if apply_resize is not False:
                 # Resize to consistent dimensions (e.g., 224x224 for ML models)
                 processed = resize.resize_image(
                     image=Image.from_array(processed),
                     new_size=apply_resize
+                ).image
+
+            if apply_grayscale:
+                # Convert to single-channel for reduced storage and faster
+                # processing. Rotation then tags the intermediate as GRAY so
+                # the face detector can convert back to RGB correctly.
+                processed = grayscale.convert_to_grayscale(
+                    image=Image.from_array(processed)
                 ).image
 
             if apply_rotate:
@@ -182,9 +237,12 @@ def capture_bulk_pictures(
             output_path = face_folder / filename
 
             try:
-                # Detect face and crop to face region only
+                # Detect face and crop to face region only. The detector
+                # needs a color image, so pass the untouched camera frame
+                # (preprocessing here is augmentation for the saved crop,
+                # not a requirement of the detector).
                 result = detect_faces(
-                    image=Image.from_array(processed),
+                    image=Image.from_array(frame),
                     max_faces=1,
                     min_confidence=min_confidence,
                     face_mesh_obj=face_mesh
@@ -193,13 +251,22 @@ def capture_bulk_pictures(
                 # Save cropped face image
                 result.save_as_img(str(output_path))
                 saved_count += 1
+                frames_without_face = 0
 
                 # Add delay between captures to allow subject movement
                 if delay > 0:
                     time.sleep(delay)
 
             except ValueError:
-                # Skip frames with no detected faces (silent failure)
+                # Skip frames with no detected faces
+                frames_without_face += 1
+                if frames_without_face >= MAX_EMPTY_FRAMES:
+                    print(
+                        f"No face detected in {frames_without_face} consecutive "
+                        f"frames; giving up with {saved_count}/{num_images} "
+                        "images saved."
+                    )
+                    break
                 continue
 
     finally:
