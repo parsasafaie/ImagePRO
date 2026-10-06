@@ -23,6 +23,10 @@ if TYPE_CHECKING:  # mediapipe is imported lazily inside the functions
 DEFAULT_MAX_FACES = 1
 DEFAULT_MIN_CONFIDENCE = 0.7
 HEAD_POSE_INDICES = [1, 152, 33, 263, 168]  # nose_tip, chin, left_eye, right_eye, nasion
+# Backend-agnostic capture: the DSHOW backend only exists on Windows, so
+# the default leaves the choice to OpenCV. Tests inject a fake through
+# this hook.
+DEFAULT_CAMERA_BACKEND = None
 
 
 def estimate_head_pose(
@@ -36,6 +40,12 @@ def estimate_head_pose(
 
     Calculates approximate yaw and pitch angles based on relative
     positions of key facial landmarks (nose, eyes, chin).
+
+    The values are unscaled proportional scores, not degrees: each is the
+    normalized landmark asymmetry multiplied by an arbitrary constant of
+    100. They are useful for thresholds and trends (e.g. detecting when a
+    face turns away), not for measuring absolute angles. Mirror-image
+    webcam feeds flip the sign of yaw.
 
     Args:
         image: Input image to process.
@@ -55,6 +65,7 @@ def estimate_head_pose(
             None if no faces detected
         - meta: Operation info and parameters
             Includes error info if detection fails
+        - image: None
 
     Raises:
         TypeError: If image is not an Image instance
@@ -64,10 +75,11 @@ def estimate_head_pose(
     if not isinstance(image, Image):
         raise TypeError("'image' must be an Image instance")
 
-    if not isinstance(max_faces, int) or max_faces <= 0:
+    if not isinstance(max_faces, int) or isinstance(max_faces, bool) or max_faces <= 0:
         raise ValueError("'max_faces' must be positive")
 
-    if not isinstance(min_confidence, (int, float)) or not (0 <= min_confidence <= 1):
+    if isinstance(min_confidence, bool) or not isinstance(min_confidence, (int, float)) \
+            or not (0 <= min_confidence <= 1):
         raise ValueError("'min_confidence' must be between 0 and 1")
 
     # Get face landmarks
@@ -120,7 +132,8 @@ def estimate_head_pose(
                 }
             )
 
-        # Calculate angles
+        # Calculate angles. The ×100 constant is arbitrary; the values are
+        # proportional scores for thresholding, not degrees.
         yaw = 100 * ((right_x - nasion_x) - (nasion_x - left_x))    # Horizontal rotation
         pitch = 100 * ((chin_y - nose_y) - (nose_y - nasion_y))     # Vertical rotation
         pose_data.append([face[0][0], yaw, pitch])
@@ -162,11 +175,11 @@ def estimate_head_pose_live(
         RuntimeError: If webcam cannot be accessed
     """
     # Validate inputs
-    if not isinstance(max_faces, int):
+    if not isinstance(max_faces, int) or isinstance(max_faces, bool):
         raise TypeError("'max_faces' must be an integer")
     if max_faces <= 0:
         raise ValueError("'max_faces' must be positive")
-    if not isinstance(min_confidence, (int, float)):
+    if isinstance(min_confidence, bool) or not isinstance(min_confidence, (int, float)):
         raise TypeError("'min_confidence' must be a number")
     if not 0 <= min_confidence <= 1:
         raise ValueError("'min_confidence' must be between 0 and 1")
@@ -179,8 +192,8 @@ def estimate_head_pose_live(
             'estimation. Install it with: pip install "ImagePRO-Python[mediapipe]"'
         ) from err
 
-    # Initialize webcam
-    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+    # Initialize webcam (backend-agnostic; see DEFAULT_CAMERA_BACKEND)
+    cap = cv2.VideoCapture(0, DEFAULT_CAMERA_BACKEND)
     if not cap.isOpened():
         raise RuntimeError("Failed to access webcam")
 

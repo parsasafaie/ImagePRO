@@ -22,6 +22,10 @@ if TYPE_CHECKING:  # mediapipe is imported lazily inside the functions
 DEFAULT_MAX_FACES = 1
 DEFAULT_MIN_CONFIDENCE = 0.7
 TOTAL_FACE_LANDMARKS = 468
+# Backend-agnostic capture: the DSHOW backend only exists on Windows, so
+# the default leaves the choice to OpenCV. Tests inject a fake through
+# this hook.
+DEFAULT_CAMERA_BACKEND = None
 
 
 def analyze_face_mesh(
@@ -38,7 +42,7 @@ def analyze_face_mesh(
     Can focus on specific landmarks or detect full 468-point mesh.
 
     Args:
-        image: Input image to process.
+        image: Input image to process (BGR, RGB, or grayscale).
         max_faces: Maximum number of faces to detect.
             Must be positive.
             Default: 1
@@ -75,15 +79,16 @@ def analyze_face_mesh(
     if not isinstance(image, Image):
         raise TypeError("'image' must be an Image instance")
 
-    if not isinstance(max_faces, int) or max_faces <= 0:
+    if not isinstance(max_faces, int) or isinstance(max_faces, bool) or max_faces <= 0:
         raise ValueError("'max_faces' must be positive")
 
-    if not isinstance(min_confidence, (int, float)) or not (0 <= min_confidence <= 1):
+    if isinstance(min_confidence, bool) or not isinstance(min_confidence, (int, float)) \
+            or not (0 <= min_confidence <= 1):
         raise ValueError("'min_confidence' must be between 0 and 1")
 
     if landmarks_idx is not None and (
         not isinstance(landmarks_idx, list)
-        or not all(isinstance(i, int) for i in landmarks_idx)
+        or not all(isinstance(i, int) and not isinstance(i, bool) for i in landmarks_idx)
     ):
         raise TypeError("'landmarks_idx' must be a list of integers")
 
@@ -110,9 +115,14 @@ def analyze_face_mesh(
     else:
         face_mesh = face_mesh_obj
 
-    # Detect facial landmarks (cvtColor allocates a new RGB array)
-    img_rgb = cv2.cvtColor(image._data, cv2.COLOR_BGR2RGB)
-    results = face_mesh.process(img_rgb)
+    # MediaPipe expects RGB; grayscale input needs channels added back.
+    if image.colorspace == "GRAY":
+        model_input = cv2.cvtColor(image._data, cv2.COLOR_GRAY2RGB)
+    elif image.colorspace == "RGB":
+        model_input = image._data
+    else:  # BGR is the default
+        model_input = cv2.cvtColor(image._data, cv2.COLOR_BGR2RGB)
+    results = face_mesh.process(model_input)
 
     # Handle no detections
     if not results.multi_face_landmarks:
@@ -214,8 +224,9 @@ def analyze_face_mesh_live(
             'analysis. Install it with: pip install "ImagePRO-Python[mediapipe]"'
         ) from err
 
-    # Initialize camera
-    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+    # Initialize camera (backend-agnostic; DEFAULT_CAMERA_BACKEND is a
+    # module-level hook tests can monkeypatch)
+    cap = cv2.VideoCapture(0, DEFAULT_CAMERA_BACKEND)
     if not cap.isOpened():
         raise RuntimeError("Cannot access webcam")
 

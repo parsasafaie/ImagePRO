@@ -23,6 +23,10 @@ if TYPE_CHECKING:  # mediapipe is imported lazily inside the functions
 DEFAULT_MIN_CONFIDENCE = 0.7
 DEFAULT_THRESHOLD = 0.2
 RIGHT_EYE_INDICES = [386, 374, 263, 362]  # MediaPipe right eye landmarks
+# Backend-agnostic capture: the DSHOW backend only exists on Windows, so
+# the default leaves the choice to OpenCV. Tests inject a fake through
+# this hook.
+DEFAULT_CAMERA_BACKEND = None
 
 
 def analyze_eye_status(
@@ -62,7 +66,7 @@ def analyze_eye_status(
     if not isinstance(image, Image):
         raise TypeError("'image' must be an Image instance")
 
-    if not isinstance(min_confidence, (int, float)):
+    if isinstance(min_confidence, bool) or not isinstance(min_confidence, (int, float)):
         raise TypeError("'min_confidence' must be a number")
     if not 0 <= min_confidence <= 1:
         raise ValueError("'min_confidence' must be between 0 and 1")
@@ -178,7 +182,7 @@ def analyze_eye_status_live(
         RuntimeError: If webcam cannot be accessed
     """
     # Validate inputs
-    if not isinstance(min_confidence, (int, float)):
+    if isinstance(min_confidence, bool) or not isinstance(min_confidence, (int, float)):
         raise TypeError("'min_confidence' must be a number")
     if not 0 <= min_confidence <= 1:
         raise ValueError("'min_confidence' must be between 0 and 1")
@@ -191,8 +195,8 @@ def analyze_eye_status_live(
             'analysis. Install it with: pip install "ImagePRO-Python[mediapipe]"'
         ) from err
 
-    # Initialize webcam
-    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+    # Initialize webcam (backend-agnostic; see DEFAULT_CAMERA_BACKEND)
+    cap = cv2.VideoCapture(0, DEFAULT_CAMERA_BACKEND)
     if not cap.isOpened():
         raise RuntimeError("Failed to access webcam")
 
@@ -221,7 +225,8 @@ def analyze_eye_status_live(
                     face_mesh_obj=face_mesh,
                     threshold=threshold
                 )
-                status = "Open" if result.data else "Closed"
+                status = "No face" if result.data is None else \
+                    ("Open" if result.data else "Closed")
             except (TypeError, ValueError):
                 status = "No face"
 

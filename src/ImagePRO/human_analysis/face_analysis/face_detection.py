@@ -72,10 +72,11 @@ def detect_faces(
     if not isinstance(image, Image):
         raise TypeError("'image' must be an Image instance")
 
-    if not isinstance(max_faces, int) or max_faces <= 0:
+    if not isinstance(max_faces, int) or isinstance(max_faces, bool) or max_faces <= 0:
         raise ValueError("'max_faces' must be positive")
 
-    if not isinstance(min_confidence, (int, float)) or not (0 <= min_confidence <= 1):
+    if isinstance(min_confidence, bool) or not isinstance(min_confidence, (int, float)) \
+            or not (0 <= min_confidence <= 1):
         raise ValueError("'min_confidence' must be between 0 and 1")
 
     # Get image dimensions

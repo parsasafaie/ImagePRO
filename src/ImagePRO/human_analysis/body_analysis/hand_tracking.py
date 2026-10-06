@@ -24,6 +24,10 @@ DEFAULT_MIN_CONFIDENCE = 0.7
 TOTAL_HAND_LANDMARKS = 21
 LANDMARK_RADIUS = 3
 LANDMARK_COLOR = (0, 0, 255)  # Red color for landmarks
+# Backend-agnostic capture: the DSHOW backend only exists on Windows, so
+# the default leaves the choice to OpenCV. Tests inject a fake through
+# this hook.
+DEFAULT_CAMERA_BACKEND = None
 
 
 def detect_hands(
@@ -69,15 +73,16 @@ def detect_hands(
     if not isinstance(image, Image):
         raise TypeError("'image' must be an Image instance")
 
-    if not isinstance(max_hands, int) or max_hands <= 0:
+    if not isinstance(max_hands, int) or isinstance(max_hands, bool) or max_hands <= 0:
         raise ValueError("'max_hands' must be positive")
 
-    if not isinstance(min_confidence, (int, float)) or not (0.0 <= min_confidence <= 1.0):
+    if isinstance(min_confidence, bool) or not isinstance(min_confidence, (int, float)) \
+            or not (0.0 <= min_confidence <= 1.0):
         raise ValueError("'min_confidence' must be between 0.0 and 1.0")
 
     if landmarks_idx is not None and (
         not isinstance(landmarks_idx, list)
-        or not all(isinstance(i, int) for i in landmarks_idx)
+        or not all(isinstance(i, int) and not isinstance(i, bool) for i in landmarks_idx)
     ):
         raise TypeError("'landmarks_idx' must be a list of integers")
 
@@ -174,10 +179,11 @@ def detect_hands_live(
         RuntimeError: If camera cannot be accessed
     """
     # Validate parameters
-    if not isinstance(max_hands, int) or max_hands <= 0:
+    if not isinstance(max_hands, int) or isinstance(max_hands, bool) or max_hands <= 0:
         raise ValueError("'max_hands' must be positive")
 
-    if not isinstance(min_confidence, (int, float)) or not (0.0 <= min_confidence <= 1.0):
+    if isinstance(min_confidence, bool) or not isinstance(min_confidence, (int, float)) \
+            or not (0.0 <= min_confidence <= 1.0):
         raise ValueError("'min_confidence' must be between 0.0 and 1.0")
 
     try:
@@ -188,8 +194,8 @@ def detect_hands_live(
             'tracking. Install it with: pip install "ImagePRO-Python[mediapipe]"'
         ) from err
 
-    # Initialize camera
-    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+    # Initialize camera (backend-agnostic; see DEFAULT_CAMERA_BACKEND)
+    cap = cv2.VideoCapture(0, DEFAULT_CAMERA_BACKEND)
     if not cap.isOpened():
         raise RuntimeError("Cannot access webcam")
 
